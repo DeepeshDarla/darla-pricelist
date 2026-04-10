@@ -348,24 +348,25 @@ function selItem(el, ev) {
 }
 
 function doSearch() {
-  var b = document.getElementById("bInp").value.trim();
+ var b = document.getElementById("bInp").value.trim();
   var c = document.getElementById("cInp").value.trim();
   var s = document.getElementById("sInp").value.trim();
   if (!b && !c && !s) return;
   document.getElementById("results").innerHTML = spinner("Searching...");
 
+  function norm(str){ return String(str||"").toLowerCase().replace(/\s+/g,"_").replace(/_+/g,"_"); }
+
   fetch(FB + "/by_code.json")
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      var bl = b.toLowerCase(), cl = c.toLowerCase(), sl = s.toLowerCase();
       var results = [];
       Object.keys(data).forEach(function(code) {
         var items = data[code];
         var arr = Array.isArray(items) ? items : Object.values(items);
         arr.forEach(function(r) {
-          if ((!bl || String(r.brand||"").toLowerCase() === bl)
-           && (!cl || String(r.catalog||"").toLowerCase() === cl)
-           && (!sl || String(r.sno||"").toLowerCase() === sl)) {
+          if ((!b || norm(r.brand)   === norm(b))
+           && (!c || norm(r.catalog) === norm(c))
+           && (!s || norm(r.sno)     === norm(s))) {
             results.push(r);
           }
         });
