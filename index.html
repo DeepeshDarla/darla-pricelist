@@ -7,7 +7,7 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0a0a0a;min-height:100vh;-webkit-font-smoothing:antialiased;padding-bottom:120px}
-.hdr{background:#111;border-bottom:2px solid #c0392b;padding:28px 24px 20px;text-align:center;overflow:hidden}
+.hdr{background:#111;border-bottom:2px solid #c0392b;padding:28px 24px 20px;text-align:center}
 .hdr-logo{width:240px;height:85px;display:block;margin:0 auto 16px;object-fit:contain;object-position:center}
 .hdr-brand{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#777;margin-bottom:10px}
 .hdr-title{font-size:48px;font-weight:900;color:#fff;letter-spacing:-2px;line-height:1;margin-bottom:14px}
@@ -108,7 +108,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
       <button class="pk" onclick="pk('9')">9</button>
       <button class="pk ghost"></button>
       <button class="pk" onclick="pk('0')">0</button>
-      <button class="pk del" onclick="pd()">⌫</button>
+      <button class="pk del" onclick="pd()">&#9003;</button>
     </div>
     <button class="pin-cancel" onclick="closePin()">Cancel</button>
   </div>
@@ -121,19 +121,16 @@ var SK   = "darla2_v1";
 var en   = "";
 var BASE = window.location.origin + window.location.pathname;
 
-// ── ROUTING ──
 function getParam(name) {
   return new URLSearchParams(window.location.search).get(name) || "";
 }
 
 window.addEventListener("DOMContentLoaded", function() {
-  var code   = getParam("code").trim().toUpperCase();
-  var search = getParam("search");
-  if (code)   showProductPage(code);
-  else        showAdvancedSearch();
+  var code = getParam("code").trim().toUpperCase();
+  if (code) showProductPage(code);
+  else      showAdvancedSearch();
 });
 
-// ── HELPERS ──
 function esc(t) {
   if (!t) return "";
   return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;")
@@ -142,11 +139,11 @@ function esc(t) {
 
 function hdr(title, code, badge) {
   return '<div class="hdr">'
-    + <img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display='none'" alt="Darla">
+    + '<img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display=\'none\'" alt="Darla">'
     + '<div class="hdr-brand">Darla Sales &amp; Agencies</div>'
     + '<div class="hdr-title">' + esc(title) + '</div>'
     + (code ? '<div class="hdr-code">' + esc(code) + '</div>' : '')
-    + (badge ? '<div class="staff-badge" id="sBadge">✓ Staff View</div>' : '')
+    + (badge ? '<div class="staff-badge" id="sBadge">&#10003; Staff View</div>' : '')
     + '</div>';
 }
 
@@ -154,7 +151,6 @@ function spinner(msg) {
   return '<div class="spinner"><div class="spinner-ring"></div><p>' + (msg||"Loading...") + '</p></div>';
 }
 
-// ── CARD BUILDERS ──
 function buildPublic(rows) {
   return rows.map(function(r,i) {
     var t = rows.length;
@@ -164,7 +160,7 @@ function buildPublic(rows) {
       + '<div class="card card-accent-blue"><div class="lbl">S.NO</div><div class="lbl-line"></div><div class="val">'+esc(r.sno)+'</div></div>'
       + '<div class="card"><div class="lbl">WIDTH</div><div class="lbl-line"></div><div class="val">'+esc(r.width)+'</div></div>'
       + '<div class="card card-mrp"><div class="lbl lbl-dark">MRP / METRE</div><div class="lbl-line"></div>'
-      + '<div class="mrp-row"><span class="rsym">₹</span><span class="mrp-val">'+esc(r.mrp)+'</span></div></div>'
+      + '<div class="mrp-row"><span class="rsym">&#8377;</span><span class="mrp-val">'+esc(r.mrp)+'</span></div></div>'
       + '</div>';
   }).join("");
 }
@@ -173,7 +169,7 @@ function buildStaff(rows) {
   return rows.map(function(r,i) {
     var t = rows.length;
     var lnk = r.link && r.link.indexOf("http")===0
-      ? '<div class="card"><div class="lbl">LINK</div><div class="lbl-line"></div><a href="'+esc(r.link)+'" target="_blank" class="link-btn">View Product ↗</a></div>'
+      ? '<div class="card"><div class="lbl">LINK</div><div class="lbl-line"></div><a href="'+esc(r.link)+'" target="_blank" class="link-btn">View Product &#8599;</a></div>'
       : '';
     return '<div class="item-group">'
       + (t>1 ? '<div class="item-num">Item '+(i+1)+' of '+t+'</div>' : '')
@@ -184,7 +180,7 @@ function buildStaff(rows) {
       + '<div class="card"><div class="lbl">ITEM DETAILS</div><div class="lbl-line"></div><div class="val-sm">'+esc(r.item)+'</div></div>'
       + '<div class="card"><div class="lbl">WIDTH</div><div class="lbl-line"></div><div class="val">'+esc(r.width)+'</div></div>'
       + '<div class="card card-mrp"><div class="lbl lbl-dark">MRP / METRE</div><div class="lbl-line"></div>'
-      + '<div class="mrp-row"><span class="rsym">₹</span><span class="mrp-val">'+esc(r.mrp)+'</span></div></div>'
+      + '<div class="mrp-row"><span class="rsym">&#8377;</span><span class="mrp-val">'+esc(r.mrp)+'</span></div></div>'
       + lnk + '</div>';
   }).join("");
 }
@@ -192,9 +188,9 @@ function buildStaff(rows) {
 function renderRows(rows) {
   var el = document.getElementById("results");
   if (!rows || !rows.length) {
-    el.innerHTML = '<div class="nf"><div class="nf-ico">🔍</div><h3>Not Found</h3>'
+    el.innerHTML = '<div class="nf"><div class="nf-ico">&#128269;</div><h3>Not Found</h3>'
       + '<p>No matching products</p>'
-      + '<a class="back-link" href="' + BASE + '">← Advanced Search</a></div>';
+      + '<a class="back-link" href="' + BASE + '">&#8592; Advanced Search</a></div>';
     return;
   }
   window._rows = rows;
@@ -206,14 +202,12 @@ function renderRows(rows) {
   else { if(fb) fb.style.display="flex"; }
 }
 
-// ── PRODUCT PAGE ──
 function showProductPage(code) {
   document.getElementById("app").innerHTML =
     hdr("Product Details", code, true)
     + '<div class="wrap"><div id="results">' + spinner("Loading...") + '</div></div>'
-    + '<button class="fab-btn" id="fabBtn" onclick="openPin()">🔐 Staff Login</button>';
+    + '<button class="fab-btn" id="fabBtn" onclick="openPin()">&#128274; Staff Login</button>';
 
-  // Direct Firebase key lookup — O(1), no scanning
   fetch(FB + "/by_code/" + encodeURIComponent(code) + ".json")
     .then(function(r) { return r.json(); })
     .then(function(d) {
@@ -223,11 +217,11 @@ function showProductPage(code) {
     })
     .catch(function() {
       document.getElementById("results").innerHTML =
-        '<div class="nf"><h3>Error</h3><p>Please try again</p></div>';
+        '<div class="nf"><h3>Error</h3><p>Please try again</p>'
+        + '<a class="back-link" href="' + BASE + '">&#8592; Search</a></div>';
     });
 }
 
-// ── ADVANCED SEARCH ──
 var BCM = {}, BCSM = {}, allBrands = [];
 
 function showAdvancedSearch() {
@@ -241,12 +235,11 @@ function showAdvancedSearch() {
     + '<div class="autocomplete-wrap"><input class="ac-input" id="cInp" placeholder="Select brand first..." disabled autocomplete="off" autocorrect="off" spellcheck="false"><div class="dropdown" id="cDrop"></div></div>'
     + '<div class="field-lbl">S.No</div><div class="lbl-line-sm"></div>'
     + '<div class="autocomplete-wrap"><input class="ac-input" id="sInp" placeholder="Select catalog first..." disabled autocomplete="off" autocorrect="off" spellcheck="false"><div class="dropdown" id="sDrop"></div></div>'
-    + '<button class="submit-btn" id="searchBtn" onclick="doSearch()" disabled>Search →</button>'
+    + '<button class="submit-btn" id="searchBtn" onclick="doSearch()" disabled>Search &#8594;</button>'
     + '<button class="clear-btn" onclick="clearAll()">Clear All</button>'
     + '</div></div>'
     + '<div class="results-wrap"><div id="results"></div></div>';
 
-  // Fetch meta from Firebase — fast, ~200ms
   fetch(FB + "/meta.json")
     .then(function(r) { return r.json(); })
     .then(function(d) {
@@ -261,11 +254,9 @@ function showAdvancedSearch() {
           BCSM[bLabel + "|||" + cLabel] = snos.map(function(s){ return s.label || s; });
         });
       });
-      var bInp = document.getElementById("bInp");
-      var searchBtn = document.getElementById("searchBtn");
-      bInp.disabled = false;
-      bInp.placeholder = "Type brand name...";
-      searchBtn.disabled = false;
+      document.getElementById("bInp").disabled = false;
+      document.getElementById("bInp").placeholder = "Type brand name...";
+      document.getElementById("searchBtn").disabled = false;
       document.getElementById("status").style.display = "none";
       bindSearchEvents();
     })
@@ -318,6 +309,7 @@ function pickBrand(v) {
   document.getElementById("sInp").value = "";
   c.focus();
 }
+
 function pickCatalog(v) {
   document.getElementById("cInp").value = v;
   document.getElementById("cDrop").classList.remove("show");
@@ -325,6 +317,7 @@ function pickCatalog(v) {
   s.disabled = false; s.placeholder = "Type S.No..."; s.value = "";
   s.focus();
 }
+
 function pickSno(v) {
   document.getElementById("sInp").value = v;
   document.getElementById("sDrop").classList.remove("show");
@@ -361,7 +354,6 @@ function doSearch() {
   if (!b && !c && !s) return;
   document.getElementById("results").innerHTML = spinner("Searching...");
 
-  // Fetch ALL by_code and filter client-side — no Apps Script needed
   fetch(FB + "/by_code.json")
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -394,7 +386,6 @@ function clearAll() {
   document.getElementById("results").innerHTML = "";
 }
 
-// ── PIN SYSTEM ──
 function openPin()  { document.getElementById("pOv").classList.add("open"); }
 function closePin() { document.getElementById("pOv").classList.remove("open"); en=""; dots(); }
 function pk(k) { if(en.length>=4)return; en+=k; dots(); if(en.length===4) setTimeout(chk,80); }
