@@ -63,6 +63,32 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .clear-btn{display:block;width:100%;margin-top:10px;background:transparent;color:#555;border:1px solid #2a2a2a;border-radius:10px;padding:13px;font-size:15px;font-weight:600;cursor:pointer}
 .status{text-align:center;padding:8px 0;color:#555;font-size:14px}
 .results-wrap{padding:0 12px;display:flex;flex-direction:column;gap:10px;margin-top:8px}
+
+/* ── TABLE LAYOUT FOR MULTIPLE ROWS ── */
+.count-badge{background:#1a1a1a;border:1px solid #252525;border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.count-txt{color:#888;font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.count-num{color:#c0392b;font-size:15px;font-weight:800}
+.tbl-wrap{background:#161616;border:1px solid #252525;border-radius:14px;overflow:hidden}
+.tbl-head{display:grid;grid-template-columns:1fr 70px 80px 24px;background:#1e1e1e;border-bottom:1px solid #2a2a2a;padding:10px 14px}
+.tbl-head span{font-size:10px;font-weight:800;letter-spacing:1.5px;color:#555;text-transform:uppercase}
+.tbl-row{display:grid;grid-template-columns:1fr 70px 80px 24px;padding:12px 14px;border-bottom:1px solid #1e1e1e;align-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tbl-row:last-of-type{border-bottom:none}
+.tbl-row.open{background:#1a1a1a}
+.tr-main{font-size:15px;font-weight:700;color:#fff;word-break:break-word}
+.tr-sub{font-size:11px;color:#666;margin-top:2px}
+.tr-w{font-size:13px;color:#aaa;font-weight:600;text-align:center}
+.tr-mrp{font-size:15px;font-weight:900;color:#000;background:#fff;border-radius:6px;padding:4px 8px;text-align:center;display:inline-block}
+.tr-arr{color:#555;font-size:18px;text-align:right;transition:transform 0.2s}
+.tbl-row.open .tr-arr{transform:rotate(90deg)}
+.exp-panel{display:none;background:#111;border-bottom:1px solid #252525;padding:12px 14px}
+.exp-panel.show{display:block}
+.exp-line{display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid #1a1a1a}
+.exp-line:last-child{border-bottom:none}
+.exp-lbl{font-size:11px;color:#555;font-weight:700;letter-spacing:1px;text-transform:uppercase;flex-shrink:0;margin-right:12px}
+.exp-val{font-size:13px;color:#ccc;font-weight:600;text-align:right;word-break:break-word}
+.exp-link{color:#c0392b;font-size:13px;font-weight:800;text-decoration:none}
+.tbl-hint{font-size:11px;color:#444;text-align:center;padding:10px 0 4px}
+
 .pin-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100;align-items:flex-end;justify-content:center}
 .pin-ov.open{display:flex}
 .pin-sheet{background:#161616;border:1px solid #2a2a2a;border-top:3px solid #c0392b;border-bottom:none;border-radius:24px 24px 0 0;padding:18px 20px 44px;width:100%;max-width:480px;text-align:center}
@@ -151,38 +177,116 @@ function spinner(msg) {
   return '<div class="spinner"><div class="spinner-ring"></div><p>' + (msg||"Loading...") + '</p></div>';
 }
 
-function buildPublic(rows) {
-  return rows.map(function(r,i) {
-    var t = rows.length;
-    return '<div class="item-group">'
-      + (t>1 ? '<div class="item-num">Item '+(i+1)+' of '+t+'</div>' : '')
-      + '<div class="card card-accent-blue"><div class="lbl">CATALOG</div><div class="lbl-line"></div><div class="val">'+esc(r.catalog)+'</div></div>'
-      + '<div class="card card-accent-blue"><div class="lbl">S.NO</div><div class="lbl-line"></div><div class="val">'+esc(r.sno)+'</div></div>'
-      + '<div class="card"><div class="lbl">WIDTH</div><div class="lbl-line"></div><div class="val">'+esc(r.width)+'</div></div>'
-      + '<div class="card card-mrp"><div class="lbl lbl-dark">MRP / METRE</div><div class="lbl-line"></div>'
-      + '<div class="mrp-row"><span class="rsym">&#8377;</span><span class="mrp-val">'+esc(r.mrp)+'</span></div></div>'
+// ── SINGLE ROW — full card layout (used when only 1 result) ──
+function buildSinglePublic(r) {
+  return '<div class="item-group">'
+    + '<div class="card card-accent-blue"><div class="lbl">CATALOG</div><div class="lbl-line"></div><div class="val">'+esc(r.catalog)+'</div></div>'
+    + '<div class="card card-accent-blue"><div class="lbl">S.NO</div><div class="lbl-line"></div><div class="val">'+esc(r.sno)+'</div></div>'
+    + '<div class="card"><div class="lbl">WIDTH</div><div class="lbl-line"></div><div class="val">'+esc(r.width)+'</div></div>'
+    + '<div class="card card-mrp"><div class="lbl lbl-dark">MRP / METRE</div><div class="lbl-line"></div>'
+    + '<div class="mrp-row"><span class="rsym">&#8377;</span><span class="mrp-val">'+esc(r.mrp)+'</span></div></div>'
+    + '</div>';
+}
+
+function buildSingleStaff(r) {
+  var lnk = r.link && r.link.indexOf("http")===0
+    ? '<div class="card"><div class="lbl">LINK</div><div class="lbl-line"></div><a href="'+esc(r.link)+'" target="_blank" class="link-btn">View Product &#8599;</a></div>'
+    : '';
+  return '<div class="item-group">'
+    + '<div class="card card-accent-blue"><div class="lbl">CODE</div><div class="lbl-line"></div><div class="val">'+esc(r.code)+'</div></div>'
+    + '<div class="card card-accent-red"><div class="lbl">BRAND</div><div class="lbl-line"></div><div class="val">'+esc(r.brand)+'</div></div>'
+    + '<div class="card card-accent-blue"><div class="lbl">CATALOG</div><div class="lbl-line"></div><div class="val">'+esc(r.catalog)+'</div></div>'
+    + '<div class="card"><div class="lbl">S.NO</div><div class="lbl-line"></div><div class="val">'+esc(r.sno)+'</div></div>'
+    + '<div class="card"><div class="lbl">ITEM DETAILS</div><div class="lbl-line"></div><div class="val-sm">'+esc(r.item)+'</div></div>'
+    + '<div class="card"><div class="lbl">WIDTH</div><div class="lbl-line"></div><div class="val">'+esc(r.width)+'</div></div>'
+    + '<div class="card card-mrp"><div class="lbl lbl-dark">MRP / METRE</div><div class="lbl-line"></div>'
+    + '<div class="mrp-row"><span class="rsym">&#8377;</span><span class="mrp-val">'+esc(r.mrp)+'</span></div></div>'
+    + lnk + '</div>';
+}
+
+// ── MULTIPLE ROWS — compact table with expandable rows ──
+function buildTablePublic(rows) {
+  var html = '<div class="count-badge">'
+    + '<span class="count-txt">Items Found</span>'
+    + '<span class="count-num">'+rows.length+' items</span>'
+    + '</div>'
+    + '<div class="tbl-wrap">'
+    + '<div class="tbl-head"><span>Catalog / S.No</span><span style="text-align:center">Width</span><span style="text-align:center">MRP</span><span></span></div>';
+
+  rows.forEach(function(r, i) {
+    html += '<div class="tbl-row" onclick="toggleRow(this)">'
+      + '<div><div class="tr-main">'+esc(r.catalog)+'</div><div class="tr-sub">S.No '+esc(r.sno)+'</div></div>'
+      + '<div class="tr-w">'+esc(r.width)+'</div>'
+      + '<div style="text-align:center"><span class="tr-mrp">&#8377;'+esc(r.mrp)+'</span></div>'
+      + '<div class="tr-arr">&#8250;</div>'
+      + '</div>'
+      + '<div class="exp-panel">'
+      + '<div class="exp-line"><span class="exp-lbl">Catalog</span><span class="exp-val">'+esc(r.catalog)+'</span></div>'
+      + '<div class="exp-line"><span class="exp-lbl">S.No</span><span class="exp-val">'+esc(r.sno)+'</span></div>'
+      + '<div class="exp-line"><span class="exp-lbl">Width</span><span class="exp-val">'+esc(r.width)+'</span></div>'
+      + '<div class="exp-line"><span class="exp-lbl">MRP / Metre</span><span class="exp-val">&#8377;'+esc(r.mrp)+'</span></div>'
       + '</div>';
-  }).join("");
+  });
+
+  html += '</div><div class="tbl-hint">Tap any row to expand</div>';
+  return html;
+}
+
+function buildTableStaff(rows) {
+  var html = '<div class="count-badge">'
+    + '<span class="count-txt">Items Found</span>'
+    + '<span class="count-num">'+rows.length+' items</span>'
+    + '</div>'
+    + '<div class="tbl-wrap">'
+    + '<div class="tbl-head"><span>Catalog / S.No</span><span style="text-align:center">Width</span><span style="text-align:center">MRP</span><span></span></div>';
+
+  rows.forEach(function(r, i) {
+    var lnk = r.link && r.link.indexOf("http")===0
+      ? '<div class="exp-line"><span class="exp-lbl">Link</span><span class="exp-val"><a class="exp-link" href="'+esc(r.link)+'" target="_blank">View Product &#8599;</a></span></div>'
+      : '';
+    html += '<div class="tbl-row" onclick="toggleRow(this)">'
+      + '<div><div class="tr-main">'+esc(r.catalog)+'</div><div class="tr-sub">S.No '+esc(r.sno)+'</div></div>'
+      + '<div class="tr-w">'+esc(r.width)+'</div>'
+      + '<div style="text-align:center"><span class="tr-mrp">&#8377;'+esc(r.mrp)+'</span></div>'
+      + '<div class="tr-arr">&#8250;</div>'
+      + '</div>'
+      + '<div class="exp-panel">'
+      + '<div class="exp-line"><span class="exp-lbl">Code</span><span class="exp-val">'+esc(r.code)+'</span></div>'
+      + '<div class="exp-line"><span class="exp-lbl">Brand</span><span class="exp-val">'+esc(r.brand)+'</span></div>'
+      + '<div class="exp-line"><span class="exp-lbl">Catalog</span><span class="exp-val">'+esc(r.catalog)+'</span></div>'
+      + '<div class="exp-line"><span class="exp-lbl">S.No</span><span class="exp-val">'+esc(r.sno)+'</span></div>'
+      + '<div class="exp-line"><span class="exp-lbl">Item Details</span><span class="exp-val">'+esc(r.item)+'</span></div>'
+      + '<div class="exp-line"><span class="exp-lbl">Width</span><span class="exp-val">'+esc(r.width)+'</span></div>'
+      + '<div class="exp-line"><span class="exp-lbl">MRP / Metre</span><span class="exp-val">&#8377;'+esc(r.mrp)+'</span></div>'
+      + lnk
+      + '</div>';
+  });
+
+  html += '</div><div class="tbl-hint">Tap any row to expand</div>';
+  return html;
+}
+
+function toggleRow(row) {
+  var panel = row.nextElementSibling;
+  var isOpen = panel.classList.contains("show");
+  document.querySelectorAll(".exp-panel.show").forEach(function(p){ p.classList.remove("show"); });
+  document.querySelectorAll(".tbl-row.open").forEach(function(r){ r.classList.remove("open"); });
+  if (!isOpen) {
+    panel.classList.add("show");
+    row.classList.add("open");
+    row.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+}
+
+// ── MAIN RENDER ──
+function buildPublic(rows) {
+  if (rows.length === 1) return buildSinglePublic(rows[0]);
+  return buildTablePublic(rows);
 }
 
 function buildStaff(rows) {
-  return rows.map(function(r,i) {
-    var t = rows.length;
-    var lnk = r.link && r.link.indexOf("http")===0
-      ? '<div class="card"><div class="lbl">LINK</div><div class="lbl-line"></div><a href="'+esc(r.link)+'" target="_blank" class="link-btn">View Product &#8599;</a></div>'
-      : '';
-    return '<div class="item-group">'
-      + (t>1 ? '<div class="item-num">Item '+(i+1)+' of '+t+'</div>' : '')
-      + '<div class="card card-accent-blue"><div class="lbl">CODE</div><div class="lbl-line"></div><div class="val">'+esc(r.code)+'</div></div>'
-      + '<div class="card card-accent-red"><div class="lbl">BRAND</div><div class="lbl-line"></div><div class="val">'+esc(r.brand)+'</div></div>'
-      + '<div class="card card-accent-blue"><div class="lbl">CATALOG</div><div class="lbl-line"></div><div class="val">'+esc(r.catalog)+'</div></div>'
-      + '<div class="card"><div class="lbl">S.NO</div><div class="lbl-line"></div><div class="val">'+esc(r.sno)+'</div></div>'
-      + '<div class="card"><div class="lbl">ITEM DETAILS</div><div class="lbl-line"></div><div class="val-sm">'+esc(r.item)+'</div></div>'
-      + '<div class="card"><div class="lbl">WIDTH</div><div class="lbl-line"></div><div class="val">'+esc(r.width)+'</div></div>'
-      + '<div class="card card-mrp"><div class="lbl lbl-dark">MRP / METRE</div><div class="lbl-line"></div>'
-      + '<div class="mrp-row"><span class="rsym">&#8377;</span><span class="mrp-val">'+esc(r.mrp)+'</span></div></div>'
-      + lnk + '</div>';
-  }).join("");
+  if (rows.length === 1) return buildSingleStaff(rows[0]);
+  return buildTableStaff(rows);
 }
 
 function renderRows(rows) {
@@ -348,29 +452,47 @@ function selItem(el, ev) {
 }
 
 function doSearch() {
- var b = document.getElementById("bInp").value.trim();
+  var b = document.getElementById("bInp").value.trim();
   var c = document.getElementById("cInp").value.trim();
   var s = document.getElementById("sInp").value.trim();
   if (!b && !c && !s) return;
   document.getElementById("results").innerHTML = spinner("Searching...");
 
-  function norm(str){ return String(str||"").toLowerCase().replace(/\s+/g,"_").replace(/_+/g,"_"); }
+  function sk(str) {
+    return String(str||"").trim()
+      .replace(/\./g,"_").replace(/\$/g,"_").replace(/\#/g,"_")
+      .replace(/\[/g,"_").replace(/\]/g,"_").replace(/\//g,"_")
+      .replace(/\s+/g,"_").replace(/__+/g,"_").replace(/^_|_$/g,"");
+  }
 
-  fetch(FB + "/by_code.json")
+  var bKey = sk(b);
+  var cKey = sk(c);
+  var sKey = sk(s);
+
+  var url;
+  if (bKey && cKey && sKey) {
+    url = FB + "/by_brand/" + encodeURIComponent(bKey) + "/" + encodeURIComponent(cKey) + "/" + encodeURIComponent(sKey) + ".json";
+  } else if (bKey && cKey) {
+    url = FB + "/by_brand/" + encodeURIComponent(bKey) + "/" + encodeURIComponent(cKey) + ".json";
+  } else if (bKey) {
+    url = FB + "/by_brand/" + encodeURIComponent(bKey) + ".json";
+  } else {
+    url = FB + "/by_code.json";
+  }
+
+  fetch(url)
     .then(function(r) { return r.json(); })
     .then(function(data) {
+      if (!data) { renderRows([]); return; }
       var results = [];
-      Object.keys(data).forEach(function(code) {
-        var items = data[code];
-        var arr = Array.isArray(items) ? items : Object.values(items);
-        arr.forEach(function(r) {
-          if ((!b || norm(r.brand)   === norm(b))
-           && (!c || norm(r.catalog) === norm(c))
-           && (!s || norm(r.sno)     === norm(s))) {
-            results.push(r);
-          }
-        });
-      });
+      function flatten(obj) {
+        if (Array.isArray(obj)) {
+          obj.forEach(function(item){ if(item && item.code) results.push(item); });
+        } else if (typeof obj === "object") {
+          Object.values(obj).forEach(function(v){ flatten(v); });
+        }
+      }
+      flatten(data);
       renderRows(results);
     })
     .catch(function() {
