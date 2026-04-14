@@ -152,12 +152,13 @@ var SAK  = "darla_search_v1";
 var BASE = window.location.origin + window.location.pathname;
 
 var CATS = {
-  fabric:     { label:"Fabric",     icon:"🧵", hasSno:true  },
-  hangers:    { label:"Hangers",    icon:"🪝", hasSno:true  },
-  blinds:     { label:"Blinds",     icon:"🪟", hasSno:false },
-  wallpapers: { label:"Wallpapers", icon:"🖼️", hasSno:true  },
-  motors:     { label:"Motors",     icon:"⚙️", hasSno:true  },
-  mattress:   { label:"Mattress",   icon:"🛏️", hasSno:false }
+  fabric:     { label:"Fabric",     icon:"🧵", hasSno:true,  codeSearch:false },
+  hangers:    { label:"Hangers",    icon:"🪝", hasSno:false, codeSearch:true  },
+  blinds:     { label:"Blinds",     icon:"🪟", hasSno:false, codeSearch:false },
+  wallpapers: { label:"Wallpapers", icon:"🖼️", hasSno:true,  codeSearch:false },
+  motors:     { label:"Motors",     icon:"⚙️", hasSno:true,  codeSearch:false },
+  mattress:   { label:"Mattress",   icon:"🛏️", hasSno:false, codeSearch:false }
+};
 };
 
 function getParam(n){ return new URLSearchParams(window.location.search).get(n)||""; }
@@ -263,6 +264,30 @@ function showAdvancedSearch(category) {
   var catInfo = CATS[currentCategory] || CATS.fabric;
   BCM={}; BCSM={}; allBrands=[];
 
+  // Code search mode — just one input box
+  if (catInfo.codeSearch) {
+    document.getElementById("app").innerHTML =
+      hdr(catInfo.label+" Search","",true)
+      + '<div class="search-wrap"><div class="search-card">'
+      + '<div class="field-lbl">Code</div><div class="lbl-line-sm"></div>'
+      + '<div class="autocomplete-wrap">'
+      + '<input class="ac-input" id="codeInp" placeholder="Enter code..." autocomplete="off" spellcheck="false" style="text-transform:uppercase">'
+      + '</div>'
+      + '<button class="submit-btn" id="searchBtn" onclick="doCodeSearch()">Search &#8594;</button>'
+      + '<button class="clear-btn" onclick="clearSearch()">Clear</button>'
+      + '<button class="clear-btn" style="margin-top:6px;color:#c0392b;border-color:#c0392b" onclick="showHome()">&#8592; Categories</button>'
+      + '</div></div>'
+      + '<div class="results-wrap"><div id="results"></div></div>';
+
+    // Allow enter key to search
+    document.getElementById("codeInp").addEventListener("keyup", function(e) {
+      if (e.key === "Enter") doCodeSearch();
+      this.value = this.value.toUpperCase();
+    });
+    return;
+  }
+
+  // Normal brand/catalog search mode
   document.getElementById("app").innerHTML =
     hdr(catInfo.label+" Search","",true)
     + '<div class="search-wrap"><div class="search-card">'
@@ -301,7 +326,6 @@ function showAdvancedSearch(category) {
     })
     .catch(function(){ document.getElementById("status").textContent="Failed to load. Please refresh."; });
 }
-
 function bindSearchEvents() {
   var bInp=document.getElementById("bInp");
   var cInp=document.getElementById("cInp");
