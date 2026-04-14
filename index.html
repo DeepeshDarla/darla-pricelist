@@ -451,7 +451,7 @@ function buildPublic(rows,category){
 function buildSinglePublic(r){
   var html='<div class="item-group">';
   if(r.catalog)    html+=card("CATALOG",r.catalog,"card-accent-blue");
-  if(r["s.no"]||r.sno) html+=card("S.NO",r["s.no"]||r.sno,"card-accent-blue");
+  if(r["s.no"]||r.sno||r["s_no"]) html+=card("S.NO",r["s.no"]||r.sno||r["s_no"],"card-accent-blue");
   if(r.width)      html+=card("WIDTH",r.width,"");
   if(r.mrp)        html+=cardMrp(r.mrp);
   if(r.thickness)  html+=card("THICKNESS",r.thickness,"");
@@ -468,7 +468,7 @@ function buildTablePublic(rows,category){
     +'</div>';
 
   rows.forEach(function(r){
-    var sno    = r["s.no"]||r.sno||"";
+    var sno    = r["s.no"]||r.sno||r["s_no"]||"";
     var catalog= r.catalog||r["blind type"]||"";
     var width  = r.width||r.size||r.thickness||"";
     var mrp    = r.mrp||"";
@@ -506,7 +506,7 @@ function buildSingleStaff(r){
   if(r.brand)      html+=card("BRAND",r.brand,"card-accent-red");
   if(r.catalog)    html+=card("CATALOG",r.catalog,"card-accent-blue");
   if(r["blind type"]) html+=card("BLIND TYPE",r["blind type"],"card-accent-blue");
-  if(r["s.no"]||r.sno) html+=card("S.NO",r["s.no"]||r.sno,"");
+  if(r["s.no"]||r.sno||r["s_no"]) html+=card("S.NO",r["s.no"]||r.sno||r["s_no"],"");
   if(r["item details"]) html+=cardSm("ITEM DETAILS",r["item details"]);
   if(r.mechanism)  html+=card("MECHANISM",r.mechanism,"");
   if(r.others)     html+=card("OTHERS",r.others,"");
@@ -528,7 +528,7 @@ function buildTableStaff(rows,category){
     +'</div>';
 
   rows.forEach(function(r){
-    var sno    = r["s.no"]||r.sno||"";
+    var sno    = r["s.no"]||r.sno||r["s_no"]||"";
     var catalog= r.catalog||r["blind type"]||"";
     var width  = r.width||r.size||r.thickness||"";
     var mrp    = r.mrp||"";
