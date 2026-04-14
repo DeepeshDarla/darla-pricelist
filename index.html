@@ -476,8 +476,8 @@ function buildTablePublic(rows,category){
 
     html+='<div class="tbl-row" style="grid-template-columns:1fr 70px 80px 24px" onclick="toggleRow(this)">'
       +'<div><div class="tr-main">'+esc(sno||"—")+'</div><div class="tr-sub">'+esc(catalog)+'</div></div>'
-      +'<div style="text-align:center;font-size:13px;color:#aaa;font-weight:600">'+esc(width)+'</div>'
-      +'<div style="text-align:center"><span class="tr-mrp">&#8377;'+esc(mrp)+'</span></div>'
+      ++'<div style="text-align:center;font-size:13px;color:#aaa;font-weight:600">'+(width?esc(width):'—')+'</div>'
+      +'<div style="text-align:center">'+(mrp?'<span class="tr-mrp">&#8377;'+esc(mrp)+'</span>':'<span style="color:#555;font-size:13px">—</span>')+'</div>'
       +'<div class="tr-arr">'+(hasExtra?'&#8250;':'')+'</div>'
       +'</div>'
       +'<div class="exp-panel">'
@@ -536,8 +536,8 @@ function buildTableStaff(rows,category){
 
     html+='<div class="tbl-row" style="grid-template-columns:1fr 70px 80px 24px" onclick="toggleRow(this)">'
       +'<div><div class="tr-main">'+esc(sno||"—")+'</div><div class="tr-sub">'+esc(catalog)+'</div></div>'
-      +'<div style="text-align:center;font-size:13px;color:#aaa;font-weight:600">'+esc(width)+'</div>'
-      +'<div style="text-align:center"><span class="tr-mrp">&#8377;'+esc(mrp)+'</span></div>'
+      +'<div style="text-align:center;font-size:13px;color:#aaa;font-weight:600">'+(width?esc(width):'—')+'</div>'
+      +'<div style="text-align:center">'+(mrp?'<span class="tr-mrp">&#8377;'+esc(mrp)+'</span>':'<span style="color:#555;font-size:13px">—</span>')+'</div>'
       +'<div class="tr-arr">'+(hasExtra?'&#8250;':'')+'</div>'
       +'</div>'
       +'<div class="exp-panel">'
