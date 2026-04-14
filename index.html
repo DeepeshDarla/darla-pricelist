@@ -316,7 +316,7 @@ function showAdvancedSearch(category) {
       document.getElementById("status").style.display="none";
       bindSearchEvents();
     })
-    .catch(function(){ document.getElementById("status").textContent="Failed to load. Please refresh."; });
+    .catch(function(){   document.getElementById("status").textContent="No data available yet for this category.";   document.getElementById("searchBtn").disabled=true; });
 }
 
 function bindSearchEvents(){
