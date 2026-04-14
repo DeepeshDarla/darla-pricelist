@@ -488,13 +488,13 @@ function buildSinglePublic(r, category) {
 function buildTablePublic(rows, category) {
   var html = '<div class="count-badge"><span class="count-txt">Items Found</span><span class="count-num">'+rows.length+' items</span></div>'
     + '<div class="tbl-wrap">'
-    + '<div class="tbl-head" style="grid-template-columns:1fr 70px 80px 24px"><span>Catalog / S.No</span><span style="text-align:center">Width</span><span style="text-align:center">MRP</span><span></span></div>';
+    + '<div class="tbl-head" style="grid-template-columns:1fr 70px 80px 24px"><span>S.No / Catalog</span><span style="text-align:center">Width</span><span style="text-align:center">MRP</span><span></span></div>'
 
   rows.forEach(function(r) {
     var w = r.width || r.size || r.thickness || "";
     var m = r.mrp || "";
     html += '<div class="tbl-row" style="grid-template-columns:1fr 70px 80px 24px" onclick="toggleRow(this)">'
-      + '<div><div class="tr-main">'+esc(r.catalog||r["blind type"]||"")+'</div><div class="tr-sub">'+(r["s.no"]?"S.No "+esc(r["s.no"]):"")+'</div></div>'
+      + '<div><div class="tr-main">'+(r["s.no"]?esc(r["s.no"]):"—")+'</div><div class="tr-sub">'+esc(r.catalog||r["blind type"]||"")+'</div></div>'
       + '<div style="text-align:center" class="tr-w">'+esc(w)+'</div>'
       + '<div style="text-align:center"><span class="tr-mrp">&#8377;'+esc(m)+'</span></div>'
       + '<div class="tr-arr">&#8250;</div>'
@@ -541,7 +541,7 @@ function buildSingleStaff(r, category) {
 function buildTableStaff(rows, category) {
   var html = '<div class="count-badge"><span class="count-txt">Items Found</span><span class="count-num">'+rows.length+' items</span></div>'
     + '<div class="tbl-wrap">'
-    + '<div class="tbl-head" style="grid-template-columns:1fr 70px 80px 24px"><span>Catalog / S.No</span><span style="text-align:center">Width</span><span style="text-align:center">MRP</span><span></span></div>';
+    + '<div class="tbl-head" style="grid-template-columns:1fr 70px 80px 24px"><span>S.No / Catalog</span><span style="text-align:center">Width</span><span style="text-align:center">MRP</span><span></span></div>'
 
   rows.forEach(function(r) {
     var w = r.width || r.size || r.thickness || "";
@@ -549,7 +549,7 @@ function buildTableStaff(rows, category) {
     var lnk = r.link && r.link.indexOf("http")===0
       ? expLinkLine("Link", r.link) : "";
     html += '<div class="tbl-row" style="grid-template-columns:1fr 70px 80px 24px" onclick="toggleRow(this)">'
-      + '<div><div class="tr-main">'+esc(r.catalog||r["blind type"]||"")+'</div><div class="tr-sub">'+(r["s.no"]?"S.No "+esc(r["s.no"]):"")+'</div></div>'
+      + '<div><div class="tr-main">'+(r["s.no"]?esc(r["s.no"]):"—")+'</div><div class="tr-sub">'+esc(r.catalog||r["blind type"]||"")+'</div></div>'
       + '<div style="text-align:center" class="tr-w">'+esc(w)+'</div>'
       + '<div style="text-align:center"><span class="tr-mrp">&#8377;'+esc(m)+'</span></div>'
       + '<div class="tr-arr">&#8250;</div>'
