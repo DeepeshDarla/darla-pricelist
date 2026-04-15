@@ -319,12 +319,12 @@ function showAdvancedSearch(cat) {
 }
 
 function loadMeta(attempt) {
-  var statusEl  = document.getElementById("status");
-  var bInp      = document.getElementById("bInp");
-  var searchBtn = document.getElementById("searchBtn");
+  // Guard against multiple simultaneous calls
+  if (window._metaLoading && attempt === 1) return;
+  if (attempt === 1) window._metaLoading = true;
 
-  // Safety: if DOM elements gone (user navigated away), abort
-  if (!statusEl) return;
+  var statusEl = document.getElementById("status");
+  if (!statusEl) { window._metaLoading = false; return; }
 
   statusEl.textContent = attempt > 1 ? "Retrying... ("+attempt+"/3)" : "Loading...";
   statusEl.style.color = "#555";
@@ -337,13 +337,14 @@ function loadMeta(attempt) {
       return r.json();
     })
     .then(function(d){
-      // Re-check DOM still exists
+      window._metaLoading = false;  // ← ADD HERE (success)
+
       var statusEl2 = document.getElementById("status");
       var bInp2     = document.getElementById("bInp");
       var btn2      = document.getElementById("searchBtn");
-      if (!statusEl2) return;
+      if(!statusEl2) return;
 
-      if (!d || !d.brandList || !d.brandList.length) {
+      if(!d || !d.brandList || !d.brandList.length){
         statusEl2.textContent = "No data yet for this category.";
         return;
       }
@@ -364,15 +365,20 @@ function loadMeta(attempt) {
       bindSearchEvents();
     })
     .catch(function(){
+      window._metaLoading = false;  // ← ADD HERE (failure)
+
       var statusEl3 = document.getElementById("status");
       if(!statusEl3) return;
       if(attempt < 3){
-        setTimeout(function(){ loadMeta(attempt+1); }, 2000);
+        setTimeout(function(){ loadMeta(attempt+1); }, 3000);
       } else {
         statusEl3.textContent = "Tap here to retry";
         statusEl3.style.color = "#c0392b";
         statusEl3.style.cursor = "pointer";
-        statusEl3.onclick = function(){ loadMeta(1); };
+        statusEl3.onclick = function(){ 
+          window._metaLoading = false;  // ← ADD HERE (manual retry)
+          loadMeta(1); 
+        };
       }
     });
 }
