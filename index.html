@@ -298,25 +298,53 @@ function showAdvancedSearch(category) {
     + '</div></div>'
     + '<div class="results-wrap"><div id="results"></div></div>';
 
-  fetch(FB+"/"+currentCategory+"/meta.json")
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      allBrands = d.brandList.map(function(b){ return b.label||b; }).sort();
-      d.brandList.forEach(function(b){
-        var bKey=b.key||b, bLabel=b.label||b;
-        BCM[bLabel] = (d.bcmArr[bKey]||[]).map(function(c){ return c.label||c; });
-        (d.bcmArr[bKey]||[]).forEach(function(c){
-          var cKey=c.key||c, cLabel=c.label||c;
-          BCSM[bLabel+"|||"+cLabel] = (d.bcsmArr[bKey+"|||"+cKey]||[]).map(function(s){ return s.label||s; });
+  function loadMeta(attempt) {
+    attempt = attempt || 1;
+    var statusEl = document.getElementById("status");
+    if (statusEl) statusEl.textContent = attempt > 1 ? "Retrying... ("+attempt+"/3)" : "Loading...";
+
+    fetch(FB+"/"+currentCategory+"/meta.json?t="+Date.now())
+      .then(function(r){
+        if (!r.ok) throw new Error("HTTP "+r.status);
+        return r.json();
+      })
+      .then(function(d){
+        if (!d || !d.brandList || !d.brandList.length) {
+          if (statusEl) statusEl.textContent = "No data available yet for this category.";
+          var sb = document.getElementById("searchBtn");
+          if (sb) sb.disabled = true;
+          return;
+        }
+        allBrands = d.brandList.map(function(b){ return b.label||b; }).sort();
+        d.brandList.forEach(function(b){
+          var bKey=b.key||b, bLabel=b.label||b;
+          BCM[bLabel] = (d.bcmArr[bKey]||[]).map(function(c){ return c.label||c; });
+          (d.bcmArr[bKey]||[]).forEach(function(c){
+            var cKey=c.key||c, cLabel=c.label||c;
+            BCSM[bLabel+"|||"+cLabel] = (d.bcsmArr[bKey+"|||"+cKey]||[]).map(function(s){ return s.label||s; });
+          });
         });
+        var bInp = document.getElementById("bInp");
+        var searchBtn = document.getElementById("searchBtn");
+        if (bInp) { bInp.disabled=false; bInp.placeholder="Type brand name..."; }
+        if (searchBtn) searchBtn.disabled=false;
+        if (statusEl) statusEl.style.display="none";
+        bindSearchEvents();
+      })
+      .catch(function(err){
+        if (attempt < 3) {
+          setTimeout(function(){ loadMeta(attempt+1); }, 1500);
+        } else {
+          if (statusEl) {
+            statusEl.textContent = "Failed to load. Tap to retry.";
+            statusEl.style.cursor = "pointer";
+            statusEl.style.color = "#c0392b";
+            statusEl.onclick = function(){ loadMeta(1); };
+          }
+        }
       });
-      document.getElementById("bInp").disabled=false;
-      document.getElementById("bInp").placeholder="Type brand name...";
-      document.getElementById("searchBtn").disabled=false;
-      document.getElementById("status").style.display="none";
-      bindSearchEvents();
-    })
-    .catch(function(){   document.getElementById("status").textContent="No data available yet for this category.";   document.getElementById("searchBtn").disabled=true; });
+  }
+  loadMeta(1);
 }
 
 function bindSearchEvents(){
