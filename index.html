@@ -411,7 +411,7 @@ function doCodeSearch(){
   var code=codeKey(raw);
   if(!code)return;
   document.getElementById("results").innerHTML=spinner("Searching...");
-  fetch(FB+"/"+currentCategory+"/by_code/"+encodeURIComponent(code)+".json?t="+Date.now())
+  fetch(FB+"/"+currentCategory+"/by_code/"+encodeURIComponent(code)+".json")
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(!d){ renderRows([],currentCategory); return; }
@@ -472,7 +472,7 @@ function showProductPage(code, category){
     hdr("Product Details",code,true)
     + '<div class="wrap"><div id="results">'+spinner("Loading...")+'</div></div>'
     + '<button class="fab-btn" id="fabBtn" onclick="openStaffPin()">&#128274; Staff Login</button>';
-  fetch(FB+"/"+category+"/by_code/"+encodeURIComponent(safeCode)+".json?t="+Date.now())
+  fetch(FB+"/"+category+"/by_code/"+encodeURIComponent(safeCode)+".json")
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(!d){ renderRows([],category); return; }
