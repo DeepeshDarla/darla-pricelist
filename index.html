@@ -263,7 +263,7 @@ var BCM={}, BCSM={}, allBrands=[];
 var currentCategory="fabric";
 
 function showAdvancedSearch(category) {
-  currentCategory = category || "fabric";
+  currentCategory = String(category || "fabric").toLowerCase();
   var catInfo = CATS[currentCategory] || CATS.fabric;
   BCM={}; BCSM={}; allBrands=[];
 
