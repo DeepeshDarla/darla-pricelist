@@ -315,7 +315,7 @@ function showAdvancedSearch(cat) {
     +'<div class="results-wrap"><div id="results"></div></div>';
 
   // *** THE FIX: setTimeout ensures DOM is rendered before we touch it ***
-  setTimeout(function(){ loadMeta(1); }, 0);
+  setTimeout(function(){ loadMeta(1); }, 500);
 }
 
 function loadMeta(attempt) {
