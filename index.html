@@ -145,64 +145,53 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
   </div>
 </div>
 <script>
-// ── CONSTANTS ──
-var FB   = "https://pricelist-qr-codes-default-rtdb.asia-southeast1.firebasedatabase.app";
-var PIN  = "1516";
-var SK   = "darla_staff_v1";
-var SAK  = "darla_search_v1";
-var BASE = window.location.origin + window.location.pathname;
+var FB  = "https://pricelist-qr-codes-default-rtdb.asia-southeast1.firebasedatabase.app";
+var PIN = "1516";
+var SK  = "darla_staff_v1";
+var SAK = "darla_search_v1";
+var BASE= window.location.origin+window.location.pathname;
 
 var CATS = {
-  fabric:     { label:"Fabric",     icon:"🧵", hasSno:true,  codeSearch:false },
-  hangers:    { label:"Hangers",    icon:"🪝", hasSno:false, codeSearch:true  },
-  blinds:     { label:"Blinds",     icon:"🪟", hasSno:false, codeSearch:false },
-  wallpapers: { label:"Wallpapers", icon:"🖼️", hasSno:true,  codeSearch:false },
-  motors:     { label:"Motors",     icon:"⚙️", hasSno:true,  codeSearch:false },
-  mattresses:   { label:"mattresses",   icon:"🛏️", hasSno:false, codeSearch:false }
+  fabric:     {label:"Fabric",     icon:"&#129525;", hasSno:true,  codeSearch:false},
+  hangers:    {label:"Hangers",    icon:"&#129693;", hasSno:false, codeSearch:true},
+  blinds:     {label:"Blinds",     icon:"&#129695;", hasSno:false, codeSearch:false},
+  wallpapers: {label:"Wallpapers", icon:"&#128444;", hasSno:true,  codeSearch:false},
+  motors:     {label:"Motors",     icon:"&#9881;",   hasSno:true,  codeSearch:false},
+  beds:       {label:"Beds",       icon:"&#128716;", hasSno:false, codeSearch:false}
 };
 
-// ── SANITIZERS — must match Apps Script exactly ──
-// For Firebase keys (brands, catalogs, s.no)
-function sk(str) {
+function sk(str){
   return String(str||"").trim()
     .replace(/[^a-zA-Z0-9\-_]/g,"_")
     .replace(/_+/g,"_")
     .replace(/^_+|_+$/g,"")
     ||"_";
 }
-// For product codes (strips everything except alphanumeric and dash)
-function codeKey(str) {
+function codeKey(str){
   return String(str||"").trim().toUpperCase().replace(/[^A-Z0-9\-]/g,"");
 }
-
-// ── HELPERS ──
-function getParam(n){ return new URLSearchParams(window.location.search).get(n)||""; }
+function gv(r,key){
+  if(!r)return"";
+  var s=key.replace(/[^a-z0-9_]/g,"_").replace(/_+/g,"_").replace(/^_|_$/g,"");
+  return r[s]||r[key]||"";
+}
+function getParam(n){return new URLSearchParams(window.location.search).get(n)||"";}
 function esc(t){
   if(!t)return"";
   return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
-function spinner(m){ return '<div class="spinner"><div class="spinner-ring"></div><p>'+(m||"Loading...")+'</p></div>'; }
-function isStaff(){ return localStorage.getItem(SK)==="1"; }
-function hasSearchAccess(){ return localStorage.getItem(SAK)==="1"; }
+function spinner(m){return '<div class="spinner"><div class="spinner-ring"></div><p>'+(m||"Loading...")+'</p></div>';}
+function isStaff(){return localStorage.getItem(SK)==="1";}
+function hasSearchAccess(){return localStorage.getItem(SAK)==="1";}
 
-// Get field value — handles both sanitized keys (s_no) and original keys (s.no)
-function gv(r, key) {
-  if(!r) return "";
-  // Try sanitized key first, then original, then common variants
-  var sanitized = key.replace(/[^a-z0-9_]/g,"_").replace(/_+/g,"_").replace(/^_|_$/g,"");
-  return r[sanitized] || r[key] || "";
-}
-
-// ── INIT ──
-window.addEventListener("DOMContentLoaded", function() {
-  var code     = getParam("code").trim().toUpperCase();
-  var category = getParam("category").trim().toLowerCase() || "fabric";
-  if (code) showProductPage(code, category);
-  else      showHome();
+window.addEventListener("DOMContentLoaded",function(){
+  var code    =getParam("code").trim().toUpperCase();
+  var category=getParam("category").trim().toLowerCase()||"fabric";
+  if(code) showProductPage(code,category);
+  else     showHome();
 });
 
-// ── HEADER ──
-function hdr(title, code, badge) {
+function hdr(title,code,badge){
   return '<div class="hdr">'
     +'<img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display=\'none\'" alt="Darla">'
     +'<div class="hdr-brand">Darla Sales &amp; Agencies</div>'
@@ -212,32 +201,30 @@ function hdr(title, code, badge) {
     +'</div>';
 }
 
-// ── HOME ──
-function showHome() {
-  var html = hdr("Product Lookup","",false)
+function showHome(){
+  var html=hdr("Product Lookup","",false)
     +'<div style="padding:16px 12px 8px;text-align:center">'
     +'<div style="font-size:13px;color:#555;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Select Category to Search</div>'
     +'</div><div class="cat-grid">';
-  Object.keys(CATS).forEach(function(key) {
-    var c = CATS[key];
-    html += '<div class="cat-btn" onclick="goSearch(\''+key+'\')">'
+  Object.keys(CATS).forEach(function(key){
+    var c=CATS[key];
+    html+='<div class="cat-btn" onclick="goSearch(\''+key+'\')">'
       +'<div class="cat-ico">'+c.icon+'</div>'
       +'<div class="cat-name">'+c.label+'</div></div>';
   });
-  html += '</div>';
-  document.getElementById("app").innerHTML = html;
+  html+='</div>';
+  document.getElementById("app").innerHTML=html;
 }
 
-function goSearch(cat) {
-  if (hasSearchAccess()) showAdvancedSearch(cat);
+function goSearch(cat){
+  if(hasSearchAccess()) showAdvancedSearch(cat);
   else showSearchGate(cat);
 }
 
-// ── PIN GATE (search access) ──
-var gateEn="", gateCat="";
-function showSearchGate(cat) {
+var gateEn="",gateCat="";
+function showSearchGate(cat){
   gateCat=cat; gateEn="";
-  document.getElementById("app").innerHTML =
+  document.getElementById("app").innerHTML=
     '<div class="pin-gate">'
     +'<img class="pin-gate-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display=\'none\'" alt="Darla">'
     +'<div class="pin-gate-title">Staff Access Required</div>'
@@ -254,30 +241,29 @@ function showSearchGate(cat) {
     +'<button class="pin-cancel" onclick="showHome()" style="color:#555;margin-top:8px">&#8592; Back</button>'
     +'</div>';
 }
-function gatePk(k){ if(gateEn.length>=4)return; gateEn+=k; gDots(); if(gateEn.length===4)setTimeout(gChk,80); }
-function gatePd(){ gateEn=gateEn.slice(0,-1); gDots(); }
+function gatePk(k){if(gateEn.length>=4)return;gateEn+=k;gDots();if(gateEn.length===4)setTimeout(gChk,80);}
+function gatePd(){gateEn=gateEn.slice(0,-1);gDots();}
 function gDots(err){
   for(var i=0;i<4;i++){
-    var d=document.getElementById("gd"+i); if(!d)return;
+    var d=document.getElementById("gd"+i);if(!d)return;
     d.className="dot";
-    if(err)d.classList.add("err"); else if(i<gateEn.length)d.classList.add("on");
+    if(err)d.classList.add("err");else if(i<gateEn.length)d.classList.add("on");
   }
 }
 function gChk(){
-  if(gateEn===PIN){ localStorage.setItem(SAK,"1"); showAdvancedSearch(gateCat); }
-  else{ gDots(true); setTimeout(function(){ gateEn=""; gDots(); },800); }
+  if(gateEn===PIN){localStorage.setItem(SAK,"1");showAdvancedSearch(gateCat);}
+  else{gDots(true);setTimeout(function(){gateEn="";gDots();},800);}
 }
 
-// ── ADVANCED SEARCH ──
-var BCM={}, BCSM={}, allBrands=[], currentCat="fabric";
+var BCM={},BCSM={},allBrands=[],currentCat="fabric";
 
-function showAdvancedSearch(cat) {
-  currentCat = String(cat||"fabric").toLowerCase();
-  var catInfo = CATS[currentCat] || CATS.fabric;
-  BCM={}; BCSM={}; allBrands=[];
+function showAdvancedSearch(cat){
+  currentCat=String(cat||"fabric").toLowerCase();
+  var catInfo=CATS[currentCat]||CATS.fabric;
+  BCM={};BCSM={};allBrands=[];
 
-  if (catInfo.codeSearch) {
-    document.getElementById("app").innerHTML =
+  if(catInfo.codeSearch){
+    document.getElementById("app").innerHTML=
       hdr(catInfo.label+" Search","",true)
       +'<div class="search-wrap"><div class="search-card">'
       +'<div class="field-lbl">Code</div><div class="lbl-line-sm"></div>'
@@ -290,19 +276,19 @@ function showAdvancedSearch(cat) {
       +'</div></div>'
       +'<div class="results-wrap"><div id="results"></div></div>';
     setTimeout(function(){
-      var inp = document.getElementById("codeInp");
-      if(inp) inp.addEventListener("keyup",function(e){ if(e.key==="Enter")doCodeSearch(); this.value=this.value.toUpperCase(); });
+      var inp=document.getElementById("codeInp");
+      if(inp) inp.addEventListener("keyup",function(e){if(e.key==="Enter")doCodeSearch();this.value=this.value.toUpperCase();});
     },0);
     return;
   }
 
-  document.getElementById("app").innerHTML =
+  document.getElementById("app").innerHTML=
     hdr(catInfo.label+" Search","",true)
     +'<div class="search-wrap"><div class="search-card">'
     +'<div id="status" class="status">Loading...</div>'
     +'<div class="field-lbl">Brand</div><div class="lbl-line-sm"></div>'
     +'<div class="autocomplete-wrap"><input class="ac-input" id="bInp" placeholder="Loading..." disabled autocomplete="off" spellcheck="false"><div class="dropdown" id="bDrop"></div></div>'
-    +'<div class="field-lbl">Catalog</div><div class="lbl-line-sm"></div>'
+    +'<div class="field-lbl">Product</div><div class="lbl-line-sm"></div>'
     +'<div class="autocomplete-wrap"><input class="ac-input" id="cInp" placeholder="Select brand first..." disabled autocomplete="off" spellcheck="false"><div class="dropdown" id="cDrop"></div></div>'
     +(catInfo.hasSno
       ?'<div class="field-lbl">S.No</div><div class="lbl-line-sm"></div>'
@@ -314,71 +300,59 @@ function showAdvancedSearch(cat) {
     +'</div></div>'
     +'<div class="results-wrap"><div id="results"></div></div>';
 
-  // *** THE FIX: setTimeout ensures DOM is rendered before we touch it ***
-  setTimeout(function(){ loadMeta(1); }, 500);
+  window._metaLoading=false;
+  setTimeout(function(){loadMeta(1);},150);
 }
 
-function loadMeta(attempt) {
-  // Guard against multiple simultaneous calls
-  if (window._metaLoading && attempt === 1) return;
-  if (attempt === 1) window._metaLoading = true;
+function loadMeta(attempt){
+  if(window._metaLoading&&attempt===1)return;
+  if(attempt===1)window._metaLoading=true;
 
-  var statusEl = document.getElementById("status");
-  if (!statusEl) { window._metaLoading = false; return; }
+  var st=document.getElementById("status");
+  if(!st){window._metaLoading=false;return;}
 
-  statusEl.textContent = attempt > 1 ? "Retrying... ("+attempt+"/3)" : "Loading...";
-  statusEl.style.color = "#555";
-  statusEl.style.cursor = "default";
-  statusEl.onclick = null;
+  st.textContent=attempt>1?"Retrying... ("+attempt+"/3)":"Loading...";
+  st.style.color="#555";
+  st.style.cursor="default";
+  st.onclick=null;
 
   fetch(FB+"/"+currentCat+"/meta.json")
-    .then(function(r){
-      if(!r.ok) throw new Error("HTTP "+r.status);
-      return r.json();
-    })
+    .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json();})
     .then(function(d){
-      window._metaLoading = false;  // ← ADD HERE (success)
-
-      var statusEl2 = document.getElementById("status");
-      var bInp2     = document.getElementById("bInp");
-      var btn2      = document.getElementById("searchBtn");
-      if(!statusEl2) return;
-
-      if(!d || !d.brandList || !d.brandList.length){
-        statusEl2.textContent = "No data yet for this category.";
+      window._metaLoading=false;
+      var st2=document.getElementById("status");
+      var bi =document.getElementById("bInp");
+      var btn=document.getElementById("searchBtn");
+      if(!st2)return;
+      if(!d||!d.brandList||!d.brandList.length){
+        st2.textContent="No data yet for this category.";
         return;
       }
-
-      allBrands = d.brandList.map(function(b){ return b.label||b; }).sort();
+      allBrands=d.brandList.map(function(b){return b.label||b;}).sort();
       d.brandList.forEach(function(b){
-        var bKey=b.key||b, bLabel=b.label||b;
-        BCM[bLabel] = (d.bcmArr[bKey]||[]).map(function(c){ return c.label||c; });
+        var bKey=b.key||b,bLabel=b.label||b;
+        BCM[bLabel]=(d.bcmArr[bKey]||[]).map(function(c){return c.label||c;});
         (d.bcmArr[bKey]||[]).forEach(function(c){
-          var cKey=c.key||c, cLabel=c.label||c;
-          BCSM[bLabel+"|||"+cLabel] = (d.bcsmArr[bKey+"|||"+cKey]||[]).map(function(s){ return s.label||s; });
+          var cKey=c.key||c,cLabel=c.label||c;
+          BCSM[bLabel+"|||"+cLabel]=(d.bcsmArr[bKey+"|||"+cKey]||[]).map(function(s){return s.label||s;});
         });
       });
-
-      if(bInp2){ bInp2.disabled=false; bInp2.placeholder="Type brand name..."; }
-      if(btn2)  btn2.disabled=false;
-      statusEl2.style.display="none";
+      if(bi){bi.disabled=false;bi.placeholder="Type brand name...";}
+      if(btn)btn.disabled=false;
+      st2.style.display="none";
       bindSearchEvents();
     })
     .catch(function(){
-      window._metaLoading = false;  // ← ADD HERE (failure)
-
-      var statusEl3 = document.getElementById("status");
-      if(!statusEl3) return;
-      if(attempt < 3){
-        setTimeout(function(){ loadMeta(attempt+1); }, 3000);
+      window._metaLoading=false;
+      var st3=document.getElementById("status");
+      if(!st3)return;
+      if(attempt<3){
+        setTimeout(function(){loadMeta(attempt+1);},3000);
       } else {
-        statusEl3.textContent = "Tap here to retry";
-        statusEl3.style.color = "#c0392b";
-        statusEl3.style.cursor = "pointer";
-        statusEl3.onclick = function(){ 
-          window._metaLoading = false;  // ← ADD HERE (manual retry)
-          loadMeta(1); 
-        };
+        st3.textContent="Tap here to retry";
+        st3.style.color="#c0392b";
+        st3.style.cursor="pointer";
+        st3.onclick=function(){window._metaLoading=false;loadMeta(1);};
       }
     });
 }
@@ -390,70 +364,60 @@ function bindSearchEvents(){
   var bDrop=document.getElementById("bDrop");
   var cDrop=document.getElementById("cDrop");
   var sDrop=document.getElementById("sDrop");
-  if(!bInp||!cInp) return;
+  if(!bInp||!cInp)return;
 
-  bInp.addEventListener("focus",function(){ showDrop(bDrop,filt(allBrands,this.value),bInp,pickBrand); });
+  bInp.addEventListener("focus",function(){showDrop(bDrop,filt(allBrands,this.value),bInp,pickBrand);});
   bInp.addEventListener("input",function(){
     if(cInp){cInp.value="";cInp.disabled=true;}
     if(sInp){sInp.value="";sInp.disabled=true;}
     showDrop(bDrop,filt(allBrands,this.value),bInp,pickBrand);
   });
-  bInp.addEventListener("blur",function(){ setTimeout(function(){ if(bDrop)bDrop.classList.remove("show"); },200); });
-
-  if(cInp){
-    cInp.addEventListener("focus",function(){ showDrop(cDrop,filt(BCM[bInp.value.trim()]||[],this.value),cInp,pickCatalog); });
-    cInp.addEventListener("input",function(){
-      if(sInp){sInp.value="";sInp.disabled=true;}
-      showDrop(cDrop,filt(BCM[bInp.value.trim()]||[],this.value),cInp,pickCatalog);
-    });
-    cInp.addEventListener("blur",function(){ setTimeout(function(){ if(cDrop)cDrop.classList.remove("show"); },200); });
-  }
+  bInp.addEventListener("blur",function(){setTimeout(function(){if(bDrop)bDrop.classList.remove("show");},200);});
+  cInp.addEventListener("focus",function(){showDrop(cDrop,filt(BCM[bInp.value.trim()]||[],this.value),cInp,pickCatalog);});
+  cInp.addEventListener("input",function(){
+    if(sInp){sInp.value="";sInp.disabled=true;}
+    showDrop(cDrop,filt(BCM[bInp.value.trim()]||[],this.value),cInp,pickCatalog);
+  });
+  cInp.addEventListener("blur",function(){setTimeout(function(){if(cDrop)cDrop.classList.remove("show");},200);});
   if(sInp){
     sInp.addEventListener("focus",function(){
-      var key=bInp.value.trim()+"|||"+cInp.value.trim();
-      showDrop(sDrop,filt(BCSM[key]||[],this.value),sInp,pickSno);
+      showDrop(sDrop,filt(BCSM[bInp.value.trim()+"|||"+cInp.value.trim()]||[],this.value),sInp,pickSno);
     });
     sInp.addEventListener("input",function(){
-      var key=bInp.value.trim()+"|||"+cInp.value.trim();
-      showDrop(sDrop,filt(BCSM[key]||[],this.value),sInp,pickSno);
+      showDrop(sDrop,filt(BCSM[bInp.value.trim()+"|||"+cInp.value.trim()]||[],this.value),sInp,pickSno);
     });
-    sInp.addEventListener("blur",function(){ setTimeout(function(){ if(sDrop)sDrop.classList.remove("show"); },200); });
+    sInp.addEventListener("blur",function(){setTimeout(function(){if(sDrop)sDrop.classList.remove("show");},200);});
   }
 }
 
 function pickBrand(v){
-  var bInp=document.getElementById("bInp"); if(bInp) bInp.value=v;
-  var bDrop=document.getElementById("bDrop"); if(bDrop) bDrop.classList.remove("show");
-  var c=document.getElementById("cInp"); if(c){c.disabled=false;c.placeholder="Type catalog...";c.value="";}
-  var s=document.getElementById("sInp"); if(s){s.disabled=true;s.value="";}
-  if(c) c.focus();
+  var bi=document.getElementById("bInp");if(bi)bi.value=v;
+  var bd=document.getElementById("bDrop");if(bd)bd.classList.remove("show");
+  var ci=document.getElementById("cInp");if(ci){ci.disabled=false;ci.placeholder="Type product...";ci.value="";}
+  var si=document.getElementById("sInp");if(si){si.disabled=true;si.value="";}
+  if(ci)ci.focus();
 }
 function pickCatalog(v){
-  var cInp=document.getElementById("cInp"); if(cInp) cInp.value=v;
-  var cDrop=document.getElementById("cDrop"); if(cDrop) cDrop.classList.remove("show");
-  var s=document.getElementById("sInp"); if(s){s.disabled=false;s.placeholder="Optional — leave blank for all";s.value="";s.focus();}
+  var ci=document.getElementById("cInp");if(ci)ci.value=v;
+  var cd=document.getElementById("cDrop");if(cd)cd.classList.remove("show");
+  var si=document.getElementById("sInp");if(si){si.disabled=false;si.placeholder="Optional — leave blank for all";si.value="";si.focus();}
 }
 function pickSno(v){
-  var sInp=document.getElementById("sInp"); if(sInp) sInp.value=v;
-  var sDrop=document.getElementById("sDrop"); if(sDrop) sDrop.classList.remove("show");
+  var si=document.getElementById("sInp");if(si)si.value=v;
+  var sd=document.getElementById("sDrop");if(sd)sd.classList.remove("show");
 }
 
-// ── SEARCH ──
 function doCodeSearch(){
-  var inp = document.getElementById("codeInp");
-  if(!inp) return;
-  var code = codeKey(inp.value.trim());
-  if(!code) return;
-  var res = document.getElementById("results");
-  if(res) res.innerHTML = spinner("Searching...");
-
+  var inp=document.getElementById("codeInp");if(!inp)return;
+  var code=codeKey(inp.value.trim());if(!code)return;
+  var res=document.getElementById("results");if(res)res.innerHTML=spinner("Searching...");
   fetch(FB+"/"+currentCat+"/by_code/"+encodeURIComponent(code)+".json")
-    .then(function(r){ return r.json(); })
+    .then(function(r){return r.json();})
     .then(function(d){
-      if(!d){ renderRows([],currentCat); return; }
-      renderRows(Array.isArray(d)?d:Object.values(d), currentCat);
+      if(!d){renderRows([],currentCat);return;}
+      renderRows(Array.isArray(d)?d:Object.values(d),currentCat);
     })
-    .catch(function(){ var r=document.getElementById("results"); if(r) r.innerHTML='<div class="nf"><h3>Error</h3><p>Please try again.</p></div>'; });
+    .catch(function(){var r=document.getElementById("results");if(r)r.innerHTML='<div class="nf"><h3>Error</h3><p>Please try again.</p></div>';});
 }
 
 function doSearch(){
@@ -463,34 +427,31 @@ function doSearch(){
   var b=bInp?bInp.value.trim():"";
   var c=cInp?cInp.value.trim():"";
   var s=sInp?sInp.value.trim():"";
-  if(!b&&!c&&!s) return;
-  var res=document.getElementById("results");
-  if(res) res.innerHTML=spinner("Searching...");
-
-  var bKey=sk(b), cKey=sk(c), sKey=sk(s);
+  if(!b&&!c&&!s)return;
+  var res=document.getElementById("results");if(res)res.innerHTML=spinner("Searching...");
+  var bKey=sk(b),cKey=sk(c),sKey=sk(s);
   var url;
-  if(bKey&&bKey!=="?"&&cKey&&cKey!=="?"&&sKey&&sKey!=="?")
+  if(bKey&&bKey!="_"&&cKey&&cKey!="_"&&sKey&&sKey!="_")
     url=FB+"/"+currentCat+"/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+"/"+encodeURIComponent(sKey)+".json";
-  else if(bKey&&bKey!=="?"&&cKey&&cKey!=="?")
+  else if(bKey&&bKey!="_"&&cKey&&cKey!="_")
     url=FB+"/"+currentCat+"/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+".json";
-  else if(bKey&&bKey!=="?")
+  else if(bKey&&bKey!="_")
     url=FB+"/"+currentCat+"/by_brand/"+encodeURIComponent(bKey)+".json";
   else
     url=FB+"/"+currentCat+"/by_code.json";
-
   fetch(url)
-    .then(function(r){ return r.json(); })
+    .then(function(r){return r.json();})
     .then(function(data){
-      if(!data){ renderRows([],currentCat); return; }
+      if(!data){renderRows([],currentCat);return;}
       var results=[];
       function flatten(obj){
-        if(Array.isArray(obj)) obj.forEach(function(item){ if(item&&item.code)results.push(item); });
-        else if(obj&&typeof obj==="object") Object.values(obj).forEach(function(v){ flatten(v); });
+        if(Array.isArray(obj))obj.forEach(function(item){if(item&&item.code)results.push(item);});
+        else if(obj&&typeof obj==="object")Object.values(obj).forEach(function(v){flatten(v);});
       }
       flatten(data);
       renderRows(results,currentCat);
     })
-    .catch(function(){ var r=document.getElementById("results"); if(r) r.innerHTML='<div class="nf"><h3>Error</h3><p>Please try again.</p></div>'; });
+    .catch(function(){var r=document.getElementById("results");if(r)r.innerHTML='<div class="nf"><h3>Error</h3><p>Please try again.</p></div>';});
 }
 
 function clearSearch(){
@@ -498,83 +459,82 @@ function clearSearch(){
     var el=document.getElementById(id);
     if(el){el.value="";if(id!=="bInp"&&id!=="codeInp")el.disabled=true;}
   });
-  var r=document.getElementById("results"); if(r) r.innerHTML="";
+  var r=document.getElementById("results");if(r)r.innerHTML="";
 }
 
-// ── PRODUCT PAGE ──
-function showProductPage(code, cat) {
-  var safeCode = codeKey(code);
-  var safeCat  = String(cat||"fabric").toLowerCase();
-  document.getElementById("app").innerHTML =
+function showProductPage(code,cat){
+  var safeCode=codeKey(code);
+  var safeCat=String(cat||"fabric").toLowerCase();
+  document.getElementById("app").innerHTML=
     hdr("Product Details",code,true)
     +'<div class="wrap"><div id="results">'+spinner("Loading...")+'</div></div>'
     +'<button class="fab-btn" id="fabBtn" onclick="openStaffPin()">&#128274; Staff Login</button>';
-
   fetch(FB+"/"+safeCat+"/by_code/"+encodeURIComponent(safeCode)+".json")
-    .then(function(r){ return r.json(); })
+    .then(function(r){return r.json();})
     .then(function(d){
-      if(!d){ renderRows([],safeCat); return; }
-      renderRows(Array.isArray(d)?d:Object.values(d), safeCat);
+      if(!d){renderRows([],safeCat);return;}
+      renderRows(Array.isArray(d)?d:Object.values(d),safeCat);
     })
     .catch(function(){
       var r=document.getElementById("results");
-      if(r) r.innerHTML='<div class="nf"><h3>Error</h3><p>Please try again</p><a class="back-link" href="'+BASE+'">&#8592; Home</a></div>';
+      if(r)r.innerHTML='<div class="nf"><h3>Error</h3><p>Please try again</p><a class="back-link" href="'+BASE+'">&#8592; Home</a></div>';
     });
 }
 
-// ── RENDER ──
-function renderRows(rows, cat){
-  var el=document.getElementById("results");
-  if(!el) return;
+function renderRows(rows,cat){
+  var el=document.getElementById("results");if(!el)return;
   if(!rows||!rows.length){
     el.innerHTML='<div class="nf"><div class="nf-ico">&#128269;</div><h3>Not Found</h3><p>No matching products</p><a class="back-link" href="'+BASE+'">&#8592; Home</a></div>';
     return;
   }
-  window._rows=rows; window._cat=cat;
+  window._rows=rows;window._cat=cat;
   var staff=isStaff();
-  el.innerHTML = staff ? buildStaff(rows,cat) : buildPublic(rows,cat);
+  el.innerHTML=staff?buildStaff(rows,cat):buildPublic(rows,cat);
   var fb=document.getElementById("fabBtn");
   var sb=document.getElementById("sBadge");
-  if(staff){ if(sb)sb.style.display="inline-block"; if(fb)fb.style.display="none"; }
-  else{ if(fb)fb.style.display="flex"; }
+  if(staff){if(sb)sb.style.display="inline-block";if(fb)fb.style.display="none";}
+  else{if(fb)fb.style.display="flex";}
 }
 
-// ── CARD BUILDERS ──
-function buildPublic(rows,cat){
-  return rows.length===1 ? buildSinglePublic(rows[0],cat) : buildTablePublic(rows,cat);
-}
-function buildStaff(rows,cat){
-  return rows.length===1 ? buildSingleStaff(rows[0],cat) : buildTableStaff(rows,cat);
-}
+function isBedsCat(cat){return cat==="beds";}
+
+function buildPublic(rows,cat){return rows.length===1?buildSinglePublic(rows[0],cat):buildTablePublic(rows,cat);}
+function buildStaff(rows,cat){return rows.length===1?buildSingleStaff(rows[0],cat):buildTableStaff(rows,cat);}
 
 function buildSinglePublic(r,cat){
-  var sno     = gv(r,"s_no")||gv(r,"s.no")||"";
-  var mrpLbl  = cat==="mattresses"?"MRP":"MRP / METRE";
+  var isBeds=isBedsCat(cat);
+  var sno=gv(r,"s_no")||gv(r,"s.no")||"";
+  var product=r.product||r.catalog||"";
+  var mrpLbl=isBeds?"MRP":"MRP / METRE";
   var html='<div class="item-group">';
-  if(r.catalog)    html+=card("CATALOG",r.catalog,"card-accent-blue");
+  if(product)      html+=card(isBeds?"PRODUCT":"CATALOG",product,"card-accent-blue");
   if(sno)          html+=card("S.NO",sno,"card-accent-blue");
   if(r.width)      html+=card("WIDTH",r.width,"");
-  if(r.mrp)        html+=cardMrp(r.mrp,mrpLbl);
+  if(r.length)     html+=card("LENGTH",r.length,"");
   if(r.thickness)  html+=card("THICKNESS",r.thickness,"");
   if(r.size)       html+=card("SIZE",r.size,"");
+  if(r.mrp)        html+=cardMrp(r.mrp,mrpLbl);
   return html+'</div>';
 }
 
 function buildSingleStaff(r,cat){
-  var sno     = gv(r,"s_no")||gv(r,"s.no")||"";
-  var item    = gv(r,"item_details")||gv(r,"item details")||"";
-  var blind   = gv(r,"blind_type")||gv(r,"blind type")||"";
-  var mrpLbl  = cat==="mattresses"?"MRP":"MRP / METRE";
+  var isBeds=isBedsCat(cat);
+  var sno=gv(r,"s_no")||gv(r,"s.no")||"";
+  var product=r.product||r.catalog||"";
+  var item=gv(r,"item_details")||gv(r,"item details")||"";
+  var blind=gv(r,"blind_type")||gv(r,"blind type")||"";
+  var mrpLbl=isBeds?"MRP":"MRP / METRE";
   var html='<div class="item-group">';
   if(r.code)      html+=card("CODE",r.code,"card-accent-blue");
   if(r.brand)     html+=card("BRAND",r.brand,"card-accent-red");
-  if(r.catalog)   html+=card("CATALOG",r.catalog,"card-accent-blue");
+  if(product)     html+=card(isBeds?"PRODUCT":"CATALOG",product,"card-accent-blue");
   if(blind)       html+=card("BLIND TYPE",blind,"card-accent-blue");
   if(sno)         html+=card("S.NO",sno,"");
   if(item)        html+=cardSm("ITEM DETAILS",item);
   if(r.mechanism) html+=card("MECHANISM",r.mechanism,"");
   if(r.others)    html+=card("OTHERS",r.others,"");
   if(r.width)     html+=card("WIDTH",r.width,"");
+  if(r.length)    html+=card("LENGTH",r.length,"");
   if(r.thickness) html+=card("THICKNESS",r.thickness,"");
   if(r.size)      html+=card("SIZE",r.size,"");
   if(r.mrp)       html+=cardMrp(r.mrp,mrpLbl);
@@ -584,114 +544,115 @@ function buildSingleStaff(r,cat){
 }
 
 function buildTablePublic(rows,cat){
+  var isBeds=isBedsCat(cat);
+  var colHdr=isBeds?"Size":"Width";
   var html='<div class="count-badge"><span class="count-txt">Items Found</span><span class="count-num">'+rows.length+' items</span></div>'
-    +'<div class="tbl-wrap"><div class="tbl-head" style="grid-template-columns:1fr 70px 80px 24px">'
-    +'<span>S.No / Catalog</span><span style="text-align:center">Width</span><span style="text-align:center">MRP</span><span></span></div>';
+    +'<div class="tbl-wrap"><div class="tbl-head" style="grid-template-columns:1fr 80px 80px 24px">'
+    +'<span>Product / Details</span><span style="text-align:center">'+colHdr+'</span><span style="text-align:center">MRP</span><span></span></div>';
   rows.forEach(function(r){
-    var sno    = gv(r,"s_no")||gv(r,"s.no")||"";
-var catalog= r.catalog||(gv(r,"blind_type")||gv(r,"blind type"))||"";
-var item   = gv(r,"item_details")||gv(r,"item details")||"";
-var sub    = sno ? catalog : (item || catalog);
-var main   = sno || catalog || "—";
-    var width  = r.width||r.size||r.thickness||"";
-    var mrp    = r.mrp||"";
-    var item   = gv(r,"item_details")||gv(r,"item details")||"";
-    var hasX   = item||r.mechanism||r.others||r.link;
-    html+='<div class="tbl-row" style="grid-template-columns:1fr 70px 80px 24px" onclick="toggleRow(this)">'
-      +'<div><div class="tr-main">'+esc(main)+'</div><div class="tr-sub">'+esc(sub)+'</div></div>'
-      +'<div style="text-align:center;font-size:13px;color:#aaa;font-weight:600">'+(width?esc(width):"—")+'</div>'
+    var product=r.product||r.catalog||gv(r,"blind_type")||gv(r,"blind type")||"";
+    var sno=gv(r,"s_no")||gv(r,"s.no")||"";
+    var item=gv(r,"item_details")||gv(r,"item details")||"";
+    var colVal=isBeds?(r.size||(r.width&&r.length?r.width+"x"+r.length:r.width)||r.thickness||""):(r.width||r.size||r.thickness||"");
+    var mrp=r.mrp||"";
+    var main=product||"—";
+    var sub=isBeds?(r.thickness?r.thickness+" thick":""):(sno||item||"");
+    var hasX=isBeds?(r.width||r.length||r.thickness||r.size||r.link):(item||r.mechanism||r.others||r.link);
+    html+='<div class="tbl-row" style="grid-template-columns:1fr 80px 80px 24px" onclick="toggleRow(this)">'
+      +'<div><div class="tr-main">'+esc(main)+'</div>'+(sub?'<div class="tr-sub">'+esc(sub)+'</div>':'')+'</div>'
+      +'<div style="text-align:center;font-size:13px;color:#aaa;font-weight:600">'+(colVal?esc(colVal):"—")+'</div>'
       +'<div style="text-align:center">'+(mrp?'<span class="tr-mrp">&#8377;'+esc(mrp)+'</span>':'<span style="color:#555;font-size:13px">—</span>')+'</div>'
       +'<div class="tr-arr">'+(hasX?"&#8250;":"")+'</div></div>'
       +'<div class="exp-panel">'
-      +(hasX?expLine("Item Details",item)+expLine("Mechanism",r.mechanism)+expLine("Others",r.others)+expLinkLine(r.link):"")
+      +(isBeds
+        ?expLine("Width",r.width)+expLine("Length",r.length)+expLine("Thickness",r.thickness)+expLine("Size",r.size)+expLinkLine(r.link)
+        :expLine("S.No",sno)+expLine("Item Details",item)+expLine("Mechanism",r.mechanism)+expLine("Others",r.others)+expLinkLine(r.link))
       +'</div>';
   });
   return html+'</div><div class="tbl-hint">Tap row to expand details</div>';
 }
 
 function buildTableStaff(rows,cat){
+  var isBeds=isBedsCat(cat);
+  var colHdr=isBeds?"Size":"Width";
   var html='<div class="count-badge"><span class="count-txt">Items Found</span><span class="count-num">'+rows.length+' items</span></div>'
-    +'<div class="tbl-wrap"><div class="tbl-head" style="grid-template-columns:1fr 70px 80px 24px">'
-    +'<span>S.No / Catalog</span><span style="text-align:center">Width</span><span style="text-align:center">MRP</span><span></span></div>';
+    +'<div class="tbl-wrap"><div class="tbl-head" style="grid-template-columns:1fr 80px 80px 24px">'
+    +'<span>Product / Details</span><span style="text-align:center">'+colHdr+'</span><span style="text-align:center">MRP</span><span></span></div>';
   rows.forEach(function(r){
-var sno    = gv(r,"s_no")||gv(r,"s.no")||"";
-var catalog= r.catalog||(gv(r,"blind_type")||gv(r,"blind type"))||"";
-var item   = gv(r,"item_details")||gv(r,"item details")||"";
-var sub    = sno ? catalog : (item || catalog);
-var main   = sno || catalog || "—";
-    var width  = r.width||r.size||r.thickness||"";
-    var mrp    = r.mrp||"";
-    var item   = gv(r,"item_details")||gv(r,"item details")||"";
-    var blind  = gv(r,"blind_type")||gv(r,"blind type")||"";
-    var hasX   = item||r.mechanism||r.others||r.brand||r.code||r.link;
-    html+='<div class="tbl-row" style="grid-template-columns:1fr 70px 80px 24px" onclick="toggleRow(this)">'
-      +'<div><div class="tr-main">'+esc(main)+'</div><div class="tr-sub">'+esc(sub)+'</div></div>'
-      +'<div style="text-align:center;font-size:13px;color:#aaa;font-weight:600">'+(width?esc(width):"—")+'</div>'
+    var product=r.product||r.catalog||gv(r,"blind_type")||gv(r,"blind type")||"";
+    var sno=gv(r,"s_no")||gv(r,"s.no")||"";
+    var item=gv(r,"item_details")||gv(r,"item details")||"";
+    var blind=gv(r,"blind_type")||gv(r,"blind type")||"";
+    var colVal=isBeds?(r.size||(r.width&&r.length?r.width+"x"+r.length:r.width)||r.thickness||""):(r.width||r.size||r.thickness||"");
+    var mrp=r.mrp||"";
+    var main=product||"—";
+    var sub=isBeds?(r.thickness?r.thickness+" thick":""):(sno||item||"");
+    var hasX=true;
+    html+='<div class="tbl-row" style="grid-template-columns:1fr 80px 80px 24px" onclick="toggleRow(this)">'
+      +'<div><div class="tr-main">'+esc(main)+'</div>'+(sub?'<div class="tr-sub">'+esc(sub)+'</div>':'')+'</div>'
+      +'<div style="text-align:center;font-size:13px;color:#aaa;font-weight:600">'+(colVal?esc(colVal):"—")+'</div>'
       +'<div style="text-align:center">'+(mrp?'<span class="tr-mrp">&#8377;'+esc(mrp)+'</span>':'<span style="color:#555;font-size:13px">—</span>')+'</div>'
-      +'<div class="tr-arr">'+(hasX?"&#8250;":"")+'</div></div>'
+      +'<div class="tr-arr">&#8250;</div></div>'
       +'<div class="exp-panel">'
       +expLine("Code",r.code)+expLine("Brand",r.brand)
-      +expLine("Item Details",item)+expLine("Blind Type",blind)
-      +expLine("Mechanism",r.mechanism)+expLine("Others",r.others)
-      +expLine("Thickness",r.thickness)+expLine("Size",r.size)
+      +(isBeds
+        ?expLine("Width",r.width)+expLine("Length",r.length)+expLine("Thickness",r.thickness)+expLine("Size",r.size)
+        :expLine("S.No",sno)+expLine("Item Details",item)+expLine("Blind Type",blind)+expLine("Mechanism",r.mechanism)+expLine("Others",r.others))
       +expLinkLine(r.link)
       +'</div>';
   });
   return html+'</div><div class="tbl-hint">Tap row to expand details</div>';
 }
 
-// ── HELPERS ──
-function card(lbl,val,cls){ if(!val)return""; return '<div class="card '+(cls||'')+'"><div class="lbl">'+lbl+'</div><div class="lbl-line"></div><div class="val">'+esc(val)+'</div></div>'; }
-function cardSm(lbl,val){ if(!val)return""; return '<div class="card"><div class="lbl">'+lbl+'</div><div class="lbl-line"></div><div class="val-sm">'+esc(val)+'</div></div>'; }
-function cardMrp(val,lbl){ if(!val)return""; return '<div class="card card-mrp"><div class="lbl lbl-dark">'+(lbl||"MRP / METRE")+'</div><div class="lbl-line"></div><div class="mrp-row"><span class="rsym">&#8377;</span><span class="mrp-val">'+esc(val)+'</span></div></div>'; }
-function expLine(lbl,val){ if(!val)return""; return '<div class="exp-line"><span class="exp-lbl">'+lbl+'</span><span class="exp-val">'+esc(val)+'</span></div>'; }
-function expLinkLine(url){ if(!url||url.indexOf("http")!==0)return""; return '<div class="exp-line"><span class="exp-lbl">Link</span><span class="exp-val"><a class="exp-link" href="'+esc(url)+'" target="_blank">View &#8599;</a></span></div>'; }
+function card(lbl,val,cls){if(!val)return"";return '<div class="card '+(cls||'')+'"><div class="lbl">'+lbl+'</div><div class="lbl-line"></div><div class="val">'+esc(val)+'</div></div>';}
+function cardSm(lbl,val){if(!val)return"";return '<div class="card"><div class="lbl">'+lbl+'</div><div class="lbl-line"></div><div class="val-sm">'+esc(val)+'</div></div>';}
+function cardMrp(val,lbl){if(!val)return"";return '<div class="card card-mrp"><div class="lbl lbl-dark">'+(lbl||"MRP / METRE")+'</div><div class="lbl-line"></div><div class="mrp-row"><span class="rsym">&#8377;</span><span class="mrp-val">'+esc(val)+'</span></div></div>';}
+function expLine(lbl,val){if(!val)return"";return '<div class="exp-line"><span class="exp-lbl">'+lbl+'</span><span class="exp-val">'+esc(val)+'</span></div>';}
+function expLinkLine(url){if(!url||url.indexOf("http")!==0)return"";return '<div class="exp-line"><span class="exp-lbl">Link</span><span class="exp-val"><a class="exp-link" href="'+esc(url)+'" target="_blank">View &#8599;</a></span></div>';}
 
 function toggleRow(row){
   var panel=row.nextElementSibling;
   var isOpen=panel.classList.contains("show");
-  document.querySelectorAll(".exp-panel.show").forEach(function(p){ p.classList.remove("show"); });
-  document.querySelectorAll(".tbl-row.open").forEach(function(r){ r.classList.remove("open"); });
-  if(!isOpen){ panel.classList.add("show"); row.classList.add("open"); row.scrollIntoView({behavior:"smooth",block:"nearest"}); }
+  document.querySelectorAll(".exp-panel.show").forEach(function(p){p.classList.remove("show");});
+  document.querySelectorAll(".tbl-row.open").forEach(function(r){r.classList.remove("open");});
+  if(!isOpen){panel.classList.add("show");row.classList.add("open");row.scrollIntoView({behavior:"smooth",block:"nearest"});}
 }
-
 function filt(arr,q){
   if(!arr||!arr.length)return[];
   if(!q||!q.trim())return arr.slice(0,50);
   var l=q.trim().toLowerCase();
-  return arr.filter(function(x){ return String(x).toLowerCase().indexOf(l)!==-1; }).slice(0,50);
+  return arr.filter(function(x){return String(x).toLowerCase().indexOf(l)!==-1;}).slice(0,50);
 }
 function showDrop(drop,items,inp,onSel){
-  if(!drop||!items||!items.length){ if(drop)drop.classList.remove("show"); return; }
+  if(!drop||!items||!items.length){if(drop)drop.classList.remove("show");return;}
   var q=(inp.value||"").trim().toLowerCase();
   var h=items.map(function(item){
     var s=String(item).replace(/&/g,"&amp;").replace(/</g,"&lt;");
     var hi=q?s.replace(new RegExp("("+q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","gi"),"<mark>$1</mark>"):s;
     return "<div class='dd-item' onmousedown='selItem(this,event)'>"+hi+"</div>";
   }).join("");
-  drop.innerHTML=h; drop.classList.add("show"); drop._cb=onSel;
+  drop.innerHTML=h;drop.classList.add("show");drop._cb=onSel;
 }
-function selItem(el,ev){ ev.preventDefault(); var cb=el.parentElement._cb; if(cb)cb(el.textContent); }
+function selItem(el,ev){ev.preventDefault();var cb=el.parentElement._cb;if(cb)cb(el.textContent);}
 
-// ── STAFF PIN ──
 var staffEn="";
-function openStaffPin(){ staffEn=""; sDots(); document.getElementById("pOv").classList.add("open"); }
-function closeStaffPin(){ document.getElementById("pOv").classList.remove("open"); staffEn=""; sDots(); }
-function staffPk(k){ if(staffEn.length>=4)return; staffEn+=k; sDots(); if(staffEn.length===4)setTimeout(sChk,80); }
-function staffPd(){ staffEn=staffEn.slice(0,-1); sDots(); }
+function openStaffPin(){staffEn="";sDots();document.getElementById("pOv").classList.add("open");}
+function closeStaffPin(){document.getElementById("pOv").classList.remove("open");staffEn="";sDots();}
+function staffPk(k){if(staffEn.length>=4)return;staffEn+=k;sDots();if(staffEn.length===4)setTimeout(sChk,80);}
+function staffPd(){staffEn=staffEn.slice(0,-1);sDots();}
 function sDots(err){
   for(var i=0;i<4;i++){
-    var d=document.getElementById("d"+i); if(!d)return;
+    var d=document.getElementById("d"+i);if(!d)return;
     d.className="dot";
-    if(err)d.classList.add("err"); else if(i<staffEn.length)d.classList.add("on");
+    if(err)d.classList.add("err");else if(i<staffEn.length)d.classList.add("on");
   }
 }
 function sChk(){
   if(staffEn===PIN){
-    localStorage.setItem(SK,"1"); localStorage.setItem(SAK,"1");
+    localStorage.setItem(SK,"1");localStorage.setItem(SAK,"1");
     closeStaffPin();
-    if(window._rows) renderRows(window._rows, window._cat||"fabric");
-  } else { sDots(true); setTimeout(function(){ staffEn=""; sDots(); },800); }
+    if(window._rows)renderRows(window._rows,window._cat||"fabric");
+  } else {sDots(true);setTimeout(function(){staffEn="";sDots();},800);}
 }
 </script>
 </body>
