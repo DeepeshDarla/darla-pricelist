@@ -589,13 +589,16 @@ function buildTablePublic(rows,cat){
     +'<span>S.No / Catalog</span><span style="text-align:center">Width</span><span style="text-align:center">MRP</span><span></span></div>';
   rows.forEach(function(r){
     var sno    = gv(r,"s_no")||gv(r,"s.no")||"";
-    var catalog= r.catalog||(gv(r,"blind_type")||gv(r,"blind type"))||"";
+var catalog= r.catalog||(gv(r,"blind_type")||gv(r,"blind type"))||"";
+var item   = gv(r,"item_details")||gv(r,"item details")||"";
+var sub    = sno ? catalog : (item || catalog);
+var main   = sno || catalog || "—";
     var width  = r.width||r.size||r.thickness||"";
     var mrp    = r.mrp||"";
     var item   = gv(r,"item_details")||gv(r,"item details")||"";
     var hasX   = item||r.mechanism||r.others||r.link;
     html+='<div class="tbl-row" style="grid-template-columns:1fr 70px 80px 24px" onclick="toggleRow(this)">'
-      +'<div><div class="tr-main">'+esc(sno||"—")+'</div><div class="tr-sub">'+esc(catalog)+'</div></div>'
+      +'<div><div class="tr-main">'+esc(main)+'</div><div class="tr-sub">'+esc(sub)+'</div></div>'
       +'<div style="text-align:center;font-size:13px;color:#aaa;font-weight:600">'+(width?esc(width):"—")+'</div>'
       +'<div style="text-align:center">'+(mrp?'<span class="tr-mrp">&#8377;'+esc(mrp)+'</span>':'<span style="color:#555;font-size:13px">—</span>')+'</div>'
       +'<div class="tr-arr">'+(hasX?"&#8250;":"")+'</div></div>'
@@ -611,15 +614,18 @@ function buildTableStaff(rows,cat){
     +'<div class="tbl-wrap"><div class="tbl-head" style="grid-template-columns:1fr 70px 80px 24px">'
     +'<span>S.No / Catalog</span><span style="text-align:center">Width</span><span style="text-align:center">MRP</span><span></span></div>';
   rows.forEach(function(r){
-    var sno    = gv(r,"s_no")||gv(r,"s.no")||"";
-    var catalog= r.catalog||(gv(r,"blind_type")||gv(r,"blind type"))||"";
+var sno    = gv(r,"s_no")||gv(r,"s.no")||"";
+var catalog= r.catalog||(gv(r,"blind_type")||gv(r,"blind type"))||"";
+var item   = gv(r,"item_details")||gv(r,"item details")||"";
+var sub    = sno ? catalog : (item || catalog);
+var main   = sno || catalog || "—";
     var width  = r.width||r.size||r.thickness||"";
     var mrp    = r.mrp||"";
     var item   = gv(r,"item_details")||gv(r,"item details")||"";
     var blind  = gv(r,"blind_type")||gv(r,"blind type")||"";
     var hasX   = item||r.mechanism||r.others||r.brand||r.code||r.link;
     html+='<div class="tbl-row" style="grid-template-columns:1fr 70px 80px 24px" onclick="toggleRow(this)">'
-      +'<div><div class="tr-main">'+esc(sno||"—")+'</div><div class="tr-sub">'+esc(catalog)+'</div></div>'
+      +'<div><div class="tr-main">'+esc(main)+'</div><div class="tr-sub">'+esc(sub)+'</div></div>'
       +'<div style="text-align:center;font-size:13px;color:#aaa;font-weight:600">'+(width?esc(width):"—")+'</div>'
       +'<div style="text-align:center">'+(mrp?'<span class="tr-mrp">&#8377;'+esc(mrp)+'</span>':'<span style="color:#555;font-size:13px">—</span>')+'</div>'
       +'<div class="tr-arr">'+(hasX?"&#8250;":"")+'</div></div>'
