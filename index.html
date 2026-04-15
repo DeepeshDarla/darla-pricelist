@@ -118,7 +118,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 </head>
 <body>
 <div id="app"></div>
-
 <div class="pin-ov" id="pOv">
   <div class="pin-sheet">
     <div class="pin-handle"></div>
@@ -145,8 +144,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
     <button class="pin-cancel" onclick="closeStaffPin()">Cancel</button>
   </div>
 </div>
-
 <script>
+// ── CONSTANTS ──
 var FB   = "https://pricelist-qr-codes-default-rtdb.asia-southeast1.firebasedatabase.app";
 var PIN  = "1516";
 var SK   = "darla_staff_v1";
@@ -162,27 +161,39 @@ var CATS = {
   mattress:   { label:"Mattress",   icon:"🛏️", hasSno:false, codeSearch:false }
 };
 
-// ── UNIVERSAL KEY SANITIZER — matches Apps Script exactly ──
+// ── SANITIZERS — must match Apps Script exactly ──
+// For Firebase keys (brands, catalogs, s.no)
 function sk(str) {
-  return String(str||"")
-    .trim()
-    .replace(/[^a-zA-Z0-9\-_]/g, "_")
-    .replace(/_+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    || "_";
+  return String(str||"").trim()
+    .replace(/[^a-zA-Z0-9\-_]/g,"_")
+    .replace(/_+/g,"_")
+    .replace(/^_+|_+$/g,"")
+    ||"_";
 }
-
-// ── CODE KEY — matches Apps Script codeKey() ──
+// For product codes (strips everything except alphanumeric and dash)
 function codeKey(str) {
-  return String(str||"").trim().toUpperCase().replace(/[^A-Z0-9\-]/g, "");
+  return String(str||"").trim().toUpperCase().replace(/[^A-Z0-9\-]/g,"");
 }
 
+// ── HELPERS ──
 function getParam(n){ return new URLSearchParams(window.location.search).get(n)||""; }
-function esc(t){ if(!t)return""; return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function esc(t){
+  if(!t)return"";
+  return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
 function spinner(m){ return '<div class="spinner"><div class="spinner-ring"></div><p>'+(m||"Loading...")+'</p></div>'; }
 function isStaff(){ return localStorage.getItem(SK)==="1"; }
 function hasSearchAccess(){ return localStorage.getItem(SAK)==="1"; }
 
+// Get field value — handles both sanitized keys (s_no) and original keys (s.no)
+function gv(r, key) {
+  if(!r) return "";
+  // Try sanitized key first, then original, then common variants
+  var sanitized = key.replace(/[^a-z0-9_]/g,"_").replace(/_+/g,"_").replace(/^_|_$/g,"");
+  return r[sanitized] || r[key] || "";
+}
+
+// ── INIT ──
 window.addEventListener("DOMContentLoaded", function() {
   var code     = getParam("code").trim().toUpperCase();
   var category = getParam("category").trim().toLowerCase() || "fabric";
@@ -190,164 +201,180 @@ window.addEventListener("DOMContentLoaded", function() {
   else      showHome();
 });
 
+// ── HEADER ──
 function hdr(title, code, badge) {
   return '<div class="hdr">'
-    + '<img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display=\'none\'" alt="Darla">'
-    + '<div class="hdr-brand">Darla Sales &amp; Agencies</div>'
-    + '<div class="hdr-title">'+esc(title)+'</div>'
-    + (code ? '<div class="hdr-code">'+esc(code)+'</div>' : '')
-    + (badge ? '<div class="staff-badge" id="sBadge">&#10003; Staff View</div>' : '')
-    + '</div>';
+    +'<img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display=\'none\'" alt="Darla">'
+    +'<div class="hdr-brand">Darla Sales &amp; Agencies</div>'
+    +'<div class="hdr-title">'+esc(title)+'</div>'
+    +(code?'<div class="hdr-code">'+esc(code)+'</div>':'')
+    +(badge?'<div class="staff-badge" id="sBadge">&#10003; Staff View</div>':'')
+    +'</div>';
 }
 
+// ── HOME ──
 function showHome() {
   var html = hdr("Product Lookup","",false)
-    + '<div style="padding:16px 12px 8px;text-align:center">'
-    + '<div style="font-size:13px;color:#555;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Select Category to Search</div>'
-    + '</div><div class="cat-grid">';
+    +'<div style="padding:16px 12px 8px;text-align:center">'
+    +'<div style="font-size:13px;color:#555;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Select Category to Search</div>'
+    +'</div><div class="cat-grid">';
   Object.keys(CATS).forEach(function(key) {
     var c = CATS[key];
     html += '<div class="cat-btn" onclick="goSearch(\''+key+'\')">'
-      + '<div class="cat-ico">'+c.icon+'</div>'
-      + '<div class="cat-name">'+c.label+'</div></div>';
+      +'<div class="cat-ico">'+c.icon+'</div>'
+      +'<div class="cat-name">'+c.label+'</div></div>';
   });
   html += '</div>';
   document.getElementById("app").innerHTML = html;
 }
 
-function goSearch(category) {
-  if (hasSearchAccess()) showAdvancedSearch(category);
-  else showSearchGate(category);
+function goSearch(cat) {
+  if (hasSearchAccess()) showAdvancedSearch(cat);
+  else showSearchGate(cat);
 }
 
-var gateEn="", gatePendingCategory="";
-
-function showSearchGate(category) {
-  gatePendingCategory=category; gateEn="";
+// ── PIN GATE (search access) ──
+var gateEn="", gateCat="";
+function showSearchGate(cat) {
+  gateCat=cat; gateEn="";
   document.getElementById("app").innerHTML =
     '<div class="pin-gate">'
-    + '<img class="pin-gate-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display=\'none\'" alt="Darla">'
-    + '<div class="pin-gate-title">Staff Access Required</div>'
-    + '<div class="pin-gate-sub">Enter your PIN to access search</div>'
-    + '<div class="pin-gate-dots">'
-    + '<div class="dot" id="gd0"></div><div class="dot" id="gd1"></div>'
-    + '<div class="dot" id="gd2"></div><div class="dot" id="gd3"></div>'
-    + '</div><div class="pin-gate-grid">'
-    + [1,2,3,4,5,6,7,8,9].map(function(n){
-        return '<button class="pk" onclick="gatePk(\''+n+'\')">'+n+'</button>';
-      }).join("")
-    + '<button class="pk ghost"></button>'
-    + '<button class="pk" onclick="gatePk(\'0\')">0</button>'
-    + '<button class="pk del" onclick="gatePd()">&#9003;</button>'
-    + '</div>'
-    + '<button class="pin-cancel" onclick="showHome()" style="color:#555;margin-top:8px">&#8592; Back</button>'
-    + '</div>';
+    +'<img class="pin-gate-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display=\'none\'" alt="Darla">'
+    +'<div class="pin-gate-title">Staff Access Required</div>'
+    +'<div class="pin-gate-sub">Enter your PIN to access search</div>'
+    +'<div class="pin-gate-dots">'
+    +'<div class="dot" id="gd0"></div><div class="dot" id="gd1"></div>'
+    +'<div class="dot" id="gd2"></div><div class="dot" id="gd3"></div>'
+    +'</div><div class="pin-gate-grid">'
+    +[1,2,3,4,5,6,7,8,9].map(function(n){return '<button class="pk" onclick="gatePk(\''+n+'\')">'+n+'</button>';}).join("")
+    +'<button class="pk ghost"></button>'
+    +'<button class="pk" onclick="gatePk(\'0\')">0</button>'
+    +'<button class="pk del" onclick="gatePd()">&#9003;</button>'
+    +'</div>'
+    +'<button class="pin-cancel" onclick="showHome()" style="color:#555;margin-top:8px">&#8592; Back</button>'
+    +'</div>';
 }
-
-function gatePk(k){ if(gateEn.length>=4)return; gateEn+=k; updateGateDots(); if(gateEn.length===4)setTimeout(checkGatePin,80); }
-function gatePd(){ gateEn=gateEn.slice(0,-1); updateGateDots(); }
-function updateGateDots(err){
+function gatePk(k){ if(gateEn.length>=4)return; gateEn+=k; gDots(); if(gateEn.length===4)setTimeout(gChk,80); }
+function gatePd(){ gateEn=gateEn.slice(0,-1); gDots(); }
+function gDots(err){
   for(var i=0;i<4;i++){
     var d=document.getElementById("gd"+i); if(!d)return;
     d.className="dot";
-    if(err) d.classList.add("err");
-    else if(i<gateEn.length) d.classList.add("on");
+    if(err)d.classList.add("err"); else if(i<gateEn.length)d.classList.add("on");
   }
 }
-function checkGatePin(){
-  if(gateEn===PIN){ localStorage.setItem(SAK,"1"); showAdvancedSearch(gatePendingCategory); }
-  else{ updateGateDots(true); setTimeout(function(){ gateEn=""; updateGateDots(); },800); }
+function gChk(){
+  if(gateEn===PIN){ localStorage.setItem(SAK,"1"); showAdvancedSearch(gateCat); }
+  else{ gDots(true); setTimeout(function(){ gateEn=""; gDots(); },800); }
 }
 
-var BCM={}, BCSM={}, allBrands=[];
-var currentCategory="fabric";
+// ── ADVANCED SEARCH ──
+var BCM={}, BCSM={}, allBrands=[], currentCat="fabric";
 
-function showAdvancedSearch(category) {
-  currentCategory = String(category || "fabric").toLowerCase();
-  var catInfo = CATS[currentCategory] || CATS.fabric;
+function showAdvancedSearch(cat) {
+  currentCat = String(cat||"fabric").toLowerCase();
+  var catInfo = CATS[currentCat] || CATS.fabric;
   BCM={}; BCSM={}; allBrands=[];
 
   if (catInfo.codeSearch) {
     document.getElementById("app").innerHTML =
       hdr(catInfo.label+" Search","",true)
-      + '<div class="search-wrap"><div class="search-card">'
-      + '<div class="field-lbl">Code</div><div class="lbl-line-sm"></div>'
-      + '<div class="autocomplete-wrap">'
-      + '<input class="ac-input" id="codeInp" placeholder="Enter code..." autocomplete="off" spellcheck="false" style="text-transform:uppercase">'
-      + '</div>'
-      + '<button class="submit-btn" onclick="doCodeSearch()">Search &#8594;</button>'
-      + '<button class="clear-btn" onclick="clearSearch()">Clear</button>'
-      + '<button class="clear-btn" style="margin-top:6px;color:#c0392b;border-color:#c0392b" onclick="showHome()">&#8592; Categories</button>'
-      + '</div></div>'
-      + '<div class="results-wrap"><div id="results"></div></div>';
-    document.getElementById("codeInp").addEventListener("keyup", function(e){
-      if(e.key==="Enter") doCodeSearch();
-      this.value=this.value.toUpperCase();
-    });
+      +'<div class="search-wrap"><div class="search-card">'
+      +'<div class="field-lbl">Code</div><div class="lbl-line-sm"></div>'
+      +'<div class="autocomplete-wrap">'
+      +'<input class="ac-input" id="codeInp" placeholder="Enter code..." autocomplete="off" spellcheck="false" style="text-transform:uppercase">'
+      +'</div>'
+      +'<button class="submit-btn" onclick="doCodeSearch()">Search &#8594;</button>'
+      +'<button class="clear-btn" onclick="clearSearch()">Clear</button>'
+      +'<button class="clear-btn" style="margin-top:6px;color:#c0392b;border-color:#c0392b" onclick="showHome()">&#8592; Categories</button>'
+      +'</div></div>'
+      +'<div class="results-wrap"><div id="results"></div></div>';
+    setTimeout(function(){
+      var inp = document.getElementById("codeInp");
+      if(inp) inp.addEventListener("keyup",function(e){ if(e.key==="Enter")doCodeSearch(); this.value=this.value.toUpperCase(); });
+    },0);
     return;
   }
 
   document.getElementById("app").innerHTML =
     hdr(catInfo.label+" Search","",true)
-    + '<div class="search-wrap"><div class="search-card">'
-    + '<div id="status" class="status">Loading...</div>'
-    + '<div class="field-lbl">Brand</div><div class="lbl-line-sm"></div>'
-    + '<div class="autocomplete-wrap"><input class="ac-input" id="bInp" placeholder="Loading..." disabled autocomplete="off" spellcheck="false"><div class="dropdown" id="bDrop"></div></div>'
-    + '<div class="field-lbl">Catalog</div><div class="lbl-line-sm"></div>'
-    + '<div class="autocomplete-wrap"><input class="ac-input" id="cInp" placeholder="Select brand first..." disabled autocomplete="off" spellcheck="false"><div class="dropdown" id="cDrop"></div></div>'
-    + (catInfo.hasSno
-        ? '<div class="field-lbl">S.No</div><div class="lbl-line-sm"></div>'
-        + '<div class="autocomplete-wrap"><input class="ac-input" id="sInp" placeholder="Optional..." autocomplete="off" spellcheck="false" disabled><div class="dropdown" id="sDrop"></div></div>'
-        : '')
-    + '<button class="submit-btn" id="searchBtn" onclick="doSearch()" disabled>Search &#8594;</button>'
-    + '<button class="clear-btn" onclick="clearSearch()">Clear All</button>'
-    + '<button class="clear-btn" style="margin-top:6px;color:#c0392b;border-color:#c0392b" onclick="showHome()">&#8592; Categories</button>'
-    + '</div></div>'
-    + '<div class="results-wrap"><div id="results"></div></div>';
+    +'<div class="search-wrap"><div class="search-card">'
+    +'<div id="status" class="status">Loading...</div>'
+    +'<div class="field-lbl">Brand</div><div class="lbl-line-sm"></div>'
+    +'<div class="autocomplete-wrap"><input class="ac-input" id="bInp" placeholder="Loading..." disabled autocomplete="off" spellcheck="false"><div class="dropdown" id="bDrop"></div></div>'
+    +'<div class="field-lbl">Catalog</div><div class="lbl-line-sm"></div>'
+    +'<div class="autocomplete-wrap"><input class="ac-input" id="cInp" placeholder="Select brand first..." disabled autocomplete="off" spellcheck="false"><div class="dropdown" id="cDrop"></div></div>'
+    +(catInfo.hasSno
+      ?'<div class="field-lbl">S.No</div><div class="lbl-line-sm"></div>'
+      +'<div class="autocomplete-wrap"><input class="ac-input" id="sInp" placeholder="Optional..." autocomplete="off" spellcheck="false" disabled><div class="dropdown" id="sDrop"></div></div>'
+      :'')
+    +'<button class="submit-btn" id="searchBtn" onclick="doSearch()" disabled>Search &#8594;</button>'
+    +'<button class="clear-btn" onclick="clearSearch()">Clear All</button>'
+    +'<button class="clear-btn" style="margin-top:6px;color:#c0392b;border-color:#c0392b" onclick="showHome()">&#8592; Categories</button>'
+    +'</div></div>'
+    +'<div class="results-wrap"><div id="results"></div></div>';
 
-  function loadMeta(attempt) {
-    attempt = attempt || 1;
-    var statusEl = document.getElementById("status");
-    if (statusEl) statusEl.textContent = attempt > 1 ? "Retrying... ("+attempt+"/3)" : "Loading...";
+  // *** THE FIX: setTimeout ensures DOM is rendered before we touch it ***
+  setTimeout(function(){ loadMeta(1); }, 0);
+}
 
-    fetch(FB+"/"+currentCategory+"/meta.json?t="+Date.now())
-      .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
-      .then(function(d){
-        if (!d || !d.brandList || !d.brandList.length) {
-          if(statusEl) statusEl.textContent="No data available yet for this category.";
-          var sb=document.getElementById("searchBtn"); if(sb) sb.disabled=true;
-          return;
-        }
-        allBrands = d.brandList.map(function(b){ return b.label||b; }).sort();
-        d.brandList.forEach(function(b){
-          var bKey=b.key||b, bLabel=b.label||b;
-          BCM[bLabel] = (d.bcmArr[bKey]||[]).map(function(c){ return c.label||c; });
-          (d.bcmArr[bKey]||[]).forEach(function(c){
-            var cKey=c.key||c, cLabel=c.label||c;
-            BCSM[bLabel+"|||"+cLabel] = (d.bcsmArr[bKey+"|||"+cKey]||[]).map(function(s){ return s.label||s; });
-          });
+function loadMeta(attempt) {
+  var statusEl  = document.getElementById("status");
+  var bInp      = document.getElementById("bInp");
+  var searchBtn = document.getElementById("searchBtn");
+
+  // Safety: if DOM elements gone (user navigated away), abort
+  if (!statusEl) return;
+
+  statusEl.textContent = attempt > 1 ? "Retrying... ("+attempt+"/3)" : "Loading...";
+  statusEl.style.color = "#555";
+  statusEl.style.cursor = "default";
+  statusEl.onclick = null;
+
+  fetch(FB+"/"+currentCat+"/meta.json")
+    .then(function(r){
+      if(!r.ok) throw new Error("HTTP "+r.status);
+      return r.json();
+    })
+    .then(function(d){
+      // Re-check DOM still exists
+      var statusEl2 = document.getElementById("status");
+      var bInp2     = document.getElementById("bInp");
+      var btn2      = document.getElementById("searchBtn");
+      if (!statusEl2) return;
+
+      if (!d || !d.brandList || !d.brandList.length) {
+        statusEl2.textContent = "No data yet for this category.";
+        return;
+      }
+
+      allBrands = d.brandList.map(function(b){ return b.label||b; }).sort();
+      d.brandList.forEach(function(b){
+        var bKey=b.key||b, bLabel=b.label||b;
+        BCM[bLabel] = (d.bcmArr[bKey]||[]).map(function(c){ return c.label||c; });
+        (d.bcmArr[bKey]||[]).forEach(function(c){
+          var cKey=c.key||c, cLabel=c.label||c;
+          BCSM[bLabel+"|||"+cLabel] = (d.bcsmArr[bKey+"|||"+cKey]||[]).map(function(s){ return s.label||s; });
         });
-        var bInp=document.getElementById("bInp");
-        var searchBtn=document.getElementById("searchBtn");
-        if(bInp){ bInp.disabled=false; bInp.placeholder="Type brand name..."; }
-        if(searchBtn) searchBtn.disabled=false;
-        if(statusEl) statusEl.style.display="none";
-        bindSearchEvents();
-      })
-      .catch(function(){
-        if (attempt < 3) {
-          setTimeout(function(){ loadMeta(attempt+1); }, 1500);
-        } else {
-          if(statusEl){
-            statusEl.textContent="Failed to load. Tap to retry.";
-            statusEl.style.cursor="pointer";
-            statusEl.style.color="#c0392b";
-            statusEl.onclick=function(){ loadMeta(1); };
-          }
-        }
       });
-  }
-  loadMeta(1);
+
+      if(bInp2){ bInp2.disabled=false; bInp2.placeholder="Type brand name..."; }
+      if(btn2)  btn2.disabled=false;
+      statusEl2.style.display="none";
+      bindSearchEvents();
+    })
+    .catch(function(){
+      var statusEl3 = document.getElementById("status");
+      if(!statusEl3) return;
+      if(attempt < 3){
+        setTimeout(function(){ loadMeta(attempt+1); }, 2000);
+      } else {
+        statusEl3.textContent = "Tap here to retry";
+        statusEl3.style.color = "#c0392b";
+        statusEl3.style.cursor = "pointer";
+        statusEl3.onclick = function(){ loadMeta(1); };
+      }
+    });
 }
 
 function bindSearchEvents(){
@@ -357,6 +384,7 @@ function bindSearchEvents(){
   var bDrop=document.getElementById("bDrop");
   var cDrop=document.getElementById("cDrop");
   var sDrop=document.getElementById("sDrop");
+  if(!bInp||!cInp) return;
 
   bInp.addEventListener("focus",function(){ showDrop(bDrop,filt(allBrands,this.value),bInp,pickBrand); });
   bInp.addEventListener("input",function(){
@@ -364,14 +392,15 @@ function bindSearchEvents(){
     if(sInp){sInp.value="";sInp.disabled=true;}
     showDrop(bDrop,filt(allBrands,this.value),bInp,pickBrand);
   });
-  bInp.addEventListener("blur",function(){ setTimeout(function(){ bDrop.classList.remove("show"); },200); });
+  bInp.addEventListener("blur",function(){ setTimeout(function(){ if(bDrop)bDrop.classList.remove("show"); },200); });
+
   if(cInp){
     cInp.addEventListener("focus",function(){ showDrop(cDrop,filt(BCM[bInp.value.trim()]||[],this.value),cInp,pickCatalog); });
     cInp.addEventListener("input",function(){
       if(sInp){sInp.value="";sInp.disabled=true;}
       showDrop(cDrop,filt(BCM[bInp.value.trim()]||[],this.value),cInp,pickCatalog);
     });
-    cInp.addEventListener("blur",function(){ setTimeout(function(){ cDrop.classList.remove("show"); },200); });
+    cInp.addEventListener("blur",function(){ setTimeout(function(){ if(cDrop)cDrop.classList.remove("show"); },200); });
   }
   if(sInp){
     sInp.addEventListener("focus",function(){
@@ -382,80 +411,80 @@ function bindSearchEvents(){
       var key=bInp.value.trim()+"|||"+cInp.value.trim();
       showDrop(sDrop,filt(BCSM[key]||[],this.value),sInp,pickSno);
     });
-    sInp.addEventListener("blur",function(){ setTimeout(function(){ sDrop.classList.remove("show"); },200); });
+    sInp.addEventListener("blur",function(){ setTimeout(function(){ if(sDrop)sDrop.classList.remove("show"); },200); });
   }
 }
 
 function pickBrand(v){
-  document.getElementById("bInp").value=v;
-  document.getElementById("bDrop").classList.remove("show");
-  var c=document.getElementById("cInp");
-  if(c){c.disabled=false;c.placeholder="Type catalog...";c.value="";}
-  var s=document.getElementById("sInp");
-  if(s){s.disabled=true;s.value="";}
+  var bInp=document.getElementById("bInp"); if(bInp) bInp.value=v;
+  var bDrop=document.getElementById("bDrop"); if(bDrop) bDrop.classList.remove("show");
+  var c=document.getElementById("cInp"); if(c){c.disabled=false;c.placeholder="Type catalog...";c.value="";}
+  var s=document.getElementById("sInp"); if(s){s.disabled=true;s.value="";}
   if(c) c.focus();
 }
 function pickCatalog(v){
-  document.getElementById("cInp").value=v;
-  document.getElementById("cDrop").classList.remove("show");
-  var s=document.getElementById("sInp");
-  if(s){s.disabled=false;s.placeholder="Optional — leave blank for all";s.value="";s.focus();}
+  var cInp=document.getElementById("cInp"); if(cInp) cInp.value=v;
+  var cDrop=document.getElementById("cDrop"); if(cDrop) cDrop.classList.remove("show");
+  var s=document.getElementById("sInp"); if(s){s.disabled=false;s.placeholder="Optional — leave blank for all";s.value="";s.focus();}
 }
 function pickSno(v){
-  document.getElementById("sInp").value=v;
-  document.getElementById("sDrop").classList.remove("show");
+  var sInp=document.getElementById("sInp"); if(sInp) sInp.value=v;
+  var sDrop=document.getElementById("sDrop"); if(sDrop) sDrop.classList.remove("show");
 }
 
+// ── SEARCH ──
 function doCodeSearch(){
-  var raw=document.getElementById("codeInp").value.trim();
-  var code=codeKey(raw);
-  if(!code)return;
-  document.getElementById("results").innerHTML=spinner("Searching...");
-  fetch(FB+"/"+currentCategory+"/by_code/"+encodeURIComponent(code)+".json")
+  var inp = document.getElementById("codeInp");
+  if(!inp) return;
+  var code = codeKey(inp.value.trim());
+  if(!code) return;
+  var res = document.getElementById("results");
+  if(res) res.innerHTML = spinner("Searching...");
+
+  fetch(FB+"/"+currentCat+"/by_code/"+encodeURIComponent(code)+".json")
     .then(function(r){ return r.json(); })
     .then(function(d){
-      if(!d){ renderRows([],currentCategory); return; }
-      var rows=Array.isArray(d)?d:Object.values(d);
-      renderRows(rows,currentCategory);
+      if(!d){ renderRows([],currentCat); return; }
+      renderRows(Array.isArray(d)?d:Object.values(d), currentCat);
     })
-    .catch(function(){ document.getElementById("results").innerHTML='<div class="nf"><h3>Error</h3><p>Please try again.</p></div>'; });
+    .catch(function(){ var r=document.getElementById("results"); if(r) r.innerHTML='<div class="nf"><h3>Error</h3><p>Please try again.</p></div>'; });
 }
 
 function doSearch(){
-  var b=document.getElementById("bInp").value.trim();
-  var cEl=document.getElementById("cInp");
-  var sEl=document.getElementById("sInp");
-  var c=cEl?cEl.value.trim():"";
-  var s=sEl?sEl.value.trim():"";
-  if(!b&&!c&&!s)return;
-  document.getElementById("results").innerHTML=spinner("Searching...");
+  var bInp=document.getElementById("bInp");
+  var cInp=document.getElementById("cInp");
+  var sInp=document.getElementById("sInp");
+  var b=bInp?bInp.value.trim():"";
+  var c=cInp?cInp.value.trim():"";
+  var s=sInp?sInp.value.trim():"";
+  if(!b&&!c&&!s) return;
+  var res=document.getElementById("results");
+  if(res) res.innerHTML=spinner("Searching...");
 
   var bKey=sk(b), cKey=sk(c), sKey=sk(s);
   var url;
-  if(bKey&&cKey&&sKey&&sKey!=="")
-    url=FB+"/"+currentCategory+"/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+"/"+encodeURIComponent(sKey)+".json";
-  else if(bKey&&cKey)
-    url=FB+"/"+currentCategory+"/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+".json";
-  else if(bKey)
-    url=FB+"/"+currentCategory+"/by_brand/"+encodeURIComponent(bKey)+".json";
+  if(bKey&&bKey!=="?"&&cKey&&cKey!=="?"&&sKey&&sKey!=="?")
+    url=FB+"/"+currentCat+"/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+"/"+encodeURIComponent(sKey)+".json";
+  else if(bKey&&bKey!=="?"&&cKey&&cKey!=="?")
+    url=FB+"/"+currentCat+"/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+".json";
+  else if(bKey&&bKey!=="?")
+    url=FB+"/"+currentCat+"/by_brand/"+encodeURIComponent(bKey)+".json";
   else
-    url=FB+"/"+currentCategory+"/by_code.json";
-
-  url += "?t="+Date.now();
+    url=FB+"/"+currentCat+"/by_code.json";
 
   fetch(url)
     .then(function(r){ return r.json(); })
     .then(function(data){
-      if(!data){ renderRows([],currentCategory); return; }
+      if(!data){ renderRows([],currentCat); return; }
       var results=[];
       function flatten(obj){
-        if(Array.isArray(obj)) obj.forEach(function(item){ if(item&&item.code) results.push(item); });
+        if(Array.isArray(obj)) obj.forEach(function(item){ if(item&&item.code)results.push(item); });
         else if(obj&&typeof obj==="object") Object.values(obj).forEach(function(v){ flatten(v); });
       }
       flatten(data);
-      renderRows(results,currentCategory);
+      renderRows(results,currentCat);
     })
-    .catch(function(){ document.getElementById("results").innerHTML='<div class="nf"><h3>Error</h3><p>Please try again.</p></div>'; });
+    .catch(function(){ var r=document.getElementById("results"); if(r) r.innerHTML='<div class="nf"><h3>Error</h3><p>Please try again.</p></div>'; });
 }
 
 function clearSearch(){
@@ -463,184 +492,155 @@ function clearSearch(){
     var el=document.getElementById(id);
     if(el){el.value="";if(id!=="bInp"&&id!=="codeInp")el.disabled=true;}
   });
-  document.getElementById("results").innerHTML="";
+  var r=document.getElementById("results"); if(r) r.innerHTML="";
 }
 
-function showProductPage(code, category){
+// ── PRODUCT PAGE ──
+function showProductPage(code, cat) {
   var safeCode = codeKey(code);
+  var safeCat  = String(cat||"fabric").toLowerCase();
   document.getElementById("app").innerHTML =
     hdr("Product Details",code,true)
-    + '<div class="wrap"><div id="results">'+spinner("Loading...")+'</div></div>'
-    + '<button class="fab-btn" id="fabBtn" onclick="openStaffPin()">&#128274; Staff Login</button>';
-  fetch(FB+"/"+category+"/by_code/"+encodeURIComponent(safeCode)+".json")
+    +'<div class="wrap"><div id="results">'+spinner("Loading...")+'</div></div>'
+    +'<button class="fab-btn" id="fabBtn" onclick="openStaffPin()">&#128274; Staff Login</button>';
+
+  fetch(FB+"/"+safeCat+"/by_code/"+encodeURIComponent(safeCode)+".json")
     .then(function(r){ return r.json(); })
     .then(function(d){
-      if(!d){ renderRows([],category); return; }
-      var rows=Array.isArray(d)?d:Object.values(d);
-      renderRows(rows,category);
+      if(!d){ renderRows([],safeCat); return; }
+      renderRows(Array.isArray(d)?d:Object.values(d), safeCat);
     })
     .catch(function(){
-      document.getElementById("results").innerHTML='<div class="nf"><h3>Error</h3><p>Please try again</p><a class="back-link" href="'+BASE+'">&#8592; Home</a></div>';
+      var r=document.getElementById("results");
+      if(r) r.innerHTML='<div class="nf"><h3>Error</h3><p>Please try again</p><a class="back-link" href="'+BASE+'">&#8592; Home</a></div>';
     });
 }
 
-function renderRows(rows,category){
+// ── RENDER ──
+function renderRows(rows, cat){
   var el=document.getElementById("results");
+  if(!el) return;
   if(!rows||!rows.length){
     el.innerHTML='<div class="nf"><div class="nf-ico">&#128269;</div><h3>Not Found</h3><p>No matching products</p><a class="back-link" href="'+BASE+'">&#8592; Home</a></div>';
     return;
   }
-  window._rows=rows; window._category=category;
+  window._rows=rows; window._cat=cat;
   var staff=isStaff();
-  el.innerHTML=staff?buildStaff(rows,category):buildPublic(rows,category);
+  el.innerHTML = staff ? buildStaff(rows,cat) : buildPublic(rows,cat);
   var fb=document.getElementById("fabBtn");
   var sb=document.getElementById("sBadge");
   if(staff){ if(sb)sb.style.display="inline-block"; if(fb)fb.style.display="none"; }
   else{ if(fb)fb.style.display="flex"; }
 }
 
-function buildPublic(rows,category){
-  if(rows.length===1) return buildSinglePublic(rows[0],category);
-  return buildTablePublic(rows,category);
+// ── CARD BUILDERS ──
+function buildPublic(rows,cat){
+  return rows.length===1 ? buildSinglePublic(rows[0],cat) : buildTablePublic(rows,cat);
+}
+function buildStaff(rows,cat){
+  return rows.length===1 ? buildSingleStaff(rows[0],cat) : buildTableStaff(rows,cat);
 }
 
-function buildSinglePublic(r,category){
-  var sno=r.s_no||r["s.no"]||r.sno||"";
-  var mrpLabel=category==="mattress"?"MRP":"MRP / METRE";
+function buildSinglePublic(r,cat){
+  var sno     = gv(r,"s_no")||gv(r,"s.no")||"";
+  var mrpLbl  = cat==="mattress"?"MRP":"MRP / METRE";
   var html='<div class="item-group">';
-  if(r.catalog)   html+=card("CATALOG",r.catalog,"card-accent-blue");
-  if(sno)         html+=card("S.NO",sno,"card-accent-blue");
-  if(r.width)     html+=card("WIDTH",r.width,"");
-  if(r.mrp)       html+=cardMrp(r.mrp,mrpLabel);
-  if(r.thickness) html+=card("THICKNESS",r.thickness,"");
-  if(r.size)      html+=card("SIZE",r.size,"");
-  html+='</div>';
-  return html;
+  if(r.catalog)    html+=card("CATALOG",r.catalog,"card-accent-blue");
+  if(sno)          html+=card("S.NO",sno,"card-accent-blue");
+  if(r.width)      html+=card("WIDTH",r.width,"");
+  if(r.mrp)        html+=cardMrp(r.mrp,mrpLbl);
+  if(r.thickness)  html+=card("THICKNESS",r.thickness,"");
+  if(r.size)       html+=card("SIZE",r.size,"");
+  return html+'</div>';
 }
 
-function buildTablePublic(rows,category){
-  var html='<div class="count-badge"><span class="count-txt">Items Found</span><span class="count-num">'+rows.length+' items</span></div>'
-    +'<div class="tbl-wrap">'
-    +'<div class="tbl-head" style="grid-template-columns:1fr 70px 80px 24px">'
-    +'<span>S.No / Catalog</span><span style="text-align:center">Width</span><span style="text-align:center">MRP</span><span></span>'
-    +'</div>';
-  rows.forEach(function(r){
-    var sno=r.s_no||r["s.no"]||r.sno||"";
-    var catalog=r.catalog||r["blind_type"]||r["blind type"]||"";
-    var width=r.width||r.size||r.thickness||"";
-    var mrp=r.mrp||"";
-    var hasExtra=r["item_details"]||r["item details"]||r.mechanism||r.others||r.link;
-    html+='<div class="tbl-row" style="grid-template-columns:1fr 70px 80px 24px" onclick="toggleRow(this)">'
-      +'<div><div class="tr-main">'+esc(sno||"—")+'</div><div class="tr-sub">'+esc(catalog)+'</div></div>'
-      +'<div style="text-align:center;font-size:13px;color:#aaa;font-weight:600">'+(width?esc(width):'—')+'</div>'
-      +'<div style="text-align:center">'+(mrp?'<span class="tr-mrp">&#8377;'+esc(mrp)+'</span>':'<span style="color:#555;font-size:13px">—</span>')+'</div>'
-      +'<div class="tr-arr">'+(hasExtra?'&#8250;':'')+'</div>'
-      +'</div>'
-      +'<div class="exp-panel">'
-      +(hasExtra
-        ?expLine("Item Details",r["item_details"]||r["item details"])
-        +expLine("Mechanism",r.mechanism)
-        +expLine("Others",r.others)
-        +expLinkLine(r.link)
-        :'')
-      +'</div>';
-  });
-  html+='</div><div class="tbl-hint">Tap row to expand details</div>';
-  return html;
-}
-
-function buildStaff(rows,category){
-  if(rows.length===1) return buildSingleStaff(rows[0],category);
-  return buildTableStaff(rows,category);
-}
-
-function buildSingleStaff(r,category){
-  var sno=r.s_no||r["s.no"]||r.sno||"";
-  var mrpLabel=category==="mattress"?"MRP":"MRP / METRE";
+function buildSingleStaff(r,cat){
+  var sno     = gv(r,"s_no")||gv(r,"s.no")||"";
+  var item    = gv(r,"item_details")||gv(r,"item details")||"";
+  var blind   = gv(r,"blind_type")||gv(r,"blind type")||"";
+  var mrpLbl  = cat==="mattress"?"MRP":"MRP / METRE";
   var html='<div class="item-group">';
   if(r.code)      html+=card("CODE",r.code,"card-accent-blue");
   if(r.brand)     html+=card("BRAND",r.brand,"card-accent-red");
   if(r.catalog)   html+=card("CATALOG",r.catalog,"card-accent-blue");
-  if(r["blind_type"]||r["blind type"]) html+=card("BLIND TYPE",r["blind_type"]||r["blind type"],"card-accent-blue");
+  if(blind)       html+=card("BLIND TYPE",blind,"card-accent-blue");
   if(sno)         html+=card("S.NO",sno,"");
-  if(r["item_details"]||r["item details"]) html+=cardSm("ITEM DETAILS",r["item_details"]||r["item details"]);
+  if(item)        html+=cardSm("ITEM DETAILS",item);
   if(r.mechanism) html+=card("MECHANISM",r.mechanism,"");
   if(r.others)    html+=card("OTHERS",r.others,"");
   if(r.width)     html+=card("WIDTH",r.width,"");
   if(r.thickness) html+=card("THICKNESS",r.thickness,"");
   if(r.size)      html+=card("SIZE",r.size,"");
-  if(r.mrp)       html+=cardMrp(r.mrp,mrpLabel);
+  if(r.mrp)       html+=cardMrp(r.mrp,mrpLbl);
   if(r.link&&r.link.indexOf("http")===0)
     html+='<div class="card"><div class="lbl">LINK</div><div class="lbl-line"></div><a href="'+esc(r.link)+'" target="_blank" class="link-btn">View Product &#8599;</a></div>';
-  html+='</div>';
-  return html;
+  return html+'</div>';
 }
 
-function buildTableStaff(rows,category){
+function buildTablePublic(rows,cat){
   var html='<div class="count-badge"><span class="count-txt">Items Found</span><span class="count-num">'+rows.length+' items</span></div>'
-    +'<div class="tbl-wrap">'
-    +'<div class="tbl-head" style="grid-template-columns:1fr 70px 80px 24px">'
-    +'<span>S.No / Catalog</span><span style="text-align:center">Width</span><span style="text-align:center">MRP</span><span></span>'
-    +'</div>';
+    +'<div class="tbl-wrap"><div class="tbl-head" style="grid-template-columns:1fr 70px 80px 24px">'
+    +'<span>S.No / Catalog</span><span style="text-align:center">Width</span><span style="text-align:center">MRP</span><span></span></div>';
   rows.forEach(function(r){
-    var sno=r.s_no||r["s.no"]||r.sno||"";
-    var catalog=r.catalog||r["blind_type"]||r["blind type"]||"";
-    var width=r.width||r.size||r.thickness||"";
-    var mrp=r.mrp||"";
-    var hasExtra=r["item_details"]||r["item details"]||r.mechanism||r.others||r.brand||r.code||r.link;
+    var sno    = gv(r,"s_no")||gv(r,"s.no")||"";
+    var catalog= r.catalog||(gv(r,"blind_type")||gv(r,"blind type"))||"";
+    var width  = r.width||r.size||r.thickness||"";
+    var mrp    = r.mrp||"";
+    var item   = gv(r,"item_details")||gv(r,"item details")||"";
+    var hasX   = item||r.mechanism||r.others||r.link;
     html+='<div class="tbl-row" style="grid-template-columns:1fr 70px 80px 24px" onclick="toggleRow(this)">'
       +'<div><div class="tr-main">'+esc(sno||"—")+'</div><div class="tr-sub">'+esc(catalog)+'</div></div>'
-      +'<div style="text-align:center;font-size:13px;color:#aaa;font-weight:600">'+(width?esc(width):'—')+'</div>'
+      +'<div style="text-align:center;font-size:13px;color:#aaa;font-weight:600">'+(width?esc(width):"—")+'</div>'
       +'<div style="text-align:center">'+(mrp?'<span class="tr-mrp">&#8377;'+esc(mrp)+'</span>':'<span style="color:#555;font-size:13px">—</span>')+'</div>'
-      +'<div class="tr-arr">'+(hasExtra?'&#8250;':'')+'</div>'
-      +'</div>'
+      +'<div class="tr-arr">'+(hasX?"&#8250;":"")+'</div></div>'
       +'<div class="exp-panel">'
-      +expLine("Code",r.code)
-      +expLine("Brand",r.brand)
-      +expLine("Item Details",r["item_details"]||r["item details"])
-      +expLine("Blind Type",r["blind_type"]||r["blind type"])
-      +expLine("Mechanism",r.mechanism)
-      +expLine("Others",r.others)
-      +expLine("Thickness",r.thickness)
-      +expLine("Size",r.size)
+      +(hasX?expLine("Item Details",item)+expLine("Mechanism",r.mechanism)+expLine("Others",r.others)+expLinkLine(r.link):"")
+      +'</div>';
+  });
+  return html+'</div><div class="tbl-hint">Tap row to expand details</div>';
+}
+
+function buildTableStaff(rows,cat){
+  var html='<div class="count-badge"><span class="count-txt">Items Found</span><span class="count-num">'+rows.length+' items</span></div>'
+    +'<div class="tbl-wrap"><div class="tbl-head" style="grid-template-columns:1fr 70px 80px 24px">'
+    +'<span>S.No / Catalog</span><span style="text-align:center">Width</span><span style="text-align:center">MRP</span><span></span></div>';
+  rows.forEach(function(r){
+    var sno    = gv(r,"s_no")||gv(r,"s.no")||"";
+    var catalog= r.catalog||(gv(r,"blind_type")||gv(r,"blind type"))||"";
+    var width  = r.width||r.size||r.thickness||"";
+    var mrp    = r.mrp||"";
+    var item   = gv(r,"item_details")||gv(r,"item details")||"";
+    var blind  = gv(r,"blind_type")||gv(r,"blind type")||"";
+    var hasX   = item||r.mechanism||r.others||r.brand||r.code||r.link;
+    html+='<div class="tbl-row" style="grid-template-columns:1fr 70px 80px 24px" onclick="toggleRow(this)">'
+      +'<div><div class="tr-main">'+esc(sno||"—")+'</div><div class="tr-sub">'+esc(catalog)+'</div></div>'
+      +'<div style="text-align:center;font-size:13px;color:#aaa;font-weight:600">'+(width?esc(width):"—")+'</div>'
+      +'<div style="text-align:center">'+(mrp?'<span class="tr-mrp">&#8377;'+esc(mrp)+'</span>':'<span style="color:#555;font-size:13px">—</span>')+'</div>'
+      +'<div class="tr-arr">'+(hasX?"&#8250;":"")+'</div></div>'
+      +'<div class="exp-panel">'
+      +expLine("Code",r.code)+expLine("Brand",r.brand)
+      +expLine("Item Details",item)+expLine("Blind Type",blind)
+      +expLine("Mechanism",r.mechanism)+expLine("Others",r.others)
+      +expLine("Thickness",r.thickness)+expLine("Size",r.size)
       +expLinkLine(r.link)
       +'</div>';
   });
-  html+='</div><div class="tbl-hint">Tap row to expand details</div>';
-  return html;
+  return html+'</div><div class="tbl-hint">Tap row to expand details</div>';
 }
 
-function card(label,value,cls){
-  if(!value)return"";
-  return '<div class="card '+(cls||'')+'"><div class="lbl">'+label+'</div><div class="lbl-line"></div><div class="val">'+esc(value)+'</div></div>';
-}
-function cardSm(label,value){
-  if(!value)return"";
-  return '<div class="card"><div class="lbl">'+label+'</div><div class="lbl-line"></div><div class="val-sm">'+esc(value)+'</div></div>';
-}
-function cardMrp(value,label){
-  if(!value)return"";
-  return '<div class="card card-mrp"><div class="lbl lbl-dark">'+(label||"MRP / METRE")+'</div><div class="lbl-line"></div><div class="mrp-row"><span class="rsym">&#8377;</span><span class="mrp-val">'+esc(value)+'</span></div></div>';
-}
-function expLine(label,value){
-  if(!value)return"";
-  return '<div class="exp-line"><span class="exp-lbl">'+label+'</span><span class="exp-val">'+esc(value)+'</span></div>';
-}
-function expLinkLine(url){
-  if(!url||url.indexOf("http")!==0)return"";
-  return '<div class="exp-line"><span class="exp-lbl">Link</span><span class="exp-val"><a class="exp-link" href="'+esc(url)+'" target="_blank">View &#8599;</a></span></div>';
-}
+// ── HELPERS ──
+function card(lbl,val,cls){ if(!val)return""; return '<div class="card '+(cls||'')+'"><div class="lbl">'+lbl+'</div><div class="lbl-line"></div><div class="val">'+esc(val)+'</div></div>'; }
+function cardSm(lbl,val){ if(!val)return""; return '<div class="card"><div class="lbl">'+lbl+'</div><div class="lbl-line"></div><div class="val-sm">'+esc(val)+'</div></div>'; }
+function cardMrp(val,lbl){ if(!val)return""; return '<div class="card card-mrp"><div class="lbl lbl-dark">'+(lbl||"MRP / METRE")+'</div><div class="lbl-line"></div><div class="mrp-row"><span class="rsym">&#8377;</span><span class="mrp-val">'+esc(val)+'</span></div></div>'; }
+function expLine(lbl,val){ if(!val)return""; return '<div class="exp-line"><span class="exp-lbl">'+lbl+'</span><span class="exp-val">'+esc(val)+'</span></div>'; }
+function expLinkLine(url){ if(!url||url.indexOf("http")!==0)return""; return '<div class="exp-line"><span class="exp-lbl">Link</span><span class="exp-val"><a class="exp-link" href="'+esc(url)+'" target="_blank">View &#8599;</a></span></div>'; }
 
 function toggleRow(row){
   var panel=row.nextElementSibling;
   var isOpen=panel.classList.contains("show");
   document.querySelectorAll(".exp-panel.show").forEach(function(p){ p.classList.remove("show"); });
   document.querySelectorAll(".tbl-row.open").forEach(function(r){ r.classList.remove("open"); });
-  if(!isOpen){
-    panel.classList.add("show");
-    row.classList.add("open");
-    row.scrollIntoView({behavior:"smooth",block:"nearest"});
-  }
+  if(!isOpen){ panel.classList.add("show"); row.classList.add("open"); row.scrollIntoView({behavior:"smooth",block:"nearest"}); }
 }
 
 function filt(arr,q){
@@ -650,7 +650,7 @@ function filt(arr,q){
   return arr.filter(function(x){ return String(x).toLowerCase().indexOf(l)!==-1; }).slice(0,50);
 }
 function showDrop(drop,items,inp,onSel){
-  if(!items||!items.length){ drop.classList.remove("show"); return; }
+  if(!drop||!items||!items.length){ if(drop)drop.classList.remove("show"); return; }
   var q=(inp.value||"").trim().toLowerCase();
   var h=items.map(function(item){
     var s=String(item).replace(/&/g,"&amp;").replace(/</g,"&lt;");
@@ -659,34 +659,27 @@ function showDrop(drop,items,inp,onSel){
   }).join("");
   drop.innerHTML=h; drop.classList.add("show"); drop._cb=onSel;
 }
-function selItem(el,ev){
-  ev.preventDefault();
-  var cb=el.parentElement._cb;
-  if(cb)cb(el.textContent);
-}
+function selItem(el,ev){ ev.preventDefault(); var cb=el.parentElement._cb; if(cb)cb(el.textContent); }
 
+// ── STAFF PIN ──
 var staffEn="";
-function openStaffPin(){ staffEn=""; updateStaffDots(); document.getElementById("pOv").classList.add("open"); }
-function closeStaffPin(){ document.getElementById("pOv").classList.remove("open"); staffEn=""; updateStaffDots(); }
-function staffPk(k){ if(staffEn.length>=4)return; staffEn+=k; updateStaffDots(); if(staffEn.length===4)setTimeout(checkStaffPin,80); }
-function staffPd(){ staffEn=staffEn.slice(0,-1); updateStaffDots(); }
-function updateStaffDots(err){
+function openStaffPin(){ staffEn=""; sDots(); document.getElementById("pOv").classList.add("open"); }
+function closeStaffPin(){ document.getElementById("pOv").classList.remove("open"); staffEn=""; sDots(); }
+function staffPk(k){ if(staffEn.length>=4)return; staffEn+=k; sDots(); if(staffEn.length===4)setTimeout(sChk,80); }
+function staffPd(){ staffEn=staffEn.slice(0,-1); sDots(); }
+function sDots(err){
   for(var i=0;i<4;i++){
     var d=document.getElementById("d"+i); if(!d)return;
     d.className="dot";
-    if(err) d.classList.add("err");
-    else if(i<staffEn.length) d.classList.add("on");
+    if(err)d.classList.add("err"); else if(i<staffEn.length)d.classList.add("on");
   }
 }
-function checkStaffPin(){
+function sChk(){
   if(staffEn===PIN){
     localStorage.setItem(SK,"1"); localStorage.setItem(SAK,"1");
     closeStaffPin();
-    if(window._rows) renderRows(window._rows,window._category||"fabric");
-  } else {
-    updateStaffDots(true);
-    setTimeout(function(){ staffEn=""; updateStaffDots(); },800);
-  }
+    if(window._rows) renderRows(window._rows, window._cat||"fabric");
+  } else { sDots(true); setTimeout(function(){ staffEn=""; sDots(); },800); }
 }
 </script>
 </body>
