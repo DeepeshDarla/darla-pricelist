@@ -158,7 +158,7 @@ var CATS = {
   blinds:     { label:"Blinds",     icon:"🪟", hasSno:false, codeSearch:false },
   wallpapers: { label:"Wallpapers", icon:"🖼️", hasSno:true,  codeSearch:false },
   motors:     { label:"Motors",     icon:"⚙️", hasSno:true,  codeSearch:false },
-  mattress:   { label:"Mattress",   icon:"🛏️", hasSno:false, codeSearch:false }
+  mattresses:   { label:"mattresses",   icon:"🛏️", hasSno:false, codeSearch:false }
 };
 
 // ── SANITIZERS — must match Apps Script exactly ──
@@ -549,7 +549,7 @@ function buildStaff(rows,cat){
 
 function buildSinglePublic(r,cat){
   var sno     = gv(r,"s_no")||gv(r,"s.no")||"";
-  var mrpLbl  = cat==="mattress"?"MRP":"MRP / METRE";
+  var mrpLbl  = cat==="mattresses"?"MRP":"MRP / METRE";
   var html='<div class="item-group">';
   if(r.catalog)    html+=card("CATALOG",r.catalog,"card-accent-blue");
   if(sno)          html+=card("S.NO",sno,"card-accent-blue");
@@ -564,7 +564,7 @@ function buildSingleStaff(r,cat){
   var sno     = gv(r,"s_no")||gv(r,"s.no")||"";
   var item    = gv(r,"item_details")||gv(r,"item details")||"";
   var blind   = gv(r,"blind_type")||gv(r,"blind type")||"";
-  var mrpLbl  = cat==="mattress"?"MRP":"MRP / METRE";
+  var mrpLbl  = cat==="mattresses"?"MRP":"MRP / METRE";
   var html='<div class="item-group">';
   if(r.code)      html+=card("CODE",r.code,"card-accent-blue");
   if(r.brand)     html+=card("BRAND",r.brand,"card-accent-red");
