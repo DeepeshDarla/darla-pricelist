@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>Darla — Product Lookup</title>
 <style>
@@ -29,7 +32,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .card-mrp .lbl{color:#333;font-size:30px;font-weight:300}
 .card-mrp .lbl-line{background:#c0392b}
 .item-group{background:#111;border:1px solid #1e1e1e;border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:8px;margin-bottom:4px}
-.item-num{font-size:11px;font-weight:800;letter-spacing:2px;color:#c0392b;text-transform:uppercase;text-align:center;margin-bottom:2px}
 .link-btn{display:inline-block;margin-top:8px;background:#fff;color:#000;text-decoration:none;font-size:15px;font-weight:800;padding:12px 22px;border-radius:10px}
 .nf{text-align:center;padding:50px 20px}
 .nf-ico{font-size:48px;margin-bottom:16px}
@@ -160,6 +162,21 @@ var CATS = {
   mattress:   { label:"Mattress",   icon:"🛏️", hasSno:false, codeSearch:false }
 };
 
+// ── UNIVERSAL KEY SANITIZER — matches Apps Script exactly ──
+function sk(str) {
+  return String(str||"")
+    .trim()
+    .replace(/[^a-zA-Z0-9\-_]/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    || "_";
+}
+
+// ── CODE KEY — matches Apps Script codeKey() ──
+function codeKey(str) {
+  return String(str||"").trim().toUpperCase().replace(/[^A-Z0-9\-]/g, "");
+}
+
 function getParam(n){ return new URLSearchParams(window.location.search).get(n)||""; }
 function esc(t){ if(!t)return""; return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function spinner(m){ return '<div class="spinner"><div class="spinner-ring"></div><p>'+(m||"Loading...")+'</p></div>'; }
@@ -187,14 +204,12 @@ function showHome() {
   var html = hdr("Product Lookup","",false)
     + '<div style="padding:16px 12px 8px;text-align:center">'
     + '<div style="font-size:13px;color:#555;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Select Category to Search</div>'
-    + '</div>'
-    + '<div class="cat-grid">';
+    + '</div><div class="cat-grid">';
   Object.keys(CATS).forEach(function(key) {
     var c = CATS[key];
     html += '<div class="cat-btn" onclick="goSearch(\''+key+'\')">'
       + '<div class="cat-ico">'+c.icon+'</div>'
-      + '<div class="cat-name">'+c.label+'</div>'
-      + '</div>';
+      + '<div class="cat-name">'+c.label+'</div></div>';
   });
   html += '</div>';
   document.getElementById("app").innerHTML = html;
@@ -205,12 +220,10 @@ function goSearch(category) {
   else showSearchGate(category);
 }
 
-var gateEn = "";
-var gatePendingCategory = "";
+var gateEn="", gatePendingCategory="";
 
 function showSearchGate(category) {
-  gatePendingCategory = category;
-  gateEn = "";
+  gatePendingCategory=category; gateEn="";
   document.getElementById("app").innerHTML =
     '<div class="pin-gate">'
     + '<img class="pin-gate-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display=\'none\'" alt="Darla">'
@@ -219,8 +232,7 @@ function showSearchGate(category) {
     + '<div class="pin-gate-dots">'
     + '<div class="dot" id="gd0"></div><div class="dot" id="gd1"></div>'
     + '<div class="dot" id="gd2"></div><div class="dot" id="gd3"></div>'
-    + '</div>'
-    + '<div class="pin-gate-grid">'
+    + '</div><div class="pin-gate-grid">'
     + [1,2,3,4,5,6,7,8,9].map(function(n){
         return '<button class="pk" onclick="gatePk(\''+n+'\')">'+n+'</button>';
       }).join("")
@@ -243,13 +255,8 @@ function updateGateDots(err){
   }
 }
 function checkGatePin(){
-  if(gateEn===PIN){
-    localStorage.setItem(SAK,"1");
-    showAdvancedSearch(gatePendingCategory);
-  } else {
-    updateGateDots(true);
-    setTimeout(function(){ gateEn=""; updateGateDots(); },800);
-  }
+  if(gateEn===PIN){ localStorage.setItem(SAK,"1"); showAdvancedSearch(gatePendingCategory); }
+  else{ updateGateDots(true); setTimeout(function(){ gateEn=""; updateGateDots(); },800); }
 }
 
 var BCM={}, BCSM={}, allBrands=[];
@@ -304,15 +311,11 @@ function showAdvancedSearch(category) {
     if (statusEl) statusEl.textContent = attempt > 1 ? "Retrying... ("+attempt+"/3)" : "Loading...";
 
     fetch(FB+"/"+currentCategory+"/meta.json?t="+Date.now())
-      .then(function(r){
-        if (!r.ok) throw new Error("HTTP "+r.status);
-        return r.json();
-      })
+      .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
       .then(function(d){
         if (!d || !d.brandList || !d.brandList.length) {
-          if (statusEl) statusEl.textContent = "No data available yet for this category.";
-          var sb = document.getElementById("searchBtn");
-          if (sb) sb.disabled = true;
+          if(statusEl) statusEl.textContent="No data available yet for this category.";
+          var sb=document.getElementById("searchBtn"); if(sb) sb.disabled=true;
           return;
         }
         allBrands = d.brandList.map(function(b){ return b.label||b; }).sort();
@@ -324,22 +327,22 @@ function showAdvancedSearch(category) {
             BCSM[bLabel+"|||"+cLabel] = (d.bcsmArr[bKey+"|||"+cKey]||[]).map(function(s){ return s.label||s; });
           });
         });
-        var bInp = document.getElementById("bInp");
-        var searchBtn = document.getElementById("searchBtn");
-        if (bInp) { bInp.disabled=false; bInp.placeholder="Type brand name..."; }
-        if (searchBtn) searchBtn.disabled=false;
-        if (statusEl) statusEl.style.display="none";
+        var bInp=document.getElementById("bInp");
+        var searchBtn=document.getElementById("searchBtn");
+        if(bInp){ bInp.disabled=false; bInp.placeholder="Type brand name..."; }
+        if(searchBtn) searchBtn.disabled=false;
+        if(statusEl) statusEl.style.display="none";
         bindSearchEvents();
       })
-      .catch(function(err){
+      .catch(function(){
         if (attempt < 3) {
           setTimeout(function(){ loadMeta(attempt+1); }, 1500);
         } else {
-          if (statusEl) {
-            statusEl.textContent = "Failed to load. Tap to retry.";
-            statusEl.style.cursor = "pointer";
-            statusEl.style.color = "#c0392b";
-            statusEl.onclick = function(){ loadMeta(1); };
+          if(statusEl){
+            statusEl.textContent="Failed to load. Tap to retry.";
+            statusEl.style.cursor="pointer";
+            statusEl.style.color="#c0392b";
+            statusEl.onclick=function(){ loadMeta(1); };
           }
         }
       });
@@ -404,10 +407,11 @@ function pickSno(v){
 }
 
 function doCodeSearch(){
-  var code=document.getElementById("codeInp").value.trim().toUpperCase();
+  var raw=document.getElementById("codeInp").value.trim();
+  var code=codeKey(raw);
   if(!code)return;
   document.getElementById("results").innerHTML=spinner("Searching...");
-  fetch(FB+"/"+currentCategory+"/by_code/"+encodeURIComponent(code)+".json")
+  fetch(FB+"/"+currentCategory+"/by_code/"+encodeURIComponent(code)+".json?t="+Date.now())
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(!d){ renderRows([],currentCategory); return; }
@@ -426,19 +430,18 @@ function doSearch(){
   if(!b&&!c&&!s)return;
   document.getElementById("results").innerHTML=spinner("Searching...");
 
-  function sk(str){
-    return String(str||"").trim()
-      .replace(/\./g,"_").replace(/\$/g,"_").replace(/\#/g,"_")
-      .replace(/\[/g,"_").replace(/\]/g,"_").replace(/\//g,"_")
-      .replace(/\s+/g,"_").replace(/__+/g,"_").replace(/^_|_$/g,"");
-  }
-
   var bKey=sk(b), cKey=sk(c), sKey=sk(s);
   var url;
-  if(bKey&&cKey&&sKey)      url=FB+"/"+currentCategory+"/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+"/"+encodeURIComponent(sKey)+".json";
-  else if(bKey&&cKey)       url=FB+"/"+currentCategory+"/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+".json";
-  else if(bKey)             url=FB+"/"+currentCategory+"/by_brand/"+encodeURIComponent(bKey)+".json";
-  else                      url=FB+"/"+currentCategory+"/by_code.json";
+  if(bKey&&cKey&&sKey&&sKey!=="")
+    url=FB+"/"+currentCategory+"/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+"/"+encodeURIComponent(sKey)+".json";
+  else if(bKey&&cKey)
+    url=FB+"/"+currentCategory+"/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+".json";
+  else if(bKey)
+    url=FB+"/"+currentCategory+"/by_brand/"+encodeURIComponent(bKey)+".json";
+  else
+    url=FB+"/"+currentCategory+"/by_code.json";
+
+  url += "?t="+Date.now();
 
   fetch(url)
     .then(function(r){ return r.json(); })
@@ -464,11 +467,12 @@ function clearSearch(){
 }
 
 function showProductPage(code, category){
+  var safeCode = codeKey(code);
   document.getElementById("app").innerHTML =
     hdr("Product Details",code,true)
     + '<div class="wrap"><div id="results">'+spinner("Loading...")+'</div></div>'
     + '<button class="fab-btn" id="fabBtn" onclick="openStaffPin()">&#128274; Staff Login</button>';
-  fetch(FB+"/"+category+"/by_code/"+encodeURIComponent(code)+".json")
+  fetch(FB+"/"+category+"/by_code/"+encodeURIComponent(safeCode)+".json?t="+Date.now())
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(!d){ renderRows([],category); return; }
@@ -486,8 +490,7 @@ function renderRows(rows,category){
     el.innerHTML='<div class="nf"><div class="nf-ico">&#128269;</div><h3>Not Found</h3><p>No matching products</p><a class="back-link" href="'+BASE+'">&#8592; Home</a></div>';
     return;
   }
-  window._rows=rows;
-  window._category=category;
+  window._rows=rows; window._category=category;
   var staff=isStaff();
   el.innerHTML=staff?buildStaff(rows,category):buildPublic(rows,category);
   var fb=document.getElementById("fabBtn");
@@ -497,19 +500,20 @@ function renderRows(rows,category){
 }
 
 function buildPublic(rows,category){
-  if(rows.length===1) return buildSinglePublic(rows[0]);
+  if(rows.length===1) return buildSinglePublic(rows[0],category);
   return buildTablePublic(rows,category);
 }
 
-function buildSinglePublic(r){
-  var sno=r["s_no"]||r["s.no"]||r.sno||"";
+function buildSinglePublic(r,category){
+  var sno=r.s_no||r["s.no"]||r.sno||"";
+  var mrpLabel=category==="mattress"?"MRP":"MRP / METRE";
   var html='<div class="item-group">';
-  if(r.catalog)  html+=card("CATALOG",r.catalog,"card-accent-blue");
-  if(sno)        html+=card("S.NO",sno,"card-accent-blue");
-  if(r.width)    html+=card("WIDTH",r.width,"");
-  if(r.mrp)      html+=cardMrp(r.mrp);
-  if(r.thickness)html+=card("THICKNESS",r.thickness,"");
-  if(r.size)     html+=card("SIZE",r.size,"");
+  if(r.catalog)   html+=card("CATALOG",r.catalog,"card-accent-blue");
+  if(sno)         html+=card("S.NO",sno,"card-accent-blue");
+  if(r.width)     html+=card("WIDTH",r.width,"");
+  if(r.mrp)       html+=cardMrp(r.mrp,mrpLabel);
+  if(r.thickness) html+=card("THICKNESS",r.thickness,"");
+  if(r.size)      html+=card("SIZE",r.size,"");
   html+='</div>';
   return html;
 }
@@ -521,11 +525,11 @@ function buildTablePublic(rows,category){
     +'<span>S.No / Catalog</span><span style="text-align:center">Width</span><span style="text-align:center">MRP</span><span></span>'
     +'</div>';
   rows.forEach(function(r){
-    var sno    = r["s_no"]||r["s.no"]||r.sno||"";
-    var catalog= r.catalog||r["blind type"]||"";
-    var width  = r.width||r.size||r.thickness||"";
-    var mrp    = r.mrp||"";
-    var hasExtra = r["item details"]||r.mechanism||r.others||r.link;
+    var sno=r.s_no||r["s.no"]||r.sno||"";
+    var catalog=r.catalog||r["blind_type"]||r["blind type"]||"";
+    var width=r.width||r.size||r.thickness||"";
+    var mrp=r.mrp||"";
+    var hasExtra=r["item_details"]||r["item details"]||r.mechanism||r.others||r.link;
     html+='<div class="tbl-row" style="grid-template-columns:1fr 70px 80px 24px" onclick="toggleRow(this)">'
       +'<div><div class="tr-main">'+esc(sno||"—")+'</div><div class="tr-sub">'+esc(catalog)+'</div></div>'
       +'<div style="text-align:center;font-size:13px;color:#aaa;font-weight:600">'+(width?esc(width):'—')+'</div>'
@@ -533,7 +537,12 @@ function buildTablePublic(rows,category){
       +'<div class="tr-arr">'+(hasExtra?'&#8250;':'')+'</div>'
       +'</div>'
       +'<div class="exp-panel">'
-      +(hasExtra?expLine("Item Details",r["item details"])+expLine("Mechanism",r.mechanism)+expLine("Others",r.others)+expLinkLine(r.link):'')
+      +(hasExtra
+        ?expLine("Item Details",r["item_details"]||r["item details"])
+        +expLine("Mechanism",r.mechanism)
+        +expLine("Others",r.others)
+        +expLinkLine(r.link)
+        :'')
       +'</div>';
   });
   html+='</div><div class="tbl-hint">Tap row to expand details</div>';
@@ -541,25 +550,26 @@ function buildTablePublic(rows,category){
 }
 
 function buildStaff(rows,category){
-  if(rows.length===1) return buildSingleStaff(rows[0]);
+  if(rows.length===1) return buildSingleStaff(rows[0],category);
   return buildTableStaff(rows,category);
 }
 
-function buildSingleStaff(r){
-  var sno=r["s_no"]||r["s.no"]||r.sno||"";
+function buildSingleStaff(r,category){
+  var sno=r.s_no||r["s.no"]||r.sno||"";
+  var mrpLabel=category==="mattress"?"MRP":"MRP / METRE";
   var html='<div class="item-group">';
-  if(r.code)          html+=card("CODE",r.code,"card-accent-blue");
-  if(r.brand)         html+=card("BRAND",r.brand,"card-accent-red");
-  if(r.catalog)       html+=card("CATALOG",r.catalog,"card-accent-blue");
-  if(r["blind type"]) html+=card("BLIND TYPE",r["blind type"],"card-accent-blue");
-  if(sno)             html+=card("S.NO",sno,"");
-  if(r["item details"]) html+=cardSm("ITEM DETAILS",r["item details"]);
-  if(r.mechanism)     html+=card("MECHANISM",r.mechanism,"");
-  if(r.others)        html+=card("OTHERS",r.others,"");
-  if(r.width)         html+=card("WIDTH",r.width,"");
-  if(r.thickness)     html+=card("THICKNESS",r.thickness,"");
-  if(r.size)          html+=card("SIZE",r.size,"");
-  if(r.mrp)           html+=cardMrp(r.mrp);
+  if(r.code)      html+=card("CODE",r.code,"card-accent-blue");
+  if(r.brand)     html+=card("BRAND",r.brand,"card-accent-red");
+  if(r.catalog)   html+=card("CATALOG",r.catalog,"card-accent-blue");
+  if(r["blind_type"]||r["blind type"]) html+=card("BLIND TYPE",r["blind_type"]||r["blind type"],"card-accent-blue");
+  if(sno)         html+=card("S.NO",sno,"");
+  if(r["item_details"]||r["item details"]) html+=cardSm("ITEM DETAILS",r["item_details"]||r["item details"]);
+  if(r.mechanism) html+=card("MECHANISM",r.mechanism,"");
+  if(r.others)    html+=card("OTHERS",r.others,"");
+  if(r.width)     html+=card("WIDTH",r.width,"");
+  if(r.thickness) html+=card("THICKNESS",r.thickness,"");
+  if(r.size)      html+=card("SIZE",r.size,"");
+  if(r.mrp)       html+=cardMrp(r.mrp,mrpLabel);
   if(r.link&&r.link.indexOf("http")===0)
     html+='<div class="card"><div class="lbl">LINK</div><div class="lbl-line"></div><a href="'+esc(r.link)+'" target="_blank" class="link-btn">View Product &#8599;</a></div>';
   html+='</div>';
@@ -573,11 +583,11 @@ function buildTableStaff(rows,category){
     +'<span>S.No / Catalog</span><span style="text-align:center">Width</span><span style="text-align:center">MRP</span><span></span>'
     +'</div>';
   rows.forEach(function(r){
-    var sno    = r["s_no"]||r["s.no"]||r.sno||"";
-    var catalog= r.catalog||r["blind type"]||"";
-    var width  = r.width||r.size||r.thickness||"";
-    var mrp    = r.mrp||"";
-    var hasExtra = r["item details"]||r.mechanism||r.others||r.brand||r.code||r.link;
+    var sno=r.s_no||r["s.no"]||r.sno||"";
+    var catalog=r.catalog||r["blind_type"]||r["blind type"]||"";
+    var width=r.width||r.size||r.thickness||"";
+    var mrp=r.mrp||"";
+    var hasExtra=r["item_details"]||r["item details"]||r.mechanism||r.others||r.brand||r.code||r.link;
     html+='<div class="tbl-row" style="grid-template-columns:1fr 70px 80px 24px" onclick="toggleRow(this)">'
       +'<div><div class="tr-main">'+esc(sno||"—")+'</div><div class="tr-sub">'+esc(catalog)+'</div></div>'
       +'<div style="text-align:center;font-size:13px;color:#aaa;font-weight:600">'+(width?esc(width):'—')+'</div>'
@@ -587,8 +597,8 @@ function buildTableStaff(rows,category){
       +'<div class="exp-panel">'
       +expLine("Code",r.code)
       +expLine("Brand",r.brand)
-      +expLine("Item Details",r["item details"])
-      +expLine("Blind Type",r["blind type"])
+      +expLine("Item Details",r["item_details"]||r["item details"])
+      +expLine("Blind Type",r["blind_type"]||r["blind type"])
       +expLine("Mechanism",r.mechanism)
       +expLine("Others",r.others)
       +expLine("Thickness",r.thickness)
@@ -608,9 +618,9 @@ function cardSm(label,value){
   if(!value)return"";
   return '<div class="card"><div class="lbl">'+label+'</div><div class="lbl-line"></div><div class="val-sm">'+esc(value)+'</div></div>';
 }
-function cardMrp(value){
+function cardMrp(value,label){
   if(!value)return"";
-  return '<div class="card card-mrp"><div class="lbl lbl-dark">MRP / METRE</div><div class="lbl-line"></div><div class="mrp-row"><span class="rsym">&#8377;</span><span class="mrp-val">'+esc(value)+'</span></div></div>';
+  return '<div class="card card-mrp"><div class="lbl lbl-dark">'+(label||"MRP / METRE")+'</div><div class="lbl-line"></div><div class="mrp-row"><span class="rsym">&#8377;</span><span class="mrp-val">'+esc(value)+'</span></div></div>';
 }
 function expLine(label,value){
   if(!value)return"";
@@ -670,8 +680,7 @@ function updateStaffDots(err){
 }
 function checkStaffPin(){
   if(staffEn===PIN){
-    localStorage.setItem(SK,"1");
-    localStorage.setItem(SAK,"1");
+    localStorage.setItem(SK,"1"); localStorage.setItem(SAK,"1");
     closeStaffPin();
     if(window._rows) renderRows(window._rows,window._category||"fabric");
   } else {
