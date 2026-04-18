@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Darla — Quote Builder</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0a0a0a;color:#fff;min-height:100vh;-webkit-font-smoothing:antialiased}
+:root{--red:#c0392b;--dark:#0a0a0a;--card:#161616;--border:#252525;--muted:#555;--sub:#888}
+
+/* ── SCREENS ── */
+.screen{display:none;min-height:100vh;padding-bottom:100px}
+.screen.active{display:block}
+
+/* ── HEADER ── */
+.hdr{background:#111;border-bottom:2px solid var(--red);padding:18px 20px 14px;text-align:center;position:sticky;top:0;z-index:50}
+.hdr-logo{width:160px;height:58px;display:block;margin:0 auto 10px;object-fit:contain}
+.hdr-title{font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.5px}
+.hdr-sub{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:3px}
+.hdr-row{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.hdr-back{background:transparent;border:1px solid #333;color:#aaa;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer}
+.hdr-action{background:var(--red);border:none;color:#fff;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer}
+
+/* ── LAYOUT ── */
+.page-wrap{padding:12px}
+.section-title{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:20px 0 8px;padding:0 4px}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px}
+.card-red{border-top:3px solid var(--red)}
+.card-blue{border-top:3px solid #1a6bbf}
+.card-green{border-top:3px solid #27ae60}
+.card-gold{border-top:3px solid #f39c12}
+
+/* ── INPUTS ── */
+.field{margin-bottom:14px}
+.field-label{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block}
+.inp{width:100%;background:#1e1e1e;border:1.5px solid #2a2a2a;border-radius:10px;color:#fff;font-size:16px;font-weight:600;padding:12px 14px;outline:none;-webkit-appearance:none}
+.inp:focus{border-color:var(--red)}
+.inp::placeholder{color:#333;font-weight:400}
+.inp-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.inp-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23555' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+select.inp option{background:#1e1e1e}
+
+/* ── BUTTONS ── */
+.btn{width:100%;background:var(--red);color:#fff;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;display:block;margin-top:12px;box-shadow:0 4px 20px rgba(192,57,43,0.35);-webkit-tap-highlight-color:transparent}
+.btn:active{opacity:0.85}
+.btn-ghost{background:transparent;border:1.5px solid #2a2a2a;color:#aaa;font-weight:600;box-shadow:none}
+.btn-sm{padding:10px 16px;font-size:13px;font-weight:700;border-radius:9px;width:auto;display:inline-block;margin-top:0}
+.btn-blue{background:#1a6bbf;box-shadow:0 4px 20px rgba(26,107,191,0.3)}
+.btn-green{background:#27ae60;box-shadow:0 4px 20px rgba(39,174,96,0.3)}
+.btn-add{background:#1e1e1e;border:1.5px dashed #333;color:#666;font-size:13px;font-weight:600;letter-spacing:0.5px;box-shadow:none;padding:12px}
+.btn-add:hover{border-color:var(--red);color:var(--red)}
+.btn-row{display:flex;gap:8px;margin-top:10px}
+.btn-row .btn{margin-top:0}
+
+/* ── PIN PAD ── */
+.pin-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+.pin-logo{width:180px;height:65px;object-fit:contain;margin-bottom:24px}
+.pin-title{font-size:28px;font-weight:900;margin-bottom:4px}
+.pin-sub{font-size:13px;color:var(--muted);margin-bottom:10px}
+.staff-select{width:100%;max-width:320px;margin-bottom:24px}
+.pin-dots{display:flex;gap:16px;margin-bottom:28px}
+.dot{width:16px;height:16px;border-radius:50%;background:#222;border:2px solid #333;transition:all 0.12s}
+.dot.on{background:var(--red);border-color:var(--red);transform:scale(1.15)}
+.dot.err{background:#e53935;border-color:#e53935}
+.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:320px}
+.pk{background:#1e1e1e;border:1px solid #2a2a2a;border-radius:14px;height:66px;font-size:26px;font-weight:700;color:#fff;cursor:pointer;width:100%;-webkit-tap-highlight-color:transparent;transition:background 0.1s,transform 0.1s}
+.pk:active{background:var(--red);border-color:var(--red);transform:scale(0.94)}
+.pk.del{font-size:20px;color:var(--muted)}
+.pk.ghost{opacity:0;pointer-events:none}
+.pin-error{color:#e53935;font-size:13px;margin-top:12px;text-align:center;min-height:20px}
+
+/* ── ROOM CARDS ── */
+.room-card{background:var(--card);border:1px solid var(--border);border-top:3px solid var(--red);border-radius:14px;margin-bottom:12px;overflow:hidden}
+.room-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer}
+.room-name{font-size:17px;font-weight:800;color:#fff}
+.room-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.room-toggle{color:var(--muted);font-size:20px;transition:transform 0.2s}
+.room-card.open .room-toggle{transform:rotate(90deg)}
+.room-body{display:none;padding:0 12px 12px}
+.room-card.open .room-body{display:block}
+.room-actions{display:flex;gap:8px;padding:8px 16px 12px;border-top:1px solid var(--border)}
+
+/* ── WINDOW CARDS ── */
+.win-card{background:#111;border:1px solid #1e1e1e;border-radius:12px;margin-bottom:8px;overflow:hidden}
+.win-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer}
+.win-name{font-size:15px;font-weight:700}
+.win-dims{font-size:11px;color:var(--muted);margin-top:2px}
+.win-body{display:none;padding:0 12px 12px}
+.win-card.open .win-body{display:block}
+.win-toggle{color:var(--muted);font-size:18px;transition:transform 0.2s}
+.win-card.open .win-toggle{transform:rotate(90deg)}
+
+/* ── TREATMENT ── */
+.treatment-card{background:#161616;border:1px solid #252525;border-radius:10px;margin-bottom:8px;padding:12px}
+.treatment-type-badge{display:inline-block;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#aaa;margin-bottom:10px}
+.treatment-type-badge.curtains{color:#1a6bbf;border-color:#1a3a5c}
+.treatment-type-badge.roman_blinds{color:#27ae60;border-color:#1a3d27}
+.treatment-type-badge.blinds{color:#f39c12;border-color:#5a4010}
+
+/* ── COMPONENT ── */
+.comp-card{background:#0f0f0f;border:1px solid #1a1a1a;border-radius:9px;padding:10px 12px;margin-bottom:6px}
+.comp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.comp-layer{font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:5px}
+.comp-layer.main{background:#1a3a5c;color:#5b9bd5}
+.comp-layer.sheer{background:#1a3a27;color:#5bd57e}
+.comp-layer.blind{background:#3a2a0a;color:#d5a05b}
+.comp-product{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px}
+.comp-brand{font-size:11px;color:var(--muted)}
+.comp-calc{background:#111;border-radius:7px;padding:8px 10px;margin-top:8px}
+.comp-calc-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:2px 0}
+.comp-calc-row .lbl{color:var(--muted)}
+.comp-calc-row .val{font-weight:700;color:#fff}
+.comp-calc-row .val.total{color:var(--red);font-size:14px}
+.comp-del{background:transparent;border:none;color:#333;font-size:16px;cursor:pointer;padding:4px}
+.comp-del:active{color:#e53935}
+
+/* ── SUMMARY ── */
+.summary-wrap{padding:12px}
+.quote-id-badge{background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;padding:8px 14px;font-size:11px;color:var(--muted);text-align:center;margin-bottom:16px}
+.quote-id-badge span{color:#fff;font-weight:700;font-size:14px;display:block;margin-top:2px}
+.summary-customer{background:var(--card);border:1px solid var(--border);border-top:3px solid #1a6bbf;border-radius:12px;padding:14px;margin-bottom:12px}
+.summary-field{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #1a1a1a;font-size:13px}
+.summary-field:last-child{border-bottom:none}
+.summary-field .lbl{color:var(--muted);font-weight:600}
+.summary-field .val{font-weight:700;color:#fff;text-align:right}
+.summary-room{background:var(--card);border:1px solid var(--border);border-top:3px solid var(--red);border-radius:12px;margin-bottom:10px;overflow:hidden}
+.summary-room-hdr{background:#1a1a1a;padding:12px 14px;font-size:14px;font-weight:800}
+.summary-win-block{padding:10px 14px;border-bottom:1px solid #1a1a1a}
+.summary-win-block:last-child{border-bottom:none}
+.summary-win-title{font-size:13px;font-weight:700;color:#ccc;margin-bottom:6px}
+.summary-win-dims{font-size:11px;color:var(--muted);margin-bottom:8px}
+.summary-comp-row{display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid #111}
+.summary-comp-row:last-child{border-bottom:none}
+.summary-comp-info .lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.summary-comp-info .name{font-size:13px;font-weight:700;color:#fff;margin-top:2px}
+.summary-comp-info .detail{font-size:11px;color:var(--muted);margin-top:1px}
+.summary-comp-amt{font-size:15px;font-weight:900;color:#fff;white-space:nowrap;margin-left:12px}
+.grand-total-card{background:#fff;border-radius:14px;padding:18px;text-align:center;margin:16px 0}
+.grand-total-lbl{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#555;margin-bottom:4px}
+.grand-total-val{font-size:42px;font-weight:900;color:#000;letter-spacing:-2px}
+.grand-total-sub{font-size:11px;color:#888;margin-top:4px}
+
+/* ── BOTTOM BAR ── */
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;background:#111;border-top:1px solid var(--border);padding:12px 16px;display:flex;gap:8px;z-index:50}
+
+/* ── QUOTE MODE BANNER ── */
+.quote-mode-banner{background:var(--red);color:#fff;text-align:center;padding:10px;font-size:13px;font-weight:700;letter-spacing:0.5px}
+
+/* ── PRINT STYLES ── */
+@media print{
+  .no-print{display:none!important}
+  body{background:#fff;color:#000}
+  .screen{display:block!important}
+  .screen:not(#screen-print){display:none!important}
+  .summary-room{border:1px solid #ddd;break-inside:avoid}
+  .grand-total-card{background:#f5f5f5}
+  .grand-total-val{color:#000}
+}
+
+/* ── SPINNER ── */
+.spinner-sm{width:20px;height:20px;border:2px solid #333;border-top-color:var(--red);border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;margin-right:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── BADGES ── */
+.tag{display:inline-block;border-radius:5px;padding:2px 8px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.tag-red{background:#3a1010;color:#e57373}
+.tag-blue{background:#0a1a3a;color:#64b5f6}
+.tag-green{background:#0a2a1a;color:#81c784}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#fff;color:#000;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:700;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-sheet{background:#161616;border:1px solid #2a2a2a;border-top:3px solid var(--red);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px}
+.modal-handle{width:40px;height:4px;background:#2e2e2e;border-radius:2px;margin:0 auto 16px}
+.modal-title{font-size:18px;font-weight:900;margin-bottom:14px}
+
+/* ── ROOM NAME PILLS ── */
+.name-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.name-pill{background:#1e1e1e;border:1.5px solid #2a2a2a;border-radius:20px;padding:7px 14px;font-size:13px;font-weight:600;color:#aaa;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.name-pill.selected{background:#3a1010;border-color:var(--red);color:#fff}
+
+/* QUOTE SAVED STATE */
+.saved-badge{display:inline-block;background:#0a2a1a;color:#81c784;border:1px solid #1a4a2a;border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-left:8px}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SCREEN 1: STAFF LOGIN                  -->
+<!-- ═══════════════════════════════════════ -->
+<div id="screen-login" class="screen active">
+  <div class="pin-wrap">
+    <img class="pin-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display='none'" alt="Darla">
+    <div class="pin-title">Quote Builder</div>
+    <div class="pin-sub" id="loginSub">Select your name to continue</div>
+
+    <div class="staff-select">
+      <select class="inp" id="staffSelect" onchange="onStaffSelect()">
+        <option value="">Select Staff Member...</option>
+      </select>
+    </div>
+
+    <div class="pin-dots">
+      <div class="dot" id="pd0"></div>
+      <div class="dot" id="pd1"></div>
+      <div class="dot" id="pd2"></div>
+      <div class="dot" id="pd3"></div>
+    </div>
+
+    <div class="pin-grid">
+      <button class="pk" onclick="lPk('1')">1</button>
+      <button class="pk" onclick="lPk('2')">2</button>
+      <button class="pk" onclick="lPk('3')">3</button>
+      <button class="pk" onclick="lPk('4')">4</button>
+      <button class="pk" onclick="lPk('5')">5</button>
+      <button class="pk" onclick="lPk('6')">6</button>
+      <button class="pk" onclick="lPk('7')">7</button>
+      <button class="pk" onclick="lPk('8')">8</button>
+      <button class="pk" onclick="lPk('9')">9</button>
+      <button class="pk ghost"></button>
+      <button class="pk" onclick="lPk('0')">0</button>
+      <button class="pk del" onclick="lPd()">&#9003;</button>
+    </div>
+
+    <div class="pin-error" id="loginError"></div>
+
+    <button class="btn btn-ghost" style="max-width:320px;margin-top:20px" onclick="skipLogin()">
+      Skip (Demo Mode)
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SCREEN 2: CUSTOMER DETAILS            -->
+<!-- ═══════════════════════════════════════ -->
+<div id="screen-customer" class="screen">
+  <div class="hdr">
+    <img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display='none'" alt="Darla">
+    <div class="hdr-title">New Quote</div>
+    <div class="hdr-sub" id="staffNameDisplay">Staff</div>
+  </div>
+  <div class="page-wrap">
+    <div class="section-title">Customer Details</div>
+    <div class="card card-blue">
+      <div class="field">
+        <label class="field-label">Customer Name *</label>
+        <input class="inp" id="custName" placeholder="Full name" type="text">
+      </div>
+      <div class="field">
+        <label class="field-label">Mobile Number *</label>
+        <input class="inp" id="custMobile" placeholder="10-digit number" type="tel" maxlength="10">
+      </div>
+      <div class="field">
+        <label class="field-label">Architect / Interior Designer</label>
+        <input class="inp" id="custArch" placeholder="Optional" type="text">
+      </div>
+      <div class="field">
+        <label class="field-label">Address / Project</label>
+        <input class="inp" id="custAddr" placeholder="Optional" type="text">
+      </div>
+    </div>
+
+    <div class="section-title">Existing Quote</div>
+    <div class="card">
+      <div class="field">
+        <label class="field-label">Load Quote by ID</label>
+        <div style="display:flex;gap:8px">
+          <input class="inp" id="loadQuoteId" placeholder="e.g. DRL-0042" style="flex:1;margin-top:0">
+          <button class="btn btn-blue btn-sm" onclick="loadQuote()" style="margin-top:0;flex-shrink:0">Load</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn" onclick="startQuote()">Start Quote &#8594;</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SCREEN 3: QUOTE BUILDER               -->
+<!-- ═══════════════════════════════════════ -->
+<div id="screen-builder" class="screen">
+  <div class="hdr">
+    <img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display='none'" alt="Darla">
+    <div class="hdr-row">
+      <button class="hdr-back" onclick="goTo('screen-customer')">&#8592; Back</button>
+      <div style="text-align:center">
+        <div class="hdr-title" id="builderCustomerName">Quote</div>
+        <div class="hdr-sub" id="builderQuoteId"></div>
+      </div>
+      <button class="hdr-action" onclick="goTo('screen-summary')">Summary</button>
+    </div>
+  </div>
+  <div class="page-wrap">
+    <div id="roomsContainer"></div>
+    <button class="btn btn-add" onclick="showAddRoomModal()">&#43; Add Room</button>
+  </div>
+  <div class="bottom-bar no-print">
+    <button class="btn btn-ghost" style="margin-top:0" onclick="saveQuote()">&#128190; Save</button>
+    <button class="btn" style="margin-top:0" onclick="goTo('screen-summary')">View Summary &#8594;</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SCREEN 4: SUMMARY / PRINT             -->
+<!-- ═══════════════════════════════════════ -->
+<div id="screen-summary" class="screen">
+  <div class="hdr no-print">
+    <img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display='none'" alt="Darla">
+    <div class="hdr-row">
+      <button class="hdr-back" onclick="goTo('screen-builder')">&#8592; Edit</button>
+      <div style="text-align:center">
+        <div class="hdr-title">Quote Summary</div>
+      </div>
+      <button class="hdr-action" onclick="window.print()">&#128424; Print</button>
+    </div>
+  </div>
+  <div class="summary-wrap" id="summaryContent"></div>
+  <div class="bottom-bar no-print">
+    <button class="btn btn-ghost" style="margin-top:0" onclick="shareQuote()">&#128279; Share</button>
+    <button class="btn" style="margin-top:0" onclick="saveQuote()">&#128190; Save Quote</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- MODAL: ADD ROOM                        -->
+<!-- ═══════════════════════════════════════ -->
+<div class="modal-overlay" id="addRoomModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Room</div>
+    <div class="name-pills" id="roomNamePills"></div>
+    <div class="field">
+      <label class="field-label">Custom Name</label>
+      <input class="inp" id="customRoomName" placeholder="Enter room name">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" style="margin-top:0" onclick="closeModal('addRoomModal')">Cancel</button>
+      <button class="btn" style="margin-top:0" onclick="confirmAddRoom()">Add Room</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- MODAL: ADD WINDOW                      -->
+<!-- ═══════════════════════════════════════ -->
+<div class="modal-overlay" id="addWindowModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Window</div>
+    <input type="hidden" id="winRoomIdx">
+    <div class="field">
+      <label class="field-label">Window Name</label>
+      <input class="inp" id="winName" placeholder="e.g. Bay Window, Sliding Door">
+    </div>
+    <div class="inp-row">
+      <div class="field">
+        <label class="field-label">Width (inches)</label>
+        <input class="inp" id="winWidth" type="number" placeholder="e.g. 84">
+      </div>
+      <div class="field">
+        <label class="field-label">Height (inches)</label>
+        <input class="inp" id="winHeight" type="number" placeholder="e.g. 108">
+      </div>
+    </div>
+    <div class="inp-row">
+      <div class="field">
+        <label class="field-label">Qty</label>
+        <input class="inp" id="winQty" type="number" value="1" min="1">
+      </div>
+      <div class="field">
+        <label class="field-label">Remarks</label>
+        <input class="inp" id="winRemarks" placeholder="Optional">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" style="margin-top:0" onclick="closeModal('addWindowModal')">Cancel</button>
+      <button class="btn" style="margin-top:0" onclick="confirmAddWindow()">Add Window</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- MODAL: ADD TREATMENT                   -->
+<!-- ═══════════════════════════════════════ -->
+<div class="modal-overlay" id="addTreatmentModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Select Treatment</div>
+    <input type="hidden" id="txRoomIdx">
+    <input type="hidden" id="txWinIdx">
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+      <button class="btn btn-blue" style="margin-top:0" onclick="confirmAddTreatment('curtains')">
+        &#129525; Curtains
+      </button>
+      <button class="btn btn-green" style="margin-top:0" onclick="confirmAddTreatment('roman_blinds')">
+        &#129695; Roman Blinds
+      </button>
+      <button class="btn" style="background:#f39c12;box-shadow:0 4px 20px rgba(243,156,18,0.3);margin-top:0" onclick="confirmAddTreatment('blinds')">
+        &#9000; Blinds
+      </button>
+    </div>
+    <button class="btn btn-ghost" style="margin-top:0" onclick="closeModal('addTreatmentModal')">Cancel</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════
+// CONFIG — UPDATE THESE AFTER DEPLOYING APPS SCRIPT
+// ════════════════════════════════════════════
+var APPS_SCRIPT_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+var PRODUCT_SEARCH_URL = "index.html";
+
+// ════════════════════════════════════════════
+// STAFF DATA — loaded from Apps Script or fallback
+// ════════════════════════════════════════════
+var STAFF_LIST = [
+  // Fallback — will be replaced by Apps Script data
+  // Format: {name:"Staff Name", pin:"1234"}
+  {name:"Demo Staff", pin:"0000"}
+];
+
+// ════════════════════════════════════════════
+// APP STATE
+// ════════════════════════════════════════════
+var APP = {
+  staff: null,
+  quote: newQuote()
+};
+
+function newQuote(){
+  return {
+    id: null,
+    date: new Date().toLocaleDateString("en-IN"),
+    staff: "",
+    customer: {name:"",mobile:"",arch:"",addr:""},
+    rooms: [],
+    saved: false
+  };
+}
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+window.addEventListener("DOMContentLoaded", function(){
+  // Check if returning from product search
+  var selected = localStorage.getItem("darla_selected_product");
+  var ctx      = localStorage.getItem("quote_product_ctx");
+
+  if(selected && ctx){
+    // Restore quote from localStorage
+    var saved = localStorage.getItem("darla_quote_draft");
+    if(saved) APP.quote = JSON.parse(saved);
+    var product = JSON.parse(selected);
+    var context = JSON.parse(ctx);
+    attachProduct(context, product);
+    localStorage.removeItem("darla_selected_product");
+    localStorage.removeItem("quote_product_ctx");
+    // Restore staff
+    var staffStr = localStorage.getItem("darla_quote_staff");
+    if(staffStr) APP.staff = JSON.parse(staffStr);
+    goTo("screen-builder");
+    renderBuilder();
+    showToast("Product added ✓");
+    return;
+  }
+
+  // Check if loading a quote by ID from URL
+  var urlId = getParam("load");
+  if(urlId){
+    loadQuoteById(urlId);
+    return;
+  }
+
+  // Load staff list
+  loadStaffList();
+
+  // Restore draft if exists
+  var draft = localStorage.getItem("darla_quote_draft");
+  if(draft){
+    try{
+      APP.quote = JSON.parse(draft);
+      if(APP.quote.customer && APP.quote.customer.name){
+        document.getElementById("custName").value    = APP.quote.customer.name;
+        document.getElementById("custMobile").value  = APP.quote.customer.mobile||"";
+        document.getElementById("custArch").value    = APP.quote.customer.arch||"";
+        document.getElementById("custAddr").value    = APP.quote.customer.addr||"";
+      }
+    }catch(e){}
+  }
+});
+
+function getParam(n){ return new URLSearchParams(window.location.search).get(n)||""; }
+
+// ════════════════════════════════════════════
+// STAFF / LOGIN
+// ════════════════════════════════════════════
+function loadStaffList(){
+  if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf("YOUR_")===0){
+    populateStaffDropdown();
+    return;
+  }
+  fetch(APPS_SCRIPT_URL+"?action=getStaff")
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.staff && d.staff.length) STAFF_LIST = d.staff;
+      populateStaffDropdown();
+    })
+    .catch(function(){ populateStaffDropdown(); });
+}
+
+function populateStaffDropdown(){
+  var sel = document.getElementById("staffSelect");
+  STAFF_LIST.forEach(function(s){
+    var opt = document.createElement("option");
+    opt.value = s.name;
+    opt.textContent = s.name;
+    sel.appendChild(opt);
+  });
+}
+
+var loginPin="", selectedStaff=null;
+
+function onStaffSelect(){
+  var name = document.getElementById("staffSelect").value;
+  selectedStaff = STAFF_LIST.find(function(s){return s.name===name;})||null;
+  loginPin="";
+  updateLoginDots();
+  document.getElementById("loginError").textContent="";
+  document.getElementById("loginSub").textContent = name ? "Enter your PIN" : "Select your name to continue";
+}
+
+function lPk(k){
+  if(!selectedStaff){
+    document.getElementById("loginError").textContent="Please select your name first";
+    return;
+  }
+  if(loginPin.length>=4) return;
+  loginPin+=k;
+  updateLoginDots();
+  if(loginPin.length===4) setTimeout(checkLoginPin,80);
+}
+
+function lPd(){ loginPin=loginPin.slice(0,-1); updateLoginDots(); }
+
+function updateLoginDots(err){
+  for(var i=0;i<4;i++){
+    var d=document.getElementById("pd"+i);if(!d)return;
+    d.className="dot";
+    if(err) d.classList.add("err");
+    else if(i<loginPin.length) d.classList.add("on");
+  }
+}
+
+function checkLoginPin(){
+  if(!selectedStaff) return;
+  if(loginPin===selectedStaff.pin){
+    APP.staff = selectedStaff;
+    localStorage.setItem("darla_quote_staff", JSON.stringify(APP.staff));
+    document.getElementById("staffNameDisplay").textContent = APP.staff.name;
+    goTo("screen-customer");
+  } else {
+    updateLoginDots(true);
+    document.getElementById("loginError").textContent="Incorrect PIN. Try again.";
+    setTimeout(function(){ loginPin=""; updateLoginDots(); document.getElementById("loginError").textContent=""; },1000);
+  }
+}
+
+function skipLogin(){
+  APP.staff = {name:"Staff", pin:""};
+  document.getElementById("staffNameDisplay").textContent="Demo Mode";
+  goTo("screen-customer");
+}
+
+// ════════════════════════════════════════════
+// CUSTOMER & QUOTE START
+// ════════════════════════════════════════════
+function startQuote(){
+  var name = document.getElementById("custName").value.trim();
+  var mob  = document.getElementById("custMobile").value.trim();
+  if(!name){ showToast("Enter customer name"); return; }
+  if(!mob || mob.length<10){ showToast("Enter valid mobile number"); return; }
+
+  APP.quote.customer = {
+    name: name,
+    mobile: mob,
+    arch: document.getElementById("custArch").value.trim(),
+    addr: document.getElementById("custAddr").value.trim()
+  };
+  APP.quote.staff = APP.staff ? APP.staff.name : "Staff";
+
+  if(!APP.quote.id){
+    APP.quote.id = "DRL-" + String(Math.floor(Math.random()*9000)+1000);
+    APP.quote.date = new Date().toLocaleDateString("en-IN");
+  }
+
+  document.getElementById("builderCustomerName").textContent = name;
+  document.getElementById("builderQuoteId").textContent = APP.quote.id;
+
+  saveDraft();
+  goTo("screen-builder");
+  renderBuilder();
+}
+
+// ════════════════════════════════════════════
+// ROOMS
+// ════════════════════════════════════════════
+var ROOM_PRESETS = [
+  "Living Room","Master Bedroom","Kids Room","Guest Room",
+  "Sons Room","Daughters Room","Parents Room","Home Theatre",
+  "Study","Kitchen","Dining Room","Pooja Room"
+];
+
+var addRoomSelectedName = "";
+
+function showAddRoomModal(){
+  addRoomSelectedName = "";
+  document.getElementById("customRoomName").value = "";
+  // Build pills
+  var html="";
+  ROOM_PRESETS.forEach(function(n){
+    html+='<div class="name-pill" onclick="selectRoomPreset(this,\''+n+'\')">' +n+'</div>';
+  });
+  document.getElementById("roomNamePills").innerHTML=html;
+  openModal("addRoomModal");
+}
+
+function selectRoomPreset(el, name){
+  document.querySelectorAll(".name-pill").forEach(function(p){p.classList.remove("selected");});
+  el.classList.add("selected");
+  addRoomSelectedName = name;
+  document.getElementById("customRoomName").value = "";
+}
+
+function confirmAddRoom(){
+  var custom = document.getElementById("customRoomName").value.trim();
+  var name   = custom || addRoomSelectedName;
+  if(!name){ showToast("Select or enter a room name"); return; }
+  APP.quote.rooms.push({id:uid(), name:name, windows:[]});
+  closeModal("addRoomModal");
+  saveDraft();
+  renderBuilder();
+}
+
+// ════════════════════════════════════════════
+// WINDOWS
+// ════════════════════════════════════════════
+function showAddWindowModal(roomIdx){
+  document.getElementById("winRoomIdx").value = roomIdx;
+  document.getElementById("winName").value    = "";
+  document.getElementById("winWidth").value   = "";
+  document.getElementById("winHeight").value  = "";
+  document.getElementById("winQty").value     = "1";
+  document.getElementById("winRemarks").value = "";
+  openModal("addWindowModal");
+}
+
+function confirmAddWindow(){
+  var ri     = parseInt(document.getElementById("winRoomIdx").value);
+  var name   = document.getElementById("winName").value.trim() || "Window "+(APP.quote.rooms[ri].windows.length+1);
+  var width  = parseFloat(document.getElementById("winWidth").value)||0;
+  var height = parseFloat(document.getElementById("winHeight").value)||0;
+  var qty    = parseInt(document.getElementById("winQty").value)||1;
+  var rem    = document.getElementById("winRemarks").value.trim();
+  if(!width||!height){ showToast("Enter width and height"); return; }
+  APP.quote.rooms[ri].windows.push({
+    id:uid(), name:name, width:width, height:height, qty:qty, remarks:rem, treatments:[]
+  });
+  closeModal("addWindowModal");
+  saveDraft();
+  renderBuilder();
+}
+
+// ════════════════════════════════════════════
+// TREATMENTS
+// ════════════════════════════════════════════
+function showAddTreatmentModal(ri, wi){
+  document.getElementById("txRoomIdx").value = ri;
+  document.getElementById("txWinIdx").value  = wi;
+  openModal("addTreatmentModal");
+}
+
+function confirmAddTreatment(type){
+  var ri = parseInt(document.getElementById("txRoomIdx").value);
+  var wi = parseInt(document.getElementById("txWinIdx").value);
+  APP.quote.rooms[ri].windows[wi].treatments.push({id:uid(), type:type, components:[]});
+  closeModal("addTreatmentModal");
+  saveDraft();
+  renderBuilder();
+}
+
+// ════════════════════════════════════════════
+// COMPONENTS
+// ════════════════════════════════════════════
+function addComponent(ri, wi, ti, layer){
+  var comp = {id:uid(), layer:layer, product:null, blindType:"", mechanism:"", calc:{}};
+  APP.quote.rooms[ri].windows[wi].treatments[ti].components.push(comp);
+  saveDraft();
+  renderBuilder();
+}
+
+function deleteComponent(ri, wi, ti, ci){
+  APP.quote.rooms[ri].windows[wi].treatments[ti].components.splice(ci,1);
+  saveDraft();
+  renderBuilder();
+}
+
+function deleteTreatment(ri, wi, ti){
+  APP.quote.rooms[ri].windows[wi].treatments.splice(ti,1);
+  saveDraft();
+  renderBuilder();
+}
+
+function deleteWindow(ri, wi){
+  APP.quote.rooms[ri].windows.splice(wi,1);
+  saveDraft();
+  renderBuilder();
+}
+
+function deleteRoom(ri){
+  APP.quote.rooms.splice(ri,1);
+  saveDraft();
+  renderBuilder();
+}
+
+// ════════════════════════════════════════════
+// PRODUCT SELECTION — opens search module
+// ════════════════════════════════════════════
+function selectProduct(ri, wi, ti, ci){
+  // Save current state
+  saveDraft();
+  localStorage.setItem("darla_quote_staff", JSON.stringify(APP.staff));
+  localStorage.setItem("quote_product_ctx", JSON.stringify({ri:ri,wi:wi,ti:ti,ci:ci}));
+  // Determine which category to open
+  var tType = APP.quote.rooms[ri].windows[wi].treatments[ti].type;
+  var cat = tType==="blinds" ? "blinds" : "fabric";
+  window.location.href = PRODUCT_SEARCH_URL+"?mode=quote&category="+cat+"&return=quote.html";
+}
+
+function attachProduct(ctx, product){
+  var comp = APP.quote.rooms[ctx.ri].windows[ctx.wi].treatments[ctx.ti].components[ctx.ci];
+  if(!comp) return;
+  comp.product = product;
+  // Auto-calculate
+  var w = APP.quote.rooms[ctx.ri].windows[ctx.wi];
+  comp.calc = calcComponent(w, comp);
+}
+
+// ════════════════════════════════════════════
+// CALCULATIONS
+// ════════════════════════════════════════════
+function roundTo(val, step){
+  return Math.round(val / step) * step;
+}
+function ceilTo(val){
+  return Math.ceil(val);
+}
+
+function calcComponent(win, comp){
+  if(!comp.product || !win) return {};
+  var mrp    = parseFloat(comp.product.mrp)||0;
+  var width  = parseFloat(win.width)||0;
+  var height = parseFloat(win.height)||0;
+  var qty    = parseInt(win.qty)||1;
+  var type   = comp.layer; // main/sheer = curtains logic; blind = blind logic
+  var tType  = ""; // set from parent treatment
+
+  // Get treatment type from context — we'll pass it in comp
+  var tType = comp.treatmentType || "curtains";
+
+  if(tType === "curtains" || tType === "roman_blinds" && (type==="main"||type==="sheer")){
+    return calcCurtains(width, height, mrp, qty);
+  } else if(tType === "roman_blinds"){
+    return calcRomanBlinds(width, height, mrp, qty);
+  } else if(tType === "blinds"){
+    return calcBlinds(width, height, mrp, qty);
+  }
+  return calcCurtains(width, height, mrp, qty);
+}
+
+function calcCurtains(width, height, mrp, qty){
+  var numPanels   = ceilTo((width + 10) / 24);
+  var panelLength = roundTo((height + 16) / 39, 0.05);
+  var fabricQty   = numPanels * panelLength;
+  var unitTotal   = fabricQty * mrp;
+  var total       = unitTotal * qty;
+  return {
+    numPanels:numPanels, panelLength:panelLength,
+    fabricQty:Math.round(fabricQty*100)/100,
+    unitTotal:Math.round(unitTotal), total:Math.round(total),
+    unit:"mtrs"
+  };
+}
+
+function calcRomanBlinds(width, height, mrp, qty){
+  var wFt      = roundTo(width/12, 0.25);
+  var hFt      = roundTo(height/12, 0.25);
+  var sqft     = wFt * hFt;
+  var matCost  = sqft * 475;
+  var panels   = ceilTo(width / 48);
+  var panelLen = roundTo((height + 20) / 39, 0.05);
+  var fabricQty= panels * panelLen;
+  var fabCost  = fabricQty * mrp;
+  var lining   = fabricQty * 200;
+  var unitTotal= matCost + fabCost + lining;
+  var total    = unitTotal * qty;
+  return {
+    sqft:Math.round(sqft*100)/100, matCost:Math.round(matCost),
+    panels:panels, panelLen:panelLen,
+    fabricQty:Math.round(fabricQty*100)/100,
+    fabCost:Math.round(fabCost), lining:Math.round(lining),
+    unitTotal:Math.round(unitTotal), total:Math.round(total),
+    unit:"mtrs"
+  };
+}
+
+function calcBlinds(width, height, mrp, qty){
+  var wFt   = roundTo(width/12, 0.25);
+  var hFt   = roundTo(height/12, 0.25);
+  var sqft  = wFt * hFt;
+  var unit  = sqft * mrp;
+  var total = unit * qty;
+  return {
+    sqft:Math.round(sqft*100)/100,
+    unitTotal:Math.round(unit), total:Math.round(total),
+    unit:"sqft"
+  };
+}
+
+function fmt(n){ return "₹"+Number(Math.round(n)).toLocaleString("en-IN"); }
+
+// ════════════════════════════════════════════
+// RENDER BUILDER
+// ════════════════════════════════════════════
+function renderBuilder(){
+  var html="";
+  APP.quote.rooms.forEach(function(room,ri){
+    var winCount = room.windows.length;
+    var roomTotal= getRoomTotal(room);
+    html+='<div class="room-card" id="room_'+ri+'">'
+      +'<div class="room-hdr" onclick="toggleRoom('+ri+')">'
+      +'<div>'
+      +'<div class="room-name">'+esc(room.name)+'</div>'
+      +'<div class="room-meta">'+winCount+' window'+(winCount!==1?"s":"")
+      +(roomTotal?' &nbsp;·&nbsp; '+fmt(roomTotal):'')+'</div>'
+      +'</div>'
+      +'<div class="room-toggle">&#8250;</div>'
+      +'</div>'
+      +'<div class="room-body">';
+
+    room.windows.forEach(function(win,wi){
+      html += renderWindow(win, ri, wi);
+    });
+
+    html+='<button class="btn btn-add" onclick="showAddWindowModal('+ri+')" style="margin-top:6px">&#43; Add Window</button>';
+    html+='</div>'
+      +'<div class="room-actions">'
+      +'<button class="btn btn-ghost btn-sm" onclick="deleteRoom('+ri+')" style="color:#e57373;border-color:#3a1010">&#128465; Delete Room</button>'
+      +'</div>'
+      +'</div>';
+  });
+  document.getElementById("roomsContainer").innerHTML = html;
+  // Reopen rooms that were open
+  document.querySelectorAll(".room-card").forEach(function(el){el.classList.add("open");});
+}
+
+function renderWindow(win, ri, wi){
+  var html='<div class="win-card" id="win_'+ri+'_'+wi+'">'
+    +'<div class="win-hdr" onclick="toggleWin(\'win_'+ri+'_'+wi+'\')">'
+    +'<div>'
+    +'<div class="win-name">'+esc(win.name)+'</div>'
+    +'<div class="win-dims">'+win.width+'" W × '+win.height+'" H &nbsp;·&nbsp; Qty: '+win.qty
+    +(win.remarks?' &nbsp;·&nbsp; '+esc(win.remarks):'')+'</div>'
+    +'</div>'
+    +'<div class="win-toggle">&#8250;</div>'
+    +'</div>'
+    +'<div class="win-body">';
+
+  win.treatments.forEach(function(t, ti){
+    html += renderTreatment(t, ri, wi, ti, win);
+  });
+
+  html+='<button class="btn btn-add" onclick="showAddTreatmentModal('+ri+','+wi+')" style="margin-bottom:6px">&#43; Add Treatment</button>';
+  html+='<button class="btn btn-ghost btn-sm" onclick="deleteWindow('+ri+','+wi+')" style="color:#e57373;border-color:#3a1010;margin-top:4px;width:100%">Remove Window</button>';
+  html+='</div></div>';
+  return html;
+}
+
+function renderTreatment(t, ri, wi, ti, win){
+  var typeLabel = t.type==="curtains"?"Curtains":t.type==="roman_blinds"?"Roman Blinds":"Blinds";
+  var html='<div class="treatment-card">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+    +'<span class="treatment-type-badge '+t.type+'">'+typeLabel+'</span>'
+    +'<button class="btn btn-ghost btn-sm" style="color:#e57373;border-color:#3a1010;padding:4px 10px;font-size:11px" onclick="deleteTreatment('+ri+','+wi+','+ti+')">✕ Remove</button>'
+    +'</div>';
+
+  // Set treatment type on components for calc
+  t.components.forEach(function(c){ c.treatmentType = t.type; });
+
+  t.components.forEach(function(c, ci){
+    html += renderComponent(c, ri, wi, ti, ci, win, t);
+  });
+
+  // Add component buttons
+  if(t.type==="curtains"||t.type==="roman_blinds"){
+    html+='<div class="btn-row">'
+      +'<button class="btn btn-sm" style="background:#1a3a5c;box-shadow:none;flex:1" onclick="addComponent('+ri+','+wi+','+ti+',\'main\')">&#43; Main</button>'
+      +'<button class="btn btn-sm" style="background:#1a3d27;box-shadow:none;flex:1" onclick="addComponent('+ri+','+wi+','+ti+',\'sheer\')">&#43; Sheer</button>'
+      +'</div>';
+  } else {
+    html+='<button class="btn btn-sm" style="background:#3a2a0a;box-shadow:none;width:100%" onclick="addComponent('+ri+','+wi+','+ti+',\'blind\')">&#43; Add Blind</button>';
+  }
+
+  html+='</div>';
+  return html;
+}
+
+function renderComponent(c, ri, wi, ti, ci, win, t){
+  var calc = c.product ? calcComponent(win, Object.assign({}, c, {treatmentType:t.type})) : {};
+  // Store calc
+  c.calc = calc;
+
+  var html='<div class="comp-card">'
+    +'<div class="comp-header">'
+    +'<span class="comp-layer '+c.layer+'">'+c.layer.toUpperCase()+'</span>'
+    +'<button class="comp-del" onclick="deleteComponent('+ri+','+wi+','+ti+','+ci+')">&#128465;</button>'
+    +'</div>';
+
+  if(c.product){
+    html+='<div class="comp-product">'+esc(c.product.catalog||c.product.product||c.product.blind_type||"Product")+'</div>'
+      +'<div class="comp-brand">'+esc(c.product.brand||"")+(c.product.code?' &nbsp;·&nbsp; Code: '+c.product.code:'')+'</div>'
+      +'<div class="comp-brand" style="margin-top:2px">MRP: '+fmt(c.product.mrp||0)+' per '+(t.type==="blinds"?"sqft":"mtr")+'</div>';
+
+    if(calc && calc.total){
+      html+='<div class="comp-calc">';
+      if(t.type==="curtains"||t.type==="roman_blinds"){
+        if(t.type==="roman_blinds"){
+          html+='<div class="comp-calc-row"><span class="lbl">Area</span><span class="val">'+calc.sqft+' sqft</span></div>';
+          html+='<div class="comp-calc-row"><span class="lbl">Material</span><span class="val">'+fmt(calc.matCost)+'</span></div>';
+        }
+        html+='<div class="comp-calc-row"><span class="lbl">Panels × Length</span><span class="val">'+calc.numPanels+' × '+calc.panelLen+'m</span></div>';
+        html+='<div class="comp-calc-row"><span class="lbl">Fabric</span><span class="val">'+calc.fabricQty+' mtrs</span></div>';
+        if(t.type==="roman_blinds"){
+          html+='<div class="comp-calc-row"><span class="lbl">Fabric cost</span><span class="val">'+fmt(calc.fabCost)+'</span></div>';
+          html+='<div class="comp-calc-row"><span class="lbl">Lining</span><span class="val">'+fmt(calc.lining)+'</span></div>';
+        }
+      } else {
+        html+='<div class="comp-calc-row"><span class="lbl">Area</span><span class="val">'+calc.sqft+' sqft</span></div>';
+      }
+      if(win.qty>1) html+='<div class="comp-calc-row"><span class="lbl">× '+win.qty+' windows</span><span class="val">'+fmt(calc.unitTotal)+'</span></div>';
+      html+='<div class="comp-calc-row" style="border-top:1px solid #222;margin-top:4px;padding-top:6px">'
+        +'<span class="lbl" style="font-weight:800;color:#ccc">TOTAL</span>'
+        +'<span class="val total">'+fmt(calc.total)+'</span></div>';
+      html+='</div>';
+    }
+  } else {
+    html+='<button class="btn btn-sm" style="width:100%;margin-top:6px;background:#1e1e1e;border:1.5px dashed #333;box-shadow:none;color:#888" '
+      +'onclick="selectProduct('+ri+','+wi+','+ti+','+ci+')">&#128269; Select Product</button>';
+  }
+
+  if(c.product){
+    html+='<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:6px;font-size:11px" '
+      +'onclick="selectProduct('+ri+','+wi+','+ti+','+ci+')">&#8635; Change Product</button>';
+  }
+
+  html+='</div>';
+  return html;
+}
+
+function toggleRoom(ri){
+  var el = document.getElementById("room_"+ri);
+  if(el) el.classList.toggle("open");
+}
+function toggleWin(id){
+  var el = document.getElementById(id);
+  if(el) el.classList.toggle("open");
+}
+
+// ════════════════════════════════════════════
+// TOTALS
+// ════════════════════════════════════════════
+function getCompTotal(comp, win, tType){
+  if(!comp.product) return 0;
+  var c = calcComponent(win, Object.assign({}, comp, {treatmentType:tType}));
+  return c.total||0;
+}
+
+function getRoomTotal(room){
+  var t=0;
+  room.windows.forEach(function(win){
+    win.treatments.forEach(function(tx){
+      tx.components.forEach(function(c){
+        t += getCompTotal(c, win, tx.type);
+      });
+    });
+  });
+  return t;
+}
+
+function getGrandTotal(){
+  var t=0;
+  APP.quote.rooms.forEach(function(r){ t+=getRoomTotal(r); });
+  return t;
+}
+
+// ════════════════════════════════════════════
+// SUMMARY SCREEN
+// ════════════════════════════════════════════
+function renderSummary(){
+  var q = APP.quote;
+  var grandTotal = getGrandTotal();
+  var html = '';
+
+  // Quote ID
+  html+='<div class="quote-id-badge no-print">Quote Reference<span>'+esc(q.id||"—")+'</span></div>';
+
+  // Print header (visible only in print)
+  html+='<div style="display:none" class="print-hdr">'
+    +'<div style="text-align:center;padding:20px 0;border-bottom:2px solid #000;margin-bottom:16px">'
+    +'<div style="font-size:24px;font-weight:900">DARLA SALES &amp; AGENCIES</div>'
+    +'<div style="font-size:12px;color:#555;margin-top:4px">Product Selection Summary</div>'
+    +'</div>'
+    +'</div>';
+
+  // Customer details
+  html+='<div class="summary-customer">'
+    +'<div class="summary-field"><span class="lbl">Customer</span><span class="val">'+esc(q.customer.name)+'</span></div>'
+    +'<div class="summary-field"><span class="lbl">Mobile</span><span class="val">'+esc(q.customer.mobile)+'</span></div>';
+  if(q.customer.arch) html+='<div class="summary-field"><span class="lbl">Designer</span><span class="val">'+esc(q.customer.arch)+'</span></div>';
+  if(q.customer.addr) html+='<div class="summary-field"><span class="lbl">Project</span><span class="val">'+esc(q.customer.addr)+'</span></div>';
+  html+='<div class="summary-field"><span class="lbl">Staff</span><span class="val">'+esc(q.staff)+'</span></div>'
+    +'<div class="summary-field"><span class="lbl">Date</span><span class="val">'+esc(q.date)+'</span></div>'
+    +'<div class="summary-field"><span class="lbl">Quote ID</span><span class="val">'+esc(q.id||"—")+'</span></div>'
+    +'</div>';
+
+  // Room breakdown
+  q.rooms.forEach(function(room){
+    var roomTotal = getRoomTotal(room);
+    html+='<div class="summary-room">'
+      +'<div class="summary-room-hdr">'+esc(room.name)+(roomTotal?' &nbsp;&nbsp;<span style="float:right;color:var(--red)">'+fmt(roomTotal)+'</span>':'')+'</div>';
+
+    room.windows.forEach(function(win){
+      html+='<div class="summary-win-block">'
+        +'<div class="summary-win-title">'+esc(win.name)+'</div>'
+        +'<div class="summary-win-dims">'+win.width+'" W × '+win.height+'" H &nbsp;·&nbsp; Qty: '+win.qty+'</div>';
+
+      win.treatments.forEach(function(tx){
+        var typeLabel = tx.type==="curtains"?"Curtains":tx.type==="roman_blinds"?"Roman Blinds":"Blinds";
+        html+='<div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">'+typeLabel+'</div>';
+
+        tx.components.forEach(function(c){
+          if(!c.product) return;
+          var calc = calcComponent(win, Object.assign({}, c, {treatmentType:tx.type}));
+          html+='<div class="summary-comp-row">'
+            +'<div class="summary-comp-info">'
+            +'<div class="lbl">'+c.layer.toUpperCase()+'</div>'
+            +'<div class="name">'+esc(c.product.catalog||c.product.product||c.product.blind_type||"")+'</div>'
+            +'<div class="detail">'+esc(c.product.brand||"")+' &nbsp;·&nbsp; '+esc(c.product.code||"")+'</div>'
+            +'<div class="detail">MRP: '+fmt(c.product.mrp||0)+(tx.type==="blinds"?"/sqft":"/mtr")+' &nbsp;·&nbsp; '+(calc.fabricQty||calc.sqft||"")+' '+(tx.type==="blinds"?"sqft":"mtrs")+'</div>'
+            +'</div>'
+            +'<div class="summary-comp-amt">'+fmt(calc.total||0)+'</div>'
+            +'</div>';
+        });
+      });
+      html+='</div>';
+    });
+    html+='</div>';
+  });
+
+  // Grand total
+  html+='<div class="grand-total-card">'
+    +'<div class="grand-total-lbl">Grand Total (MRP)</div>'
+    +'<div class="grand-total-val">'+Number(Math.round(grandTotal)).toLocaleString("en-IN")+'</div>'
+    +'<div class="grand-total-sub">All prices are MRP inclusive of GST</div>'
+    +'</div>';
+
+  // Terms
+  html+='<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:60px">'
+    +'<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Terms &amp; Notes</div>'
+    +'<div style="font-size:12px;color:#666;line-height:1.8">'
+    +'• All prices are MRP. Final prices may vary based on order.<br>'
+    +'• Quantities are calculated automatically based on window dimensions.<br>'
+    +'• Fabric availability is subject to stock at time of order.<br>'
+    +'• Delivery time: 3–4 weeks from order confirmation.<br>'
+    +'• This is a selection reference, not a final invoice.'
+    +'</div>'
+    +'</div>';
+
+  document.getElementById("summaryContent").innerHTML = html;
+}
+
+// ════════════════════════════════════════════
+// SAVE / LOAD
+// ════════════════════════════════════════════
+function saveDraft(){
+  localStorage.setItem("darla_quote_draft", JSON.stringify(APP.quote));
+}
+
+function saveQuote(){
+  saveDraft();
+  if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf("YOUR_")===0){
+    showToast("Draft saved locally ✓");
+    return;
+  }
+  showToast("Saving...");
+  fetch(APPS_SCRIPT_URL, {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({action:"saveQuote", quote:APP.quote})
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    APP.quote.saved = true;
+    saveDraft();
+    showToast("Quote saved ✓  "+APP.quote.id);
+  })
+  .catch(function(){ showToast("Saved locally (offline)"); });
+}
+
+function loadQuote(){
+  var id = document.getElementById("loadQuoteId").value.trim();
+  if(!id){ showToast("Enter a quote ID"); return; }
+  loadQuoteById(id);
+}
+
+function loadQuoteById(id){
+  if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf("YOUR_")===0){
+    showToast("Apps Script not configured");
+    return;
+  }
+  showToast("Loading...");
+  fetch(APPS_SCRIPT_URL+"?action=loadQuote&id="+encodeURIComponent(id))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.quote){
+        APP.quote = d.quote;
+        saveDraft();
+        document.getElementById("custName").value   = APP.quote.customer.name||"";
+        document.getElementById("custMobile").value = APP.quote.customer.mobile||"";
+        document.getElementById("custArch").value   = APP.quote.customer.arch||"";
+        document.getElementById("custAddr").value   = APP.quote.customer.addr||"";
+        showToast("Quote loaded: "+id);
+        goTo("screen-customer");
+      } else {
+        showToast("Quote not found: "+id);
+      }
+    })
+    .catch(function(){ showToast("Error loading quote"); });
+}
+
+function shareQuote(){
+  var url = window.location.origin + window.location.pathname + "?load=" + APP.quote.id;
+  if(navigator.share){
+    navigator.share({
+      title:"Darla Quote - "+APP.quote.customer.name,
+      text:"Quote "+APP.quote.id+" for "+APP.quote.customer.name,
+      url:url
+    });
+  } else if(navigator.clipboard){
+    navigator.clipboard.writeText(url).then(function(){ showToast("Link copied ✓"); });
+  } else {
+    showToast(url);
+  }
+}
+
+// ════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════
+function goTo(screenId){
+  document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});
+  var s = document.getElementById(screenId);
+  if(s) s.classList.add("active");
+  window.scrollTo(0,0);
+  if(screenId==="screen-summary") renderSummary();
+  if(screenId==="screen-builder") renderBuilder();
+}
+
+// ════════════════════════════════════════════
+// MODALS
+// ════════════════════════════════════════════
+function openModal(id){ document.getElementById(id).classList.add("open"); }
+function closeModal(id){ document.getElementById(id).classList.remove("open"); }
+
+// ════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════
+function uid(){ return Math.random().toString(36).substr(2,8); }
+function esc(t){ if(!t)return""; return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function showToast(msg){
+  var t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("show");
+  setTimeout(function(){t.classList.remove("show");},2500);
+}
+</script>
+</body>
+</html>
