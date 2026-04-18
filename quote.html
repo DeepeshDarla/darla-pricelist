@@ -240,6 +240,20 @@ select.inp option{background:#1e1e1e}
 /* QUOTE SAVED STATE */
 .saved-badge{display:inline-block;background:#0a2a1a;color:#81c784;border:1px solid #1a4a2a;border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-left:8px}
 
+/* PRICE HIDE MODE */
+body.hide-prices .price-col,
+body.hide-prices .summary-comp-amt,
+body.hide-prices .grand-total-card,
+body.hide-prices .room-total-amt,
+body.hide-prices .win-total-line{display:none!important}
+
+/* WINDOW NUMBER BADGE */
+.win-num-badge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:var(--red);color:#fff;border-radius:50%;font-size:12px;font-weight:800;margin-right:8px;flex-shrink:0}
+.win-title-row{display:flex;align-items:center;margin-bottom:4px}
+.win-subtotal{display:flex;justify-content:space-between;align-items:center;padding:6px 0 2px;border-top:1px solid #333;margin-top:8px}
+.win-subtotal-lbl{font-size:11px;font-weight:700;color:#888;letter-spacing:1px;text-transform:uppercase}
+.win-subtotal-val{font-size:14px;font-weight:900;color:var(--red)}
+
 /* ── FORCE WHITE TEXT IN ALL INPUTS ── */
 input.inp, select.inp, textarea.inp {
   color: #fff !important;
@@ -400,7 +414,10 @@ input:-webkit-autofill:focus {
       <div style="text-align:center">
         <div class="hdr-title">Quote Summary</div>
       </div>
-      <button class="hdr-action" onclick="window.print()">&#128424; Print</button>
+      <div style="display:flex;gap:6px">
+        <button class="hdr-action" style="background:#1a6bbf" onclick="togglePriceMode()">&#128065; <span id="priceModeLabel">Hide Prices</span></button>
+        <button class="hdr-action" onclick="window.print()">&#128424; Print</button>
+      </div>
     </div>
   </div>
   <div class="summary-wrap" id="summaryContent"></div>
@@ -461,6 +478,7 @@ input:-webkit-autofill:focus {
         <input class="inp" id="winRemarks" placeholder="Optional">
       </div>
     </div>
+    <div id="winCopyHint" style="display:none;background:#0a2a1a;border:1px solid #1a4a2a;border-radius:8px;padding:8px 12px;font-size:12px;color:#81c784;margin-bottom:10px;text-align:center"></div>
     <div class="btn-row">
       <button class="btn btn-ghost" style="margin-top:0" onclick="closeModal('addWindowModal')">Cancel</button>
       <button class="btn" style="margin-top:0" onclick="confirmAddWindow()">Add Window</button>
@@ -505,10 +523,12 @@ var PRODUCT_SEARCH_URL = "index.html";
 // ════════════════════════════════════════════
 // STAFF DATA — loaded from Apps Script or fallback
 // ════════════════════════════════════════════
+// ── CONFIGURE YOUR STAFF HERE (used when Apps Script is not set up) ──
 var STAFF_LIST = [
-  // Fallback — will be replaced by Apps Script data
-  // Format: {name:"Staff Name", pin:"1234"}
-  {name:"Demo Staff", pin:"0000"}
+  {name:"Deepesh Darla",   pin:"1516"},
+  {name:"Staff Member 1",  pin:"1234"},
+  {name:"Staff Member 2",  pin:"5678"}
+  // Add more staff: {name:"Name", pin:"1234"}
 ];
 
 // ════════════════════════════════════════════
@@ -681,7 +701,7 @@ function startQuote(){
   APP.quote.staff = APP.staff ? APP.staff.name : "Staff";
 
   if(!APP.quote.id){
-    APP.quote.id = "DRL-" + String(Math.floor(Math.random()*9000)+1000);
+    APP.quote.id = nextQuoteId();
     APP.quote.date = new Date().toLocaleDateString("en-IN");
   }
 
@@ -731,18 +751,46 @@ function confirmAddRoom(){
   closeModal("addRoomModal");
   saveDraft();
   renderBuilder();
+  // Auto-flow: open Add Window for this new room
+  var ri = APP.quote.rooms.length - 1;
+  setTimeout(function(){ showAddWindowModal(ri); }, 300);
 }
 
 // ════════════════════════════════════════════
 // WINDOWS
 // ════════════════════════════════════════════
 function showAddWindowModal(roomIdx){
+  var room    = APP.quote.rooms[roomIdx];
+  var winNum  = (room.windows.length + 1);
+  var prevWin = room.windows.length > 0 ? room.windows[room.windows.length-1] : null;
+
   document.getElementById("winRoomIdx").value = roomIdx;
-  document.getElementById("winName").value    = "";
+  // Auto-number the window name
+  document.getElementById("winName").value    = "Window " + winNum;
+  // Pre-fill dimensions from previous window if exists
+  // Width/height/qty always blank — each window is a different size
   document.getElementById("winWidth").value   = "";
   document.getElementById("winHeight").value  = "";
   document.getElementById("winQty").value     = "1";
   document.getElementById("winRemarks").value = "";
+
+  // Show product copy hint if previous window has products
+  var hint = document.getElementById("winCopyHint");
+  if(hint){
+    if(prevWin && prevWin.treatments.length > 0){
+      var hasProducts = prevWin.treatments.some(function(t){
+        return t.components.some(function(c){ return !!c.product; });
+      });
+      if(hasProducts){
+        hint.style.display = "block";
+        hint.textContent   = "✓ Products from Window "+(winNum-1)+" will be copied — enter new dimensions";
+      } else {
+        hint.style.display = "none";
+      }
+    } else {
+      hint.style.display = "none";
+    }
+  }
   openModal("addWindowModal");
 }
 
@@ -754,12 +802,45 @@ function confirmAddWindow(){
   var qty    = parseInt(document.getElementById("winQty").value)||1;
   var rem    = document.getElementById("winRemarks").value.trim();
   if(!width||!height){ showToast("Enter width and height"); return; }
+  var prevWin = APP.quote.rooms[ri].windows.length > 0
+    ? APP.quote.rooms[ri].windows[APP.quote.rooms[ri].windows.length-1]
+    : null;
+
+  // Deep-copy treatments from previous window (with no product selected)
+  var copiedTreatments = [];
+  if(prevWin && prevWin.treatments.length > 0){
+    copiedTreatments = JSON.parse(JSON.stringify(prevWin.treatments)).map(function(t){
+      t.id = uid();
+      t.components = t.components.map(function(c){
+        c.id   = uid();
+        c.calc = {};  // clear calc — will recalculate with new window dimensions
+        // product is KEPT — same fabric selection for this window
+        return c;
+      });
+      return t;
+    });
+  }
+
   APP.quote.rooms[ri].windows.push({
-    id:uid(), name:name, width:width, height:height, qty:qty, remarks:rem, treatments:[]
+    id:uid(), name:name, width:width, height:height, qty:qty, remarks:rem,
+    treatments: copiedTreatments
   });
   closeModal("addWindowModal");
   saveDraft();
   renderBuilder();
+
+  var wi = APP.quote.rooms[ri].windows.length - 1;
+  if(copiedTreatments.length > 0){
+    // Treatments copied — scroll to first component to select product
+    showToast("Products copied from Window "+wi+" — enter dimensions for Window "+(wi+1));
+    setTimeout(function(){
+      var winEl = document.getElementById("win_"+ri+"_"+wi);
+      if(winEl){ winEl.classList.add("open"); winEl.scrollIntoView({behavior:"smooth",block:"start"}); }
+    }, 300);
+  } else {
+    // No previous treatments — open treatment modal
+    setTimeout(function(){ showAddTreatmentModal(ri, wi); }, 300);
+  }
 }
 
 // ════════════════════════════════════════════
@@ -778,6 +859,37 @@ function confirmAddTreatment(type){
   closeModal("addTreatmentModal");
   saveDraft();
   renderBuilder();
+  // Auto-flow: scroll to the new treatment's Add Component buttons and highlight them
+  var ti = APP.quote.rooms[ri].windows[wi].treatments.length - 1;
+  setTimeout(function(){
+    // Find the treatment card — it's the last .treatment-card inside the right window
+    var winEl = document.getElementById("win_"+ri+"_"+wi);
+    if(!winEl) return;
+    // Make sure the window is open
+    winEl.classList.add("open");
+    var txCards = winEl.querySelectorAll(".treatment-card");
+    var txEl    = txCards[ti] || txCards[txCards.length-1];
+    if(!txEl) return;
+    // Scroll it into view
+    txEl.scrollIntoView({behavior:"smooth", block:"center"});
+    // Pulse the add component buttons
+    var btnRow = txEl.querySelector(".btn-row") || txEl.querySelector(".btn-add");
+    if(btnRow){
+      btnRow.style.transition = "transform 0.15s, box-shadow 0.15s";
+      btnRow.style.transform  = "scale(1.04)";
+      btnRow.style.boxShadow  = "0 0 0 3px #c0392b";
+      btnRow.style.borderRadius = "10px";
+      setTimeout(function(){
+        btnRow.style.transform = "scale(1)";
+        btnRow.style.boxShadow = "none";
+      }, 800);
+    }
+    // Show a helpful toast
+    var label = type==="curtains"?"Tap + Main or + Sheer to add fabric":
+                type==="roman_blinds"?"Tap + Main or + Sheer to add fabric":
+                "Tap + Add Blind to add blind product";
+    showToast(label);
+  }, 350);
 }
 
 // ════════════════════════════════════════════
@@ -1130,33 +1242,66 @@ function renderSummary(){
   q.rooms.forEach(function(room){
     var roomTotal = getRoomTotal(room);
     html+='<div class="summary-room">'
-      +'<div class="summary-room-hdr">'+esc(room.name)+(roomTotal?' &nbsp;&nbsp;<span style="float:right;color:var(--red)">'+fmt(roomTotal)+'</span>':'')+'</div>';
+      +'<div class="summary-room-hdr" style="display:flex;justify-content:space-between;align-items:center">'
+      +'<span style="font-size:16px;font-weight:900">'+esc(room.name)+'</span>'
+      +'<span class="room-total-amt" style="font-size:15px;font-weight:900;color:var(--red)">'+fmt(roomTotal)+'</span>'
+      +'</div>';
 
-    room.windows.forEach(function(win){
+    room.windows.forEach(function(win, wi){
+      var winTotal=0;
+      win.treatments.forEach(function(tx){
+        tx.components.forEach(function(c){
+          if(!c.product) return;
+          winTotal += calcComponent(win,Object.assign({},c,{treatmentType:tx.type})).total||0;
+        });
+      });
+
       html+='<div class="summary-win-block">'
-        +'<div class="summary-win-title">'+esc(win.name)+'</div>'
+        // Highlighted window header with number badge
+        +'<div class="win-title-row">'
+        +'<span class="win-num-badge">'+(wi+1)+'</span>'
+        +'<span class="summary-win-title">'+esc(win.name)+'</span>'
+        +'</div>'
         +'<div class="summary-win-dims">'+win.width+'" W × '+win.height+'" H &nbsp;·&nbsp; Qty: '+win.qty+'</div>';
 
       win.treatments.forEach(function(tx){
         var typeLabel = tx.type==="curtains"?"Curtains":tx.type==="roman_blinds"?"Roman Blinds":"Blinds";
-        html+='<div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">'+typeLabel+'</div>';
-
+        var hasItems  = tx.components.some(function(c){return !!c.product;});
+        if(!hasItems) return;
+        html+='<div style="font-size:10px;font-weight:800;color:#666;letter-spacing:1.5px;text-transform:uppercase;margin:8px 0 5px">'+typeLabel+'</div>';
         tx.components.forEach(function(c){
           if(!c.product) return;
-          var calc = calcComponent(win, Object.assign({}, c, {treatmentType:tx.type}));
+          var calc = calcComponent(win,Object.assign({},c,{treatmentType:tx.type}));
+          var qtyLabel = tx.type==="blinds"?(calc.sqft||0)+" sqft":(calc.fabricQty||0)+" mtrs";
           html+='<div class="summary-comp-row">'
             +'<div class="summary-comp-info">'
             +'<div class="lbl">'+c.layer.toUpperCase()+'</div>'
-            +'<div class="name">'+esc(c.product.catalog||c.product.product||c.product.blind_type||"")+'</div>'
-            +'<div class="detail">'+esc(c.product.brand||"")+' &nbsp;·&nbsp; '+esc(c.product.code||"")+'</div>'
-            +'<div class="detail">MRP: '+fmt(c.product.mrp||0)+(tx.type==="blinds"?"/sqft":"/mtr")+' &nbsp;·&nbsp; '+(calc.fabricQty||calc.sqft||"")+' '+(tx.type==="blinds"?"sqft":"mtrs")+'</div>'
+            +'<div class="name">'+esc(c.product.catalog||c.product.product||c.product.blind_type||c.product.model||"")+'</div>'
+            +'<div class="detail">'+esc(c.product.brand||"")+(c.product.code?" &nbsp;·&nbsp; "+esc(c.product.code):"")+'</div>'
+            +'<div class="detail price-col">'+fmt(c.product.mrp||0)+(tx.type==="blinds"?"/sqft":"/mtr")+" &nbsp;·&nbsp; "+qtyLabel+'</div>'
             +'</div>'
-            +'<div class="summary-comp-amt">'+fmt(calc.total||0)+'</div>'
+            +'<div class="summary-comp-amt price-col">'+fmt(calc.total||0)+'</div>'
             +'</div>';
         });
       });
+
+      // Window subtotal line
+      if(winTotal>0){
+        html+='<div class="win-subtotal win-total-line">'
+          +'<span class="win-subtotal-lbl">&#128308; Window '+(wi+1)+' Total</span>'
+          +'<span class="win-subtotal-val">'+fmt(winTotal)+'</span>'
+          +'</div>';
+      }
       html+='</div>';
     });
+
+    // Room subtotal footer bar
+    if(roomTotal>0){
+      html+='<div class="room-total-footer room-total-amt" style="background:#1a0a0a;border-top:2px solid #3a1010;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">'
+        +'<span style="font-size:11px;font-weight:800;color:#aaa;letter-spacing:1.5px;text-transform:uppercase">'+esc(room.name)+' Sub-total</span>'
+        +'<span style="font-size:17px;font-weight:900;color:var(--red)">'+fmt(roomTotal)+'</span>'
+        +'</div>';
+    }
     html+='</div>';
   });
 
@@ -1278,7 +1423,26 @@ function closeModal(id){ document.getElementById(id).classList.remove("open"); }
 // UTILS
 // ════════════════════════════════════════════
 function uid(){ return Math.random().toString(36).substr(2,8); }
+
+function nextQuoteId(){
+  var last = parseInt(localStorage.getItem("darla_last_quote_num")||"99");
+  var next = last + 1;
+  localStorage.setItem("darla_last_quote_num", String(next));
+  return "DRL-" + String(next);
+}
 function esc(t){ if(!t)return""; return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+var _showPrices = true;
+function togglePriceMode(){
+  _showPrices = !_showPrices;
+  if(_showPrices){
+    document.body.classList.remove("hide-prices");
+    document.getElementById("priceModeLabel").textContent = "Hide Prices";
+  } else {
+    document.body.classList.add("hide-prices");
+    document.getElementById("priceModeLabel").textContent = "Show Prices";
+  }
+}
+
 function showToast(msg){
   var t=document.getElementById("toast");
   t.textContent=msg; t.classList.add("show");
