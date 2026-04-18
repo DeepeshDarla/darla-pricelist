@@ -367,6 +367,19 @@ function showAdvancedSearch(cat){
 
   window._metaLoading=false;
   setTimeout(function(){loadMeta(1);},150);
+  // Quote mode banner
+  if(isQuoteMode()){
+    setTimeout(function(){
+      var app=document.getElementById("app");
+      if(app&&!app.querySelector(".quote-banner")){
+        var b=document.createElement("div");
+        b.className="quote-banner";
+        b.style.cssText="background:#c0392b;color:#fff;text-align:center;padding:10px 16px;font-size:13px;font-weight:700;letter-spacing:0.5px;position:sticky;top:0;z-index:99";
+        b.innerHTML="&#128722; Selecting product for Quote — tap a result to add it";
+        app.insertBefore(b,app.firstChild);
+      }
+    },20);
+  }
 }
 
 function toFid(label){ return label.toLowerCase().replace(/[^a-z0-9]/g,"_"); }
@@ -564,6 +577,7 @@ function showProductPage(code,cat){
 
 // ── RENDER ──
 function renderRows(rows,cat){
+  if(isQuoteMode()){ renderQuoteSelect(rows,cat); return; }
   var el=document.getElementById("results");if(!el)return;
   if(!rows||!rows.length){
     el.innerHTML='<div class="nf"><div class="nf-ico">&#128269;</div><h3>Not Found</h3><p>No matching products</p><a class="back-link" href="'+BASE+'">&#8592; Home</a></div>';
@@ -766,6 +780,60 @@ function sChk(){
     if(window._rows)renderRows(window._rows,window._cat||"fabric");
   } else {sDots(true);setTimeout(function(){staffEn="";sDots();},800);}
 }
+
+// ── QUOTE MODE SUPPORT ──
+function isQuoteMode(){
+  return getParam("mode")==="quote";
+}
+
+function renderQuoteSelect(rows, cat){
+  var el=document.getElementById("results");
+  if(!el)return;
+  if(!rows||!rows.length){
+    el.innerHTML='<div class="nf"><div class="nf-ico">&#128269;</div><h3>Not Found</h3><p>No matching products</p></div>';
+    return;
+  }
+  var ci=CATS[cat]||CATS.fabric;
+  var html='<div class="count-badge"><span class="count-txt">'+rows.length+' items — tap to select</span><span class="count-num">&#128722;</span></div>';
+  rows.forEach(function(r){
+    var name=r.catalog||r.product||gv(r,"blind_type")||gv(r,"blind type")||r.model||r.code||"Product";
+    var sub =r.brand||"";
+    var mrp =r.mrp||"";
+    var unit=cat==="beds"||cat==="sleepwell"?"":cat==="blinds"?"/sqft":"/mtr";
+    // Build a clean product object to pass back
+    var prod={
+      code:r.code||"",
+      brand:r.brand||"",
+      catalog:r.catalog||r.product||gv(r,"blind_type")||r.model||"",
+      mrp:mrp,
+      width:r.width||"",
+      category:cat,
+      s_no:gv(r,"s_no")||gv(r,"s.no")||"",
+      item_details:gv(r,"item_details")||gv(r,"item details")||"",
+      blind_type:gv(r,"blind_type")||gv(r,"blind type")||"",
+      mechanism:r.mechanism||"",
+      model:r.model||"",
+      size:r.size||"",
+      thickness:r.thickness||""
+    };
+    var prodJson=JSON.stringify(prod).replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+    html+='<div onclick="quoteSelectProduct(this)" data-prod=''+prodJson+'' style="background:#161616;border:1px solid #252525;border-radius:14px;padding:14px 16px;margin-bottom:8px;cursor:pointer;-webkit-tap-highlight-color:transparent">'
+      +'<div style="font-size:16px;font-weight:800;color:#fff">'+esc(name)+'</div>'
+      +'<div style="font-size:12px;color:#888;margin-top:2px">'+esc(sub)+(mrp?' &nbsp;·&nbsp; &#8377;'+esc(mrp)+unit:'')+"</div>"
+      +'<div style="margin-top:10px;background:#c0392b;color:#fff;border-radius:8px;padding:8px;text-align:center;font-size:13px;font-weight:800;letter-spacing:0.5px">&#10003; Select This Product</div>'
+      +'</div>';
+  });
+  el.innerHTML=html;
+}
+
+function quoteSelectProduct(el){
+  var prodJson=el.getAttribute("data-prod");
+  if(!prodJson)return;
+  localStorage.setItem("darla_selected_product",prodJson.replace(/&quot;/g,'"').replace(/&#39;/g,"'"));
+  var returnUrl=getParam("return")||"quote.html";
+  window.location.href=returnUrl;
+}
+
 </script>
 </body>
 </html>
