@@ -37,12 +37,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 /* ── INPUTS ── */
 .field{margin-bottom:14px}
 .field-label{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block}
-.inp{width:100%;background:#1e1e1e;border:1.5px solid #2a2a2a;border-radius:10px;color:#fff;font-size:16px;font-weight:600;padding:12px 14px;outline:none;-webkit-appearance:none}
-.inp:focus{border-color:var(--red)}
-.inp::placeholder{color:#333;font-weight:400}
+.inp{width:100%;background:#1e1e1e;border:1.5px solid #2a2a2a;border-radius:10px;color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;caret-color:#fff!important;font-size:16px;font-weight:600;padding:12px 14px;outline:none;-webkit-appearance:none}
+.inp:focus{border-color:var(--red);color:#ffffff!important;-webkit-text-fill-color:#ffffff!important}
+.inp::placeholder{color:#555!important;font-weight:400}
 .inp-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .inp-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23555' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+select.inp{color:#fff!important!important;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23555' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
 select.inp option{background:#1e1e1e}
 
 /* ── BUTTONS ── */
@@ -190,6 +190,37 @@ select.inp option{background:#1e1e1e}
 
 /* QUOTE SAVED STATE */
 .saved-badge{display:inline-block;background:#0a2a1a;color:#81c784;border:1px solid #1a4a2a;border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-left:8px}
+
+/* ── FORCE WHITE TEXT IN ALL INPUTS ── */
+input.inp, select.inp, textarea.inp {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+input.inp::placeholder { color: #444 !important; }
+select.inp option { color: #fff; background: #1e1e1e; }
+
+/* Force white text in all inputs on dark background */
+input, select, textarea {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #fff;
+}
+input::placeholder, select::placeholder, textarea::placeholder {
+  color: #555 !important;
+  -webkit-text-fill-color: #555 !important;
+}
+input:disabled, select:disabled {
+  -webkit-text-fill-color: #444 !important;
+  color: #444 !important;
+}
+/* Fix iOS autofill yellow background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff !important;
+  -webkit-box-shadow: 0 0 0px 1000px #1e1e1e inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
 </style>
 </head>
 <body>
@@ -419,7 +450,7 @@ select.inp option{background:#1e1e1e}
 // ════════════════════════════════════════════
 // CONFIG — UPDATE THESE AFTER DEPLOYING APPS SCRIPT
 // ════════════════════════════════════════════
-var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx9A43LVU7Ikyxj5MNgRAnCvf9PSR5GisthNyC9oc_ye56OkTag32IUXstlDXtoWJ6v/exec";
+var APPS_SCRIPT_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
 var PRODUCT_SEARCH_URL = "index.html";
 
 // ════════════════════════════════════════════
@@ -742,10 +773,14 @@ function selectProduct(ri, wi, ti, ci){
   saveDraft();
   localStorage.setItem("darla_quote_staff", JSON.stringify(APP.staff));
   localStorage.setItem("quote_product_ctx", JSON.stringify({ri:ri,wi:wi,ti:ti,ci:ci}));
-  // Determine which category to open
+  // Determine which category to open based on treatment type
   var tType = APP.quote.rooms[ri].windows[wi].treatments[ti].type;
   var cat = tType==="blinds" ? "blinds" : "fabric";
-  window.location.href = PRODUCT_SEARCH_URL+"?mode=quote&category="+cat+"&return=quote.html";
+  // Build return URL — use current page origin so it always works
+  var base = window.location.href.split("?")[0]; // removes any params
+  var returnUrl = base; // returns to quote.html
+  var searchUrl = base.replace("quote.html","index.html");
+  window.location.href = searchUrl+"?mode=quote&category="+cat+"&return="+encodeURIComponent(returnUrl);
 }
 
 function attachProduct(ctx, product){
