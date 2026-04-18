@@ -123,27 +123,27 @@ select.inp option{background:#1e1e1e}
 .summary-wrap{padding:12px}
 .quote-id-badge{background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;padding:8px 14px;font-size:11px;color:var(--muted);text-align:center;margin-bottom:16px}
 .quote-id-badge span{color:#fff;font-weight:700;font-size:14px;display:block;margin-top:2px}
-.summary-customer{background:var(--card);border:1px solid var(--border);border-top:3px solid #1a6bbf;border-radius:12px;padding:14px;margin-bottom:12px}
-.summary-field{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #1a1a1a;font-size:13px}
+.summary-customer{background:#1a1a1a;border:1.5px solid #333;border-top:3px solid #1a6bbf;border-radius:12px;padding:14px;margin-bottom:12px}
+.summary-field{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #2a2a2a;font-size:13px}
 .summary-field:last-child{border-bottom:none}
-.summary-field .lbl{color:var(--muted);font-weight:600}
+.summary-field .lbl{color:#aaa;font-weight:600;flex-shrink:0;margin-right:12px}
 .summary-field .val{font-weight:700;color:#fff;text-align:right}
-.summary-room{background:var(--card);border:1px solid var(--border);border-top:3px solid var(--red);border-radius:12px;margin-bottom:10px;overflow:hidden}
-.summary-room-hdr{background:#1a1a1a;padding:12px 14px;font-size:14px;font-weight:800}
-.summary-win-block{padding:10px 14px;border-bottom:1px solid #1a1a1a}
+.summary-room{background:#1a1a1a;border:1.5px solid #333;border-top:3px solid var(--red);border-radius:12px;margin-bottom:12px;overflow:hidden}
+.summary-room-hdr{background:#252525;padding:13px 16px;font-size:15px;font-weight:800;color:#fff;letter-spacing:-0.3px}
+.summary-win-block{padding:12px 16px;border-bottom:1px solid #252525}
 .summary-win-block:last-child{border-bottom:none}
-.summary-win-title{font-size:13px;font-weight:700;color:#ccc;margin-bottom:6px}
-.summary-win-dims{font-size:11px;color:var(--muted);margin-bottom:8px}
-.summary-comp-row{display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid #111}
+.summary-win-title{font-size:14px;font-weight:800;color:#fff;margin-bottom:4px}
+.summary-win-dims{font-size:12px;color:#888;margin-bottom:10px;font-weight:600}
+.summary-comp-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid #252525}
 .summary-comp-row:last-child{border-bottom:none}
-.summary-comp-info .lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
-.summary-comp-info .name{font-size:13px;font-weight:700;color:#fff;margin-top:2px}
-.summary-comp-info .detail{font-size:11px;color:var(--muted);margin-top:1px}
-.summary-comp-amt{font-size:15px;font-weight:900;color:#fff;white-space:nowrap;margin-left:12px}
-.grand-total-card{background:#fff;border-radius:14px;padding:18px;text-align:center;margin:16px 0}
-.grand-total-lbl{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#555;margin-bottom:4px}
-.grand-total-val{font-size:42px;font-weight:900;color:#000;letter-spacing:-2px}
-.grand-total-sub{font-size:11px;color:#888;margin-top:4px}
+.summary-comp-info .lbl{font-size:10px;font-weight:800;color:#777;text-transform:uppercase;letter-spacing:1.5px}
+.summary-comp-info .name{font-size:14px;font-weight:800;color:#fff;margin-top:3px}
+.summary-comp-info .detail{font-size:12px;color:#999;margin-top:2px;font-weight:500}
+.summary-comp-amt{font-size:16px;font-weight:900;color:#fff;white-space:nowrap;margin-left:12px;padding-top:14px}
+.grand-total-card{background:#fff;border-radius:14px;padding:20px;text-align:center;margin:16px 0;border:2px solid #eee}
+.grand-total-lbl{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#555;margin-bottom:6px}
+.grand-total-val{font-size:48px;font-weight:900;color:#000;letter-spacing:-2px;line-height:1}
+.grand-total-sub{font-size:11px;color:#888;margin-top:6px}
 
 /* ── BOTTOM BAR ── */
 .bottom-bar{position:fixed;bottom:0;left:0;right:0;background:#111;border-top:1px solid var(--border);padding:12px 16px;display:flex;gap:8px;z-index:50}
@@ -153,14 +153,63 @@ select.inp option{background:#1e1e1e}
 
 /* ── PRINT STYLES ── */
 @media print{
-  .no-print{display:none!important}
-  body{background:#fff;color:#000}
-  .screen{display:block!important}
-  .screen:not(#screen-print){display:none!important}
-  .summary-room{border:1px solid #ddd;break-inside:avoid}
-  .grand-total-card{background:#f5f5f5}
-  .grand-total-val{color:#000}
+  /* Hide everything except summary */
+  .no-print,
+  #screen-login,
+  #screen-customer,
+  #screen-builder,
+  .bottom-bar,
+  .hdr .hdr-back,
+  .hdr .hdr-action{display:none!important}
+
+  /* Show summary */
+  #screen-summary{display:block!important}
+  .screen{padding-bottom:0}
+
+  /* White background, black text throughout */
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  body,html{background:#fff!important;color:#000!important}
+  
+  /* Summary wrapper */
+  .summary-wrap{padding:0!important}
+  
+  /* Quote ID badge */
+  .quote-id-badge{background:#f5f5f5!important;border:1px solid #ddd!important;color:#333!important;border-radius:6px!important;padding:8px 14px!important}
+  .quote-id-badge span{color:#000!important}
+  
+  /* Customer card */
+  .summary-customer{background:#fff!important;border:1.5px solid #000!important;border-top:3px solid #c0392b!important;border-radius:8px!important;padding:14px!important;margin-bottom:12px!important}
+  .summary-field{border-bottom:1px solid #eee!important;padding:6px 0!important}
+  .summary-field .lbl{color:#555!important}
+  .summary-field .val{color:#000!important}
+  
+  /* Room blocks */
+  .summary-room{background:#fff!important;border:1.5px solid #333!important;border-top:3px solid #c0392b!important;border-radius:8px!important;margin-bottom:10px!important;break-inside:avoid!important}
+  .summary-room-hdr{background:#f5f5f5!important;color:#000!important;border-bottom:1px solid #ddd!important;padding:10px 14px!important}
+  .summary-win-block{border-bottom:1px solid #eee!important;padding:10px 14px!important}
+  .summary-win-block:last-child{border-bottom:none!important}
+  .summary-win-title{color:#000!important}
+  .summary-win-dims{color:#555!important}
+  .summary-comp-row{border-bottom:1px solid #f0f0f0!important}
+  .summary-comp-info .lbl{color:#777!important}
+  .summary-comp-info .name{color:#000!important}
+  .summary-comp-info .detail{color:#555!important}
+  .summary-comp-amt{color:#000!important}
+  
+  /* Grand total */
+  .grand-total-card{background:#000!important;border-radius:8px!important;padding:16px!important}
+  .grand-total-lbl{color:#fff!important}
+  .grand-total-val{color:#fff!important}
+  .grand-total-sub{color:#ccc!important}
+  
+  /* Terms */
+  .summary-wrap>div:last-child{background:#fff!important;border:1px solid #ddd!important;border-radius:6px!important}
+  
+  /* Print header */
+  .print-only-hdr{display:block!important}
+  .hdr{display:none!important}
 }
+.print-only-hdr{display:none}
 
 /* ── SPINNER ── */
 .spinner-sm{width:20px;height:20px;border:2px solid #333;border-top-color:var(--red);border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;margin-right:8px;vertical-align:middle}
@@ -1060,12 +1109,10 @@ function renderSummary(){
   // Quote ID
   html+='<div class="quote-id-badge no-print">Quote Reference<span>'+esc(q.id||"—")+'</span></div>';
 
-  // Print header (visible only in print)
-  html+='<div style="display:none" class="print-hdr">'
-    +'<div style="text-align:center;padding:20px 0;border-bottom:2px solid #000;margin-bottom:16px">'
-    +'<div style="font-size:24px;font-weight:900">DARLA SALES &amp; AGENCIES</div>'
-    +'<div style="font-size:12px;color:#555;margin-top:4px">Product Selection Summary</div>'
-    +'</div>'
+  // Print header — shown only when printing
+  html+='<div class="print-only-hdr" style="text-align:center;padding:16px 0 14px;border-bottom:2px solid #c0392b;margin-bottom:16px">'
+    +'<img src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" style="height:48px;object-fit:contain" alt="Darla">'
+    +'<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#555;margin-top:6px">Product Selection Summary</div>'
     +'</div>';
 
   // Customer details
