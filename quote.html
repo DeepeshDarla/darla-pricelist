@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -15,45 +16,45 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .screen.active{display:block}
 
 /* ── HEADER ── */
-.hdr{background:#111;border-bottom:2px solid var(--red);padding:18px 20px 14px;text-align:center;position:sticky;top:0;z-index:50}
+.hdr{background:#111;border-bottom:2px solid var(–red);padding:18px 20px 14px;text-align:center;position:sticky;top:0;z-index:50}
 .hdr-logo{width:160px;height:58px;display:block;margin:0 auto 10px;object-fit:contain}
 .hdr-title{font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.5px}
-.hdr-sub{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:3px}
+.hdr-sub{font-size:11px;color:var(–muted);letter-spacing:2px;text-transform:uppercase;margin-top:3px}
 .hdr-row{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
 .hdr-back{background:transparent;border:1px solid #333;color:#aaa;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer}
-.hdr-action{background:var(--red);border:none;color:#fff;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer}
+.hdr-action{background:var(–red);border:none;color:#fff;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer}
 
 /* ── LAYOUT ── */
 .page-wrap{padding:12px}
-.section-title{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:20px 0 8px;padding:0 4px}
+.section-title{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(–muted);margin:20px 0 8px;padding:0 4px}
 
 /* ── CARDS ── */
-.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px}
-.card-red{border-top:3px solid var(--red)}
+.card{background:var(–card);border:1px solid var(–border);border-radius:14px;padding:16px;margin-bottom:10px}
+.card-red{border-top:3px solid var(–red)}
 .card-blue{border-top:3px solid #1a6bbf}
 .card-green{border-top:3px solid #27ae60}
 .card-gold{border-top:3px solid #f39c12}
 
 /* ── INPUTS ── */
 .field{margin-bottom:14px}
-.field-label{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block}
+.field-label{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(–muted);margin-bottom:6px;display:block}
 .inp{width:100%;background:#1e1e1e;border:1.5px solid #2a2a2a;border-radius:10px;color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;caret-color:#fff!important;font-size:16px;font-weight:600;padding:12px 14px;outline:none;-webkit-appearance:none}
-.inp:focus{border-color:var(--red);color:#ffffff!important;-webkit-text-fill-color:#ffffff!important}
+.inp:focus{border-color:var(–red);color:#ffffff!important;-webkit-text-fill-color:#ffffff!important}
 .inp::placeholder{color:#555!important;font-weight:400}
 .inp-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .inp-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-select.inp{color:#fff!important!important;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23555' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+select.inp{color:#fff!important!important;appearance:none;background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’ viewBox=‘0 0 12 8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%23555’ stroke-width=‘2’ fill=‘none’/%3E%3C/svg%3E”);background-repeat:no-repeat;background-position:right 14px center}
 select.inp option{background:#1e1e1e}
 
 /* ── BUTTONS ── */
-.btn{width:100%;background:var(--red);color:#fff;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;display:block;margin-top:12px;box-shadow:0 4px 20px rgba(192,57,43,0.35);-webkit-tap-highlight-color:transparent}
+.btn{width:100%;background:var(–red);color:#fff;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;display:block;margin-top:12px;box-shadow:0 4px 20px rgba(192,57,43,0.35);-webkit-tap-highlight-color:transparent}
 .btn:active{opacity:0.85}
 .btn-ghost{background:transparent;border:1.5px solid #2a2a2a;color:#aaa;font-weight:600;box-shadow:none}
 .btn-sm{padding:10px 16px;font-size:13px;font-weight:700;border-radius:9px;width:auto;display:inline-block;margin-top:0}
 .btn-blue{background:#1a6bbf;box-shadow:0 4px 20px rgba(26,107,191,0.3)}
 .btn-green{background:#27ae60;box-shadow:0 4px 20px rgba(39,174,96,0.3)}
 .btn-add{background:#1e1e1e;border:1.5px dashed #333;color:#666;font-size:13px;font-weight:600;letter-spacing:0.5px;box-shadow:none;padding:12px}
-.btn-add:hover{border-color:var(--red);color:var(--red)}
+.btn-add:hover{border-color:var(–red);color:var(–red)}
 .btn-row{display:flex;gap:8px;margin-top:10px}
 .btn-row .btn{margin-top:0}
 
@@ -61,38 +62,38 @@ select.inp option{background:#1e1e1e}
 .pin-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px}
 .pin-logo{width:180px;height:65px;object-fit:contain;margin-bottom:24px}
 .pin-title{font-size:28px;font-weight:900;margin-bottom:4px}
-.pin-sub{font-size:13px;color:var(--muted);margin-bottom:10px}
+.pin-sub{font-size:13px;color:var(–muted);margin-bottom:10px}
 .staff-select{width:100%;max-width:320px;margin-bottom:24px}
 .pin-dots{display:flex;gap:16px;margin-bottom:28px}
 .dot{width:16px;height:16px;border-radius:50%;background:#222;border:2px solid #333;transition:all 0.12s}
-.dot.on{background:var(--red);border-color:var(--red);transform:scale(1.15)}
+.dot.on{background:var(–red);border-color:var(–red);transform:scale(1.15)}
 .dot.err{background:#e53935;border-color:#e53935}
 .pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:320px}
 .pk{background:#1e1e1e;border:1px solid #2a2a2a;border-radius:14px;height:66px;font-size:26px;font-weight:700;color:#fff;cursor:pointer;width:100%;-webkit-tap-highlight-color:transparent;transition:background 0.1s,transform 0.1s}
-.pk:active{background:var(--red);border-color:var(--red);transform:scale(0.94)}
-.pk.del{font-size:20px;color:var(--muted)}
+.pk:active{background:var(–red);border-color:var(–red);transform:scale(0.94)}
+.pk.del{font-size:20px;color:var(–muted)}
 .pk.ghost{opacity:0;pointer-events:none}
 .pin-error{color:#e53935;font-size:13px;margin-top:12px;text-align:center;min-height:20px}
 
 /* ── ROOM CARDS ── */
-.room-card{background:var(--card);border:1px solid var(--border);border-top:3px solid var(--red);border-radius:14px;margin-bottom:12px;overflow:hidden}
+.room-card{background:var(–card);border:1px solid var(–border);border-top:3px solid var(–red);border-radius:14px;margin-bottom:12px;overflow:hidden}
 .room-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer}
 .room-name{font-size:17px;font-weight:800;color:#fff}
-.room-meta{font-size:11px;color:var(--muted);margin-top:2px}
-.room-toggle{color:var(--muted);font-size:20px;transition:transform 0.2s}
+.room-meta{font-size:11px;color:var(–muted);margin-top:2px}
+.room-toggle{color:var(–muted);font-size:20px;transition:transform 0.2s}
 .room-card.open .room-toggle{transform:rotate(90deg)}
 .room-body{display:none;padding:0 12px 12px}
 .room-card.open .room-body{display:block}
-.room-actions{display:flex;gap:8px;padding:8px 16px 12px;border-top:1px solid var(--border)}
+.room-actions{display:flex;gap:8px;padding:8px 16px 12px;border-top:1px solid var(–border)}
 
 /* ── WINDOW CARDS ── */
 .win-card{background:#111;border:1px solid #1e1e1e;border-radius:12px;margin-bottom:8px;overflow:hidden}
 .win-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer}
 .win-name{font-size:15px;font-weight:700}
-.win-dims{font-size:11px;color:var(--muted);margin-top:2px}
+.win-dims{font-size:11px;color:var(–muted);margin-top:2px}
 .win-body{display:none;padding:0 12px 12px}
 .win-card.open .win-body{display:block}
-.win-toggle{color:var(--muted);font-size:18px;transition:transform 0.2s}
+.win-toggle{color:var(–muted);font-size:18px;transition:transform 0.2s}
 .win-card.open .win-toggle{transform:rotate(90deg)}
 
 /* ── TREATMENT ── */
@@ -110,25 +111,25 @@ select.inp option{background:#1e1e1e}
 .comp-layer.sheer{background:#1a3a27;color:#5bd57e}
 .comp-layer.blind{background:#3a2a0a;color:#d5a05b}
 .comp-product{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px}
-.comp-brand{font-size:11px;color:var(--muted)}
+.comp-brand{font-size:11px;color:var(–muted)}
 .comp-calc{background:#111;border-radius:7px;padding:8px 10px;margin-top:8px}
 .comp-calc-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:2px 0}
-.comp-calc-row .lbl{color:var(--muted)}
+.comp-calc-row .lbl{color:var(–muted)}
 .comp-calc-row .val{font-weight:700;color:#fff}
-.comp-calc-row .val.total{color:var(--red);font-size:14px}
+.comp-calc-row .val.total{color:var(–red);font-size:14px}
 .comp-del{background:transparent;border:none;color:#333;font-size:16px;cursor:pointer;padding:4px}
 .comp-del:active{color:#e53935}
 
 /* ── SUMMARY ── */
 .summary-wrap{padding:12px}
-.quote-id-badge{background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;padding:8px 14px;font-size:11px;color:var(--muted);text-align:center;margin-bottom:16px}
+.quote-id-badge{background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;padding:8px 14px;font-size:11px;color:var(–muted);text-align:center;margin-bottom:16px}
 .quote-id-badge span{color:#fff;font-weight:700;font-size:14px;display:block;margin-top:2px}
 .summary-customer{background:#1a1a1a;border:1.5px solid #333;border-top:3px solid #1a6bbf;border-radius:12px;padding:14px;margin-bottom:12px}
 .summary-field{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #2a2a2a;font-size:13px}
 .summary-field:last-child{border-bottom:none}
 .summary-field .lbl{color:#aaa;font-weight:600;flex-shrink:0;margin-right:12px}
 .summary-field .val{font-weight:700;color:#fff;text-align:right}
-.summary-room{background:#1a1a1a;border:1.5px solid #333;border-top:3px solid var(--red);border-radius:12px;margin-bottom:12px;overflow:hidden}
+.summary-room{background:#1a1a1a;border:1.5px solid #333;border-top:3px solid var(–red);border-radius:12px;margin-bottom:12px;overflow:hidden}
 .summary-room-hdr{background:#252525;padding:13px 16px;font-size:15px;font-weight:800;color:#fff;letter-spacing:-0.3px}
 .summary-win-block{padding:12px 16px;border-bottom:1px solid #252525}
 .summary-win-block:last-child{border-bottom:none}
@@ -146,73 +147,73 @@ select.inp option{background:#1e1e1e}
 .grand-total-sub{font-size:11px;color:#888;margin-top:6px}
 
 /* ── BOTTOM BAR ── */
-.bottom-bar{position:fixed;bottom:0;left:0;right:0;background:#111;border-top:1px solid var(--border);padding:12px 16px;display:flex;gap:8px;z-index:50}
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;background:#111;border-top:1px solid var(–border);padding:12px 16px;display:flex;gap:8px;z-index:50}
 
 /* ── QUOTE MODE BANNER ── */
-.quote-mode-banner{background:var(--red);color:#fff;text-align:center;padding:10px;font-size:13px;font-weight:700;letter-spacing:0.5px}
+.quote-mode-banner{background:var(–red);color:#fff;text-align:center;padding:10px;font-size:13px;font-weight:700;letter-spacing:0.5px}
 
 /* ── PRINT STYLES ── */
 @media print{
-  /* Hide everything except summary */
-  .no-print,
-  #screen-login,
-  #screen-customer,
-  #screen-builder,
-  .bottom-bar,
-  .hdr .hdr-back,
-  .hdr .hdr-action{display:none!important}
+/* Hide everything except summary */
+.no-print,
+#screen-login,
+#screen-customer,
+#screen-builder,
+.bottom-bar,
+.hdr .hdr-back,
+.hdr .hdr-action{display:none!important}
 
-  /* Show summary */
-  #screen-summary{display:block!important}
-  .screen{padding-bottom:0}
+/* Show summary */
+#screen-summary{display:block!important}
+.screen{padding-bottom:0}
 
-  /* White background, black text throughout */
-  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-  body,html{background:#fff!important;color:#000!important}
-  
-  /* Summary wrapper */
-  .summary-wrap{padding:0!important}
-  
-  /* Quote ID badge */
-  .quote-id-badge{background:#f5f5f5!important;border:1px solid #ddd!important;color:#333!important;border-radius:6px!important;padding:8px 14px!important}
-  .quote-id-badge span{color:#000!important}
-  
-  /* Customer card */
-  .summary-customer{background:#fff!important;border:1.5px solid #000!important;border-top:3px solid #c0392b!important;border-radius:8px!important;padding:14px!important;margin-bottom:12px!important}
-  .summary-field{border-bottom:1px solid #eee!important;padding:6px 0!important}
-  .summary-field .lbl{color:#555!important}
-  .summary-field .val{color:#000!important}
-  
-  /* Room blocks */
-  .summary-room{background:#fff!important;border:1.5px solid #333!important;border-top:3px solid #c0392b!important;border-radius:8px!important;margin-bottom:10px!important;break-inside:avoid!important}
-  .summary-room-hdr{background:#f5f5f5!important;color:#000!important;border-bottom:1px solid #ddd!important;padding:10px 14px!important}
-  .summary-win-block{border-bottom:1px solid #eee!important;padding:10px 14px!important}
-  .summary-win-block:last-child{border-bottom:none!important}
-  .summary-win-title{color:#000!important}
-  .summary-win-dims{color:#555!important}
-  .summary-comp-row{border-bottom:1px solid #f0f0f0!important}
-  .summary-comp-info .lbl{color:#777!important}
-  .summary-comp-info .name{color:#000!important}
-  .summary-comp-info .detail{color:#555!important}
-  .summary-comp-amt{color:#000!important}
-  
-  /* Grand total */
-  .grand-total-card{background:#000!important;border-radius:8px!important;padding:16px!important}
-  .grand-total-lbl{color:#fff!important}
-  .grand-total-val{color:#fff!important}
-  .grand-total-sub{color:#ccc!important}
-  
-  /* Terms */
-  .summary-wrap>div:last-child{background:#fff!important;border:1px solid #ddd!important;border-radius:6px!important}
-  
-  /* Print header */
-  .print-only-hdr{display:block!important}
-  .hdr{display:none!important}
+/* White background, black text throughout */
+*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+body,html{background:#fff!important;color:#000!important}
+
+/* Summary wrapper */
+.summary-wrap{padding:0!important}
+
+/* Quote ID badge */
+.quote-id-badge{background:#f5f5f5!important;border:1px solid #ddd!important;color:#333!important;border-radius:6px!important;padding:8px 14px!important}
+.quote-id-badge span{color:#000!important}
+
+/* Customer card */
+.summary-customer{background:#fff!important;border:1.5px solid #000!important;border-top:3px solid #c0392b!important;border-radius:8px!important;padding:14px!important;margin-bottom:12px!important}
+.summary-field{border-bottom:1px solid #eee!important;padding:6px 0!important}
+.summary-field .lbl{color:#555!important}
+.summary-field .val{color:#000!important}
+
+/* Room blocks */
+.summary-room{background:#fff!important;border:1.5px solid #333!important;border-top:3px solid #c0392b!important;border-radius:8px!important;margin-bottom:10px!important;break-inside:avoid!important}
+.summary-room-hdr{background:#f5f5f5!important;color:#000!important;border-bottom:1px solid #ddd!important;padding:10px 14px!important}
+.summary-win-block{border-bottom:1px solid #eee!important;padding:10px 14px!important}
+.summary-win-block:last-child{border-bottom:none!important}
+.summary-win-title{color:#000!important}
+.summary-win-dims{color:#555!important}
+.summary-comp-row{border-bottom:1px solid #f0f0f0!important}
+.summary-comp-info .lbl{color:#777!important}
+.summary-comp-info .name{color:#000!important}
+.summary-comp-info .detail{color:#555!important}
+.summary-comp-amt{color:#000!important}
+
+/* Grand total */
+.grand-total-card{background:#000!important;border-radius:8px!important;padding:16px!important}
+.grand-total-lbl{color:#fff!important}
+.grand-total-val{color:#fff!important}
+.grand-total-sub{color:#ccc!important}
+
+/* Terms */
+.summary-wrap>div:last-child{background:#fff!important;border:1px solid #ddd!important;border-radius:6px!important}
+
+/* Print header */
+.print-only-hdr{display:block!important}
+.hdr{display:none!important}
 }
 .print-only-hdr{display:none}
 
 /* ── SPINNER ── */
-.spinner-sm{width:20px;height:20px;border:2px solid #333;border-top-color:var(--red);border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;margin-right:8px;vertical-align:middle}
+.spinner-sm{width:20px;height:20px;border:2px solid #333;border-top-color:var(–red);border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;margin-right:8px;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ── BADGES ── */
@@ -228,32 +229,53 @@ select.inp option{background:#1e1e1e}
 /* ── MODAL ── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;align-items:flex-end;justify-content:center}
 .modal-overlay.open{display:flex}
-.modal-sheet{background:#161616;border:1px solid #2a2a2a;border-top:3px solid var(--red);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px}
+.modal-sheet{background:#161616;border:1px solid #2a2a2a;border-top:3px solid var(–red);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px}
 .modal-handle{width:40px;height:4px;background:#2e2e2e;border-radius:2px;margin:0 auto 16px}
 .modal-title{font-size:18px;font-weight:900;margin-bottom:14px}
 
 /* ── ROOM NAME PILLS ── */
 .name-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
 .name-pill{background:#1e1e1e;border:1.5px solid #2a2a2a;border-radius:20px;padding:7px 14px;font-size:13px;font-weight:600;color:#aaa;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.name-pill.selected{background:#3a1010;border-color:var(--red);color:#fff}
+.name-pill.selected{background:#3a1010;border-color:var(–red);color:#fff}
 
 /* QUOTE SAVED STATE */
 .saved-badge{display:inline-block;background:#0a2a1a;color:#81c784;border:1px solid #1a4a2a;border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-left:8px}
 
+/* ── NEXT ACTION BUTTONS (after product added) ── */
+.next-actions{display:flex;flex-direction:column;gap:8px;margin-top:10px;padding:10px;background:#0f0f0f;border-radius:10px;border:1px dashed #252525}
+.next-actions-label{font-size:10px;font-weight:800;letter-spacing:1.5px;color:#555;text-transform:uppercase;margin-bottom:2px}
+.next-action-row{display:flex;gap:8px}
+.nab{flex:1;padding:11px 8px;font-size:13px;font-weight:700;border-radius:9px;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;text-align:center}
+.nab-sheer{background:#1a3d27;color:#81c784}
+.nab-main{background:#1a3a5c;color:#64b5f6}
+.nab-blind{background:#3a2a0a;color:#f39c12}
+.nab-window{background:#1e1e1e;color:#aaa;border:1px solid #2a2a2a}
+.nab-room{background:#1e1e1e;color:#aaa;border:1px solid #2a2a2a}
+
+/* ── COMPONENT PRODUCT DISPLAY ── */
+.comp-catalog{font-size:15px;font-weight:800;color:#fff;margin-bottom:2px}
+.comp-sno{font-size:12px;color:#aaa;margin-bottom:3px}
+.comp-brand-row{font-size:11px;color:#666;margin-bottom:2px}
+.comp-mrp-row{display:flex;align-items:center;gap:8px;margin-top:6px}
+.comp-mrp-lbl{font-size:11px;color:#888;font-weight:600;white-space:nowrap}
+.comp-mrp-inp{background:#1a1a1a;border:1.5px solid #333;border-radius:7px;color:#fff;font-size:14px;font-weight:800;padding:5px 10px;width:110px;outline:none;-webkit-appearance:none;text-align:right;-webkit-text-fill-color:#fff!important}
+.comp-mrp-inp:focus{border-color:var(–red)}
+.comp-mrp-unit{font-size:11px;color:#666}
+
 /* ── QUOTES LIST SCREEN ── */
-.tab-bar{display:flex;background:#111;border-bottom:2px solid var(--border);padding:0 12px}
-.tab-btn{flex:1;padding:12px 8px;font-size:13px;font-weight:700;color:var(--muted);border:none;background:transparent;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;letter-spacing:0.3px;-webkit-tap-highlight-color:transparent}
-.tab-btn.active{color:#fff;border-bottom-color:var(--red)}
-.search-bar-wrap{display:flex;gap:8px;padding:12px;background:#0f0f0f;border-bottom:1px solid var(--border)}
+.tab-bar{display:flex;background:#111;border-bottom:2px solid var(–border);padding:0 12px}
+.tab-btn{flex:1;padding:12px 8px;font-size:13px;font-weight:700;color:var(–muted);border:none;background:transparent;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;letter-spacing:0.3px;-webkit-tap-highlight-color:transparent}
+.tab-btn.active{color:#fff;border-bottom-color:var(–red)}
+.search-bar-wrap{display:flex;gap:8px;padding:12px;background:#0f0f0f;border-bottom:1px solid var(–border)}
 .search-bar-wrap .inp{margin-top:0;flex:1;font-size:15px;padding:11px 14px}
-.q-list-empty{text-align:center;padding:60px 20px;color:var(--muted);font-size:15px}
+.q-list-empty{text-align:center;padding:60px 20px;color:var(–muted);font-size:15px}
 .q-list-empty .ico{font-size:44px;margin-bottom:12px}
-.q-card{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--red);border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.q-card{background:var(–card);border:1px solid var(–border);border-left:4px solid var(–red);border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .q-card:active{background:#1e1e1e}
 .q-card-row{display:flex;justify-content:space-between;align-items:flex-start}
 .q-card-name{font-size:16px;font-weight:800;color:#fff}
-.q-card-id{font-size:11px;font-weight:700;color:var(--red);letter-spacing:1px}
-.q-card-meta{font-size:12px;color:var(--muted);margin-top:4px}
+.q-card-id{font-size:11px;font-weight:700;color:var(–red);letter-spacing:1px}
+.q-card-meta{font-size:12px;color:var(–muted);margin-top:4px}
 .q-card-total{font-size:16px;font-weight:900;color:#fff;white-space:nowrap;margin-left:12px}
 .q-card-staff{display:inline-block;background:#1e1e1e;border-radius:5px;padding:2px 8px;font-size:10px;font-weight:700;color:#aaa;margin-top:6px}
 .q-card-rooms{display:inline-block;background:#1a1a1a;border-radius:5px;padding:2px 8px;font-size:10px;font-weight:600;color:#666;margin-top:6px;margin-left:6px}
@@ -266,94 +288,104 @@ body.hide-prices .room-total-amt,
 body.hide-prices .win-total-line{display:none!important}
 
 /* WINDOW NUMBER BADGE */
-.win-num-badge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:var(--red);color:#fff;border-radius:50%;font-size:12px;font-weight:800;margin-right:8px;flex-shrink:0}
+.win-num-badge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:var(–red);color:#fff;border-radius:50%;font-size:12px;font-weight:800;margin-right:8px;flex-shrink:0}
 .win-title-row{display:flex;align-items:center;margin-bottom:4px}
 .win-subtotal{display:flex;justify-content:space-between;align-items:center;padding:6px 0 2px;border-top:1px solid #333;margin-top:8px}
 .win-subtotal-lbl{font-size:11px;font-weight:700;color:#888;letter-spacing:1px;text-transform:uppercase}
-.win-subtotal-val{font-size:14px;font-weight:900;color:var(--red)}
+.win-subtotal-val{font-size:14px;font-weight:900;color:var(–red)}
 
 /* ── FORCE WHITE TEXT IN ALL INPUTS ── */
 input.inp, select.inp, textarea.inp {
-  color: #fff !important;
-  -webkit-text-fill-color: #fff !important;
+color: #fff !important;
+-webkit-text-fill-color: #fff !important;
 }
 input.inp::placeholder { color: #444 !important; }
 select.inp option { color: #fff; background: #1e1e1e; }
 
 /* Force white text in all inputs on dark background */
 input, select, textarea {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  caret-color: #fff;
+color: #ffffff !important;
+-webkit-text-fill-color: #ffffff !important;
+caret-color: #fff;
 }
 input::placeholder, select::placeholder, textarea::placeholder {
-  color: #555 !important;
-  -webkit-text-fill-color: #555 !important;
+color: #555 !important;
+-webkit-text-fill-color: #555 !important;
 }
 input:disabled, select:disabled {
-  -webkit-text-fill-color: #444 !important;
-  color: #444 !important;
+-webkit-text-fill-color: #444 !important;
+color: #444 !important;
 }
 /* Fix iOS autofill yellow background */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
-  -webkit-text-fill-color: #ffffff !important;
-  -webkit-box-shadow: 0 0 0px 1000px #1e1e1e inset !important;
-  transition: background-color 5000s ease-in-out 0s;
+-webkit-text-fill-color: #ffffff !important;
+-webkit-box-shadow: 0 0 0px 1000px #1e1e1e inset !important;
+transition: background-color 5000s ease-in-out 0s;
 }
 </style>
+
 </head>
 <body>
 
 <!-- ═══════════════════════════════════════ -->
+
 <!-- SCREEN 1: STAFF LOGIN                  -->
+
 <!-- ═══════════════════════════════════════ -->
+
 <div id="screen-login" class="screen active">
   <div class="pin-wrap">
     <img class="pin-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display='none'" alt="Darla">
     <div class="pin-title">Quote Builder</div>
     <div class="pin-sub" id="loginSub">Select your name to continue</div>
 
-    <div class="staff-select">
-      <select class="inp" id="staffSelect" onchange="onStaffSelect()">
-        <option value="">Select Staff Member...</option>
-      </select>
-    </div>
+```
+<div class="staff-select">
+  <select class="inp" id="staffSelect" onchange="onStaffSelect()">
+    <option value="">Select Staff Member...</option>
+  </select>
+</div>
 
-    <div class="pin-dots">
-      <div class="dot" id="pd0"></div>
-      <div class="dot" id="pd1"></div>
-      <div class="dot" id="pd2"></div>
-      <div class="dot" id="pd3"></div>
-    </div>
+<div class="pin-dots">
+  <div class="dot" id="pd0"></div>
+  <div class="dot" id="pd1"></div>
+  <div class="dot" id="pd2"></div>
+  <div class="dot" id="pd3"></div>
+</div>
 
-    <div class="pin-grid">
-      <button class="pk" onclick="lPk('1')">1</button>
-      <button class="pk" onclick="lPk('2')">2</button>
-      <button class="pk" onclick="lPk('3')">3</button>
-      <button class="pk" onclick="lPk('4')">4</button>
-      <button class="pk" onclick="lPk('5')">5</button>
-      <button class="pk" onclick="lPk('6')">6</button>
-      <button class="pk" onclick="lPk('7')">7</button>
-      <button class="pk" onclick="lPk('8')">8</button>
-      <button class="pk" onclick="lPk('9')">9</button>
-      <button class="pk ghost"></button>
-      <button class="pk" onclick="lPk('0')">0</button>
-      <button class="pk del" onclick="lPd()">&#9003;</button>
-    </div>
+<div class="pin-grid">
+  <button class="pk" onclick="lPk('1')">1</button>
+  <button class="pk" onclick="lPk('2')">2</button>
+  <button class="pk" onclick="lPk('3')">3</button>
+  <button class="pk" onclick="lPk('4')">4</button>
+  <button class="pk" onclick="lPk('5')">5</button>
+  <button class="pk" onclick="lPk('6')">6</button>
+  <button class="pk" onclick="lPk('7')">7</button>
+  <button class="pk" onclick="lPk('8')">8</button>
+  <button class="pk" onclick="lPk('9')">9</button>
+  <button class="pk ghost"></button>
+  <button class="pk" onclick="lPk('0')">0</button>
+  <button class="pk del" onclick="lPd()">&#9003;</button>
+</div>
 
-    <div class="pin-error" id="loginError"></div>
+<div class="pin-error" id="loginError"></div>
 
-    <button class="btn btn-ghost" style="max-width:320px;margin-top:20px" onclick="skipLogin()">
-      Skip (Demo Mode)
-    </button>
+<button class="btn btn-ghost" style="max-width:320px;margin-top:20px" onclick="skipLogin()">
+  Skip (Demo Mode)
+</button>
+```
+
   </div>
 </div>
 
 <!-- ═══════════════════════════════════════ -->
+
 <!-- SCREEN 2: CUSTOMER DETAILS            -->
+
 <!-- ═══════════════════════════════════════ -->
+
 <div id="screen-customer" class="screen">
   <div class="hdr">
     <img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display='none'" alt="Darla">
@@ -385,25 +417,31 @@ input:-webkit-autofill:focus {
       </div>
     </div>
 
-    <div class="section-title">Sales Staff</div>
-    <div class="card card-red">
-      <div class="field">
-        <label class="field-label">Salesman 1 (Primary)</label>
-        <input class="inp" id="custSales1" placeholder="Staff name" type="text">
-      </div>
-      <div class="field">
-        <label class="field-label">Salesman 2 (Optional)</label>
-        <input class="inp" id="custSales2" placeholder="Second staff — if two attended" type="text">
-      </div>
-    </div>
+```
+<div class="section-title">Sales Staff</div>
+<div class="card card-red">
+  <div class="field">
+    <label class="field-label">Salesman 1 (Primary)</label>
+    <input class="inp" id="custSales1" placeholder="Staff name" type="text">
+  </div>
+  <div class="field">
+    <label class="field-label">Salesman 2 (Optional)</label>
+    <input class="inp" id="custSales2" placeholder="Second staff — if two attended" type="text">
+  </div>
+</div>
 
-    <button class="btn" onclick="startQuote()">Start Quote &#8594;</button>
+<button class="btn" onclick="startQuote()">Start Quote &#8594;</button>
+```
+
   </div>
 </div>
 
 <!-- ═══════════════════════════════════════ -->
+
 <!-- SCREEN 3: QUOTE BUILDER               -->
+
 <!-- ═══════════════════════════════════════ -->
+
 <div id="screen-builder" class="screen">
   <div class="hdr">
     <img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display='none'" alt="Darla">
@@ -428,8 +466,11 @@ input:-webkit-autofill:focus {
 </div>
 
 <!-- ═══════════════════════════════════════ -->
+
 <!-- SCREEN 4: SUMMARY / PRINT             -->
+
 <!-- ═══════════════════════════════════════ -->
+
 <div id="screen-summary" class="screen">
   <div class="hdr no-print">
     <img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display='none'" alt="Darla">
@@ -453,8 +494,11 @@ input:-webkit-autofill:focus {
 </div>
 
 <!-- ═══════════════════════════════════════ -->
+
 <!-- MODAL: ADD ROOM                        -->
+
 <!-- ═══════════════════════════════════════ -->
+
 <div class="modal-overlay" id="addRoomModal">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
@@ -472,8 +516,11 @@ input:-webkit-autofill:focus {
 </div>
 
 <!-- ═══════════════════════════════════════ -->
+
 <!-- MODAL: ADD WINDOW                      -->
+
 <!-- ═══════════════════════════════════════ -->
+
 <div class="modal-overlay" id="addWindowModal">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
@@ -512,8 +559,11 @@ input:-webkit-autofill:focus {
 </div>
 
 <!-- ═══════════════════════════════════════ -->
+
 <!-- MODAL: ADD TREATMENT                   -->
+
 <!-- ═══════════════════════════════════════ -->
+
 <div class="modal-overlay" id="addTreatmentModal">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
@@ -536,11 +586,15 @@ input:-webkit-autofill:focus {
 </div>
 
 <!-- TOAST -->
+
 <div class="toast" id="toast"></div>
 
 <!-- ═══════════════════════════════════════ -->
+
 <!-- SCREEN 5: ALL QUOTES                   -->
+
 <!-- ═══════════════════════════════════════ -->
+
 <div id="screen-quotes" class="screen">
   <div class="hdr">
     <img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display='none'" alt="Darla">
@@ -951,9 +1005,23 @@ function confirmAddTreatment(type){
 // COMPONENTS
 // ════════════════════════════════════════════
 function addComponent(ri, wi, ti, layer){
+  // Push blank component then immediately open product search
   var comp = {id:uid(), layer:layer, product:null, blindType:"", mechanism:"", calc:{}};
   APP.quote.rooms[ri].windows[wi].treatments[ti].components.push(comp);
+  var ci = APP.quote.rooms[ri].windows[wi].treatments[ti].components.length - 1;
   saveDraft();
+  // Go straight to product search
+  selectProduct(ri, wi, ti, ci);
+}
+
+function updateMrp(ri, wi, ti, ci, val){
+  var comp = APP.quote.rooms[ri].windows[wi].treatments[ti].components[ci];
+  if(!comp || !comp.product) return;
+  var v = parseFloat(val);
+  if(isNaN(v) || v < 0) return;
+  comp.product.mrp = v;
+  saveDraft();
+  // Recalc totals and re-render just the builder room totals
   renderBuilder();
 }
 
@@ -1159,18 +1227,50 @@ function renderTreatment(t, ri, wi, ti, win){
   // Set treatment type on components for calc
   t.components.forEach(function(c){ c.treatmentType = t.type; });
 
+  var hasComps = t.components.length > 0;
+
+  // No components yet — show initial selection buttons
+  if(!hasComps){
+    if(t.type==="curtains"||t.type==="roman_blinds"){
+      html+='<div class="next-actions">'
+        +'<div class="next-actions-label">Select fabric type to begin</div>'
+        +'<div class="next-action-row">'
+        +'<button class="nab nab-main" onclick="addComponent('+ri+','+wi+','+ti+','main')">&#129525; Main Fabric</button>'
+        +'<button class="nab nab-sheer" onclick="addComponent('+ri+','+wi+','+ti+','sheer')">&#129525; Sheer</button>'
+        +'</div>'
+        +'</div>';
+    } else {
+      html+='<button class="nab nab-blind" style="width:100%;border:none;padding:12px;border-radius:9px;cursor:pointer" onclick="addComponent('+ri+','+wi+','+ti+','blind')">&#43; Select Blind Product</button>';
+    }
+  }
+
+  // Render existing components
   t.components.forEach(function(c, ci){
     html += renderComponent(c, ri, wi, ti, ci, win, t);
   });
 
-  // Add component buttons
-  if(t.type==="curtains"||t.type==="roman_blinds"){
-    html+='<div class="btn-row">'
-      +'<button class="btn btn-sm" style="background:#1a3a5c;box-shadow:none;flex:1" onclick="addComponent('+ri+','+wi+','+ti+',\'main\')">&#43; Main</button>'
-      +'<button class="btn btn-sm" style="background:#1a3d27;box-shadow:none;flex:1" onclick="addComponent('+ri+','+wi+','+ti+',\'sheer\')">&#43; Sheer</button>'
+  // After components — smart next-action buttons
+  if(hasComps){
+    html+='<div class="next-actions">'
+      +'<div class="next-actions-label">What's next?</div>';
+
+    if(t.type==="curtains"||t.type==="roman_blinds"){
+      var hasMain  = t.components.some(function(c){return c.layer==="main";});
+      var hasSheer = t.components.some(function(c){return c.layer==="sheer";});
+      html+='<div class="next-action-row">';
+      if(!hasMain)  html+='<button class="nab nab-main" onclick="addComponent('+ri+','+wi+','+ti+','main')">&#43; Add Main</button>';
+      if(!hasSheer) html+='<button class="nab nab-sheer" onclick="addComponent('+ri+','+wi+','+ti+','sheer')">&#43; Add Sheer</button>';
+      if(hasMain && hasSheer) html+='<span style="font-size:12px;color:#4caf50;padding:6px 0">&#10003; Main &amp; Sheer added</span>';
+      html+='</div>';
+    } else {
+      html+='<button class="nab nab-blind" style="width:100%;border:none;padding:10px;border-radius:9px;cursor:pointer;margin-bottom:4px" onclick="addComponent('+ri+','+wi+','+ti+','blind')">&#43; Add Another Blind</button>';
+    }
+
+    html+='<div class="next-action-row" style="margin-top:6px">'
+      +'<button class="nab nab-window" onclick="showAddWindowModal('+ri+')">&#43; Add Window</button>'
+      +'<button class="nab nab-room" onclick="showAddRoomModal()">&#43; Add Room</button>'
+      +'</div>'
       +'</div>';
-  } else {
-    html+='<button class="btn btn-sm" style="background:#3a2a0a;box-shadow:none;width:100%" onclick="addComponent('+ri+','+wi+','+ti+',\'blind\')">&#43; Add Blind</button>';
   }
 
   html+='</div>';
@@ -1179,7 +1279,6 @@ function renderTreatment(t, ri, wi, ti, win){
 
 function renderComponent(c, ri, wi, ti, ci, win, t){
   var calc = c.product ? calcComponent(win, Object.assign({}, c, {treatmentType:t.type})) : {};
-  // Store calc
   c.calc = calc;
 
   var html='<div class="comp-card">'
@@ -1189,19 +1288,38 @@ function renderComponent(c, ri, wi, ti, ci, win, t){
     +'</div>';
 
   if(c.product){
-    html+='<div class="comp-product">'+esc(c.product.catalog||c.product.product||c.product.blind_type||"Product")+'</div>'
-      +'<div class="comp-brand">'+esc(c.product.brand||"")+(c.product.code?' &nbsp;·&nbsp; Code: '+c.product.code:'')+'</div>'
-      +'<div class="comp-brand" style="margin-top:2px">MRP: '+fmt(c.product.mrp||0)+' per '+(t.type==="blinds"?"sqft":"mtr")+'</div>';
+    var p = c.product;
+    var catalog  = p.catalog||p.product||p.blind_type||p.model||"";
+    var sno      = p.s_no||p["s.no"]||"";
+    var unitLbl  = t.type==="blinds"?"sqft":"mtr";
+
+    // Product name line: Catalog / S.No format
+    if(catalog && sno){
+      html+='<div class="comp-catalog">'+esc(catalog)+' / '+esc(sno)+'</div>';
+    } else {
+      html+='<div class="comp-catalog">'+esc(catalog||sno||"Product")+'</div>';
+    }
+
+    // Brand + code
+    html+='<div class="comp-brand-row">'+esc(p.brand||"")+(p.code?' &nbsp;·&nbsp; '+esc(p.code):'')+'</div>';
+
+    // Editable MRP
+    html+='<div class="comp-mrp-row">'
+      +'<span class="comp-mrp-lbl">MRP /'+unitLbl+'</span>'
+      +'<input class="comp-mrp-inp" type="number" value="'+esc(String(p.mrp||0))+'" min="0" step="0.5" '
+      +'onchange="updateMrp('+ri+','+wi+','+ti+','+ci+',this.value)" '
+      +'onclick="this.select()">'
+      +'</div>';
 
     if(calc && calc.total){
       html+='<div class="comp-calc">';
       if(t.type==="curtains"||t.type==="roman_blinds"){
         if(t.type==="roman_blinds"){
           html+='<div class="comp-calc-row"><span class="lbl">Area</span><span class="val">'+calc.sqft+' sqft</span></div>';
-          html+='<div class="comp-calc-row"><span class="lbl">Material</span><span class="val">'+fmt(calc.matCost)+'</span></div>';
+          html+='<div class="comp-calc-row"><span class="lbl">Material (₹475/sqft)</span><span class="val">'+fmt(calc.matCost)+'</span></div>';
         }
         html+='<div class="comp-calc-row"><span class="lbl">Panels × Length</span><span class="val">'+calc.numPanels+' × '+calc.panelLen+'m</span></div>';
-        html+='<div class="comp-calc-row"><span class="lbl">Fabric</span><span class="val">'+calc.fabricQty+' mtrs</span></div>';
+        html+='<div class="comp-calc-row"><span class="lbl">Fabric required</span><span class="val">'+calc.fabricQty+' mtrs</span></div>';
         if(t.type==="roman_blinds"){
           html+='<div class="comp-calc-row"><span class="lbl">Fabric cost</span><span class="val">'+fmt(calc.fabCost)+'</span></div>';
           html+='<div class="comp-calc-row"><span class="lbl">Lining</span><span class="val">'+fmt(calc.lining)+'</span></div>';
@@ -1215,14 +1333,13 @@ function renderComponent(c, ri, wi, ti, ci, win, t){
         +'<span class="val total">'+fmt(calc.total)+'</span></div>';
       html+='</div>';
     }
+
+    html+='<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px;font-size:11px" '
+      +'onclick="selectProduct('+ri+','+wi+','+ti+','+ci+')">&#8635; Change Product</button>';
   } else {
+    // No product — show select button (fallback if somehow landed here without auto-search)
     html+='<button class="btn btn-sm" style="width:100%;margin-top:6px;background:#1e1e1e;border:1.5px dashed #333;box-shadow:none;color:#888" '
       +'onclick="selectProduct('+ri+','+wi+','+ti+','+ci+')">&#128269; Select Product</button>';
-  }
-
-  if(c.product){
-    html+='<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:6px;font-size:11px" '
-      +'onclick="selectProduct('+ri+','+wi+','+ti+','+ci+')">&#8635; Change Product</button>';
   }
 
   html+='</div>';
@@ -1889,5 +2006,6 @@ function showToast(msg){
   setTimeout(function(){t.classList.remove("show");},2500);
 }
 </script>
+
 </body>
 </html>
