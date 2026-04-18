@@ -385,14 +385,15 @@ input:-webkit-autofill:focus {
       </div>
     </div>
 
-    <div class="section-title">Existing Quote</div>
-    <div class="card">
+    <div class="section-title">Sales Staff</div>
+    <div class="card card-red">
       <div class="field">
-        <label class="field-label">Load Quote by ID</label>
-        <div style="display:flex;gap:8px">
-          <input class="inp" id="loadQuoteId" placeholder="e.g. DRL-0042" style="flex:1;margin-top:0">
-          <button class="btn btn-blue btn-sm" onclick="loadQuote()" style="margin-top:0;flex-shrink:0">Load</button>
-        </div>
+        <label class="field-label">Salesman 1 (Primary)</label>
+        <input class="inp" id="custSales1" placeholder="Staff name" type="text">
+      </div>
+      <div class="field">
+        <label class="field-label">Salesman 2 (Optional)</label>
+        <input class="inp" id="custSales2" placeholder="Second staff — if two attended" type="text">
       </div>
     </div>
 
@@ -419,9 +420,10 @@ input:-webkit-autofill:focus {
     <div id="roomsContainer"></div>
     <button class="btn btn-add" onclick="showAddRoomModal()">&#43; Add Room</button>
   </div>
-  <div class="bottom-bar no-print">
-    <button class="btn btn-ghost" style="margin-top:0" onclick="saveQuote()">&#128190; Save</button>
-    <button class="btn" style="margin-top:0" onclick="goTo('screen-summary')">View Summary &#8594;</button>
+  <div class="bottom-bar no-print" style="gap:6px">
+    <button class="btn btn-ghost" style="margin-top:0;flex:1" onclick="saveAndGoList()">&#128196; All Quotes</button>
+    <button class="btn btn-ghost" style="margin-top:0;flex:1" onclick="saveQuote()">&#128190; Save</button>
+    <button class="btn" style="margin-top:0;flex:2" onclick="goTo('screen-summary')">Summary &#8594;</button>
   </div>
 </div>
 
@@ -443,9 +445,10 @@ input:-webkit-autofill:focus {
     </div>
   </div>
   <div class="summary-wrap" id="summaryContent"></div>
-  <div class="bottom-bar no-print">
-    <button class="btn btn-ghost" style="margin-top:0" onclick="shareQuote()">&#128279; Share</button>
-    <button class="btn" style="margin-top:0" onclick="saveQuote()">&#128190; Save Quote</button>
+  <div class="bottom-bar no-print" style="gap:6px">
+    <button class="btn btn-ghost" style="margin-top:0;flex:1" onclick="shareQuote()">&#128279; Share</button>
+    <button class="btn" style="margin-top:0;flex:2" onclick="saveAndExit()">&#128190; Save &amp; Exit</button>
+    <button class="btn btn-ghost" style="margin-top:0;flex:1" onclick="window.print()">&#128424;</button>
   </div>
 </div>
 
@@ -563,7 +566,7 @@ input:-webkit-autofill:focus {
 // ════════════════════════════════════════════
 // CONFIG — UPDATE THESE AFTER DEPLOYING APPS SCRIPT
 // ════════════════════════════════════════════
-var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx9A43LVU7Ikyxj5MNgRAnCvf9PSR5GisthNyC9oc_ye56OkTag32IUXstlDXtoWJ6v/exec";
+var APPS_SCRIPT_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
 var PRODUCT_SEARCH_URL = "index.html";
 
 // ════════════════════════════════════════════
@@ -631,20 +634,8 @@ window.addEventListener("DOMContentLoaded", function(){
 
   // Load staff list
   loadStaffList();
-
-  // Restore draft if exists
-  var draft = localStorage.getItem("darla_quote_draft");
-  if(draft){
-    try{
-      APP.quote = JSON.parse(draft);
-      if(APP.quote.customer && APP.quote.customer.name){
-        document.getElementById("custName").value    = APP.quote.customer.name;
-        document.getElementById("custMobile").value  = APP.quote.customer.mobile||"";
-        document.getElementById("custArch").value    = APP.quote.customer.arch||"";
-        document.getElementById("custAddr").value    = APP.quote.customer.addr||"";
-      }
-    }catch(e){}
-  }
+  // Always start fresh — don't restore draft to the form on login
+  // (draft is only used when returning from product search, handled above)
 });
 
 function getParam(n){ return new URLSearchParams(window.location.search).get(n)||""; }
@@ -715,6 +706,7 @@ function checkLoginPin(){
     APP.staff = selectedStaff;
     localStorage.setItem("darla_quote_staff", JSON.stringify(APP.staff));
     document.getElementById("staffNameDisplay").textContent = APP.staff.name;
+    clearNewQuoteForm();
     goTo("screen-customer");
   } else {
     updateLoginDots(true);
@@ -726,7 +718,20 @@ function checkLoginPin(){
 function skipLogin(){
   APP.staff = {name:"Staff", pin:""};
   document.getElementById("staffNameDisplay").textContent="Demo Mode";
+  clearNewQuoteForm();
   goTo("screen-customer");
+}
+
+// Always called when showing a blank New Quote form
+function clearNewQuoteForm(){
+  APP.quote = newQuote();
+  localStorage.removeItem("darla_quote_draft");
+  ["custName","custMobile","custArch","custAddr","custSales1","custSales2"].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value="";
+  });
+  // Pre-fill Salesman 1 with logged-in staff name
+  var s1 = document.getElementById("custSales1");
+  if(s1 && APP.staff && APP.staff.name) s1.value = APP.staff.name;
 }
 
 // ════════════════════════════════════════════
@@ -738,13 +743,17 @@ function startQuote(){
   if(!name){ showToast("Enter customer name"); return; }
   if(!mob || mob.length<10){ showToast("Enter valid mobile number"); return; }
 
+  var s1 = document.getElementById("custSales1").value.trim() || (APP.staff ? APP.staff.name : "Staff");
+  var s2 = document.getElementById("custSales2").value.trim();
+
   APP.quote.customer = {
-    name: name,
+    name:   name,
     mobile: mob,
-    arch: document.getElementById("custArch").value.trim(),
-    addr: document.getElementById("custAddr").value.trim()
+    arch:   document.getElementById("custArch").value.trim(),
+    addr:   document.getElementById("custAddr").value.trim()
   };
-  APP.quote.staff = APP.staff ? APP.staff.name : "Staff";
+  APP.quote.staff    = s1;
+  APP.quote.staff2   = s2;
 
   if(!APP.quote.id){
     APP.quote.id = nextQuoteId();
@@ -1279,8 +1288,9 @@ function renderSummary(){
     +'<div class="summary-field"><span class="lbl">Mobile</span><span class="val">'+esc(q.customer.mobile)+'</span></div>';
   if(q.customer.arch) html+='<div class="summary-field"><span class="lbl">Designer</span><span class="val">'+esc(q.customer.arch)+'</span></div>';
   if(q.customer.addr) html+='<div class="summary-field"><span class="lbl">Project</span><span class="val">'+esc(q.customer.addr)+'</span></div>';
-  html+='<div class="summary-field"><span class="lbl">Staff</span><span class="val">'+esc(q.staff)+'</span></div>'
-    +'<div class="summary-field"><span class="lbl">Date</span><span class="val">'+esc(q.date)+'</span></div>'
+  html+='<div class="summary-field"><span class="lbl">Salesman 1</span><span class="val">'+esc(q.staff||"")+'</span></div>';
+  if(q.staff2) html+='<div class="summary-field"><span class="lbl">Salesman 2</span><span class="val">'+esc(q.staff2)+'</span></div>';
+  html+='<div class="summary-field"><span class="lbl">Date</span><span class="val">'+esc(q.date)+'</span></div>'
     +'<div class="summary-field"><span class="lbl">Quote ID</span><span class="val">'+esc(q.id||"—")+'</span></div>'
     +'</div>';
 
@@ -1393,6 +1403,7 @@ function saveToQuoteList(){
     id:       q.id,
     date:     q.date,
     staff:    q.staff||"",
+    staff2:   q.staff2||"",
     name:     q.customer.name||"",
     mobile:   q.customer.mobile||"",
     arch:     q.customer.arch||"",
@@ -1493,11 +1504,50 @@ function applyLoadedQuote(q){
   document.getElementById("custMobile").value = q.customer.mobile||"";
   document.getElementById("custArch").value   = q.customer.arch||"";
   document.getElementById("custAddr").value   = q.customer.addr||"";
+  var s1el = document.getElementById("custSales1");
+  var s2el = document.getElementById("custSales2");
+  if(s1el) s1el.value = q.staff||"";
+  if(s2el) s2el.value = q.staff2||"";
   document.getElementById("builderCustomerName").textContent = q.customer.name;
   document.getElementById("builderQuoteId").textContent      = q.id;
   document.getElementById("tabNew").classList.add("active");
   document.getElementById("tabAll").classList.remove("active");
   goTo("screen-builder");
+}
+
+function saveAndGoList(){
+  saveDraft();
+  saveToQuoteList();
+  if(isCloudReady()){
+    fetch(APPS_SCRIPT_URL, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({action:"saveQuote", quote:APP.quote})
+    }).then(function(r){return r.json();}).catch(function(){});
+  }
+  document.getElementById("tabNew").classList.remove("active");
+  document.getElementById("tabAll").classList.add("active");
+  goTo("screen-quotes");
+}
+
+function saveAndExit(){
+  saveDraft();
+  saveToQuoteList();
+  // Cloud save
+  if(isCloudReady()){
+    fetch(APPS_SCRIPT_URL, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({action:"saveQuote", quote:APP.quote})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(){ showToast("Saved ✓"); })
+    .catch(function(){ showToast("Saved locally"); });
+  }
+  // Go to All Quotes
+  document.getElementById("tabNew").classList.remove("active");
+  document.getElementById("tabAll").classList.add("active");
+  goTo("screen-quotes");
 }
 
 function shareQuote(){
@@ -1537,6 +1587,7 @@ function switchTab(tab){
     document.getElementById("tabAll").classList.add("active");
     goTo("screen-quotes");
   } else {
+    clearNewQuoteForm();
     document.getElementById("tabNew").classList.add("active");
     document.getElementById("tabAll").classList.remove("active");
     goTo("screen-customer");
@@ -1544,12 +1595,7 @@ function switchTab(tab){
 }
 
 function newQuoteFromList(){
-  // Reset to blank new quote and go to customer screen
-  APP.quote = newQuote();
-  localStorage.removeItem("darla_quote_draft");
-  ["custName","custMobile","custArch","custAddr"].forEach(function(id){
-    var el=document.getElementById(id); if(el) el.value="";
-  });
+  clearNewQuoteForm();
   document.getElementById("tabNew").classList.add("active");
   document.getElementById("tabAll").classList.remove("active");
   goTo("screen-customer");
@@ -1565,6 +1611,12 @@ var _cloudQuotes = []; // full list fetched from cloud
 function renderQuotesList(){
   // Show local cache immediately while cloud loads
   var localList = getQuoteList();
+  // Sort local list by quote number descending
+  localList.sort(function(a,b){
+    var na=parseInt((a.id||"").replace(/[^0-9]/g,""))||0;
+    var nb=parseInt((b.id||"").replace(/[^0-9]/g,""))||0;
+    return nb-na;
+  });
   _filteredQuotes = localList;
   renderQuotesListHTML(localList, true); // true = loading
 
@@ -1602,23 +1654,31 @@ function mergeCloudAndLocal(cloudList){
   var localMap = {};
   getQuoteList().forEach(function(q){ localMap[q.id] = q; });
 
-  return cloudList.map(function(c){
+  var merged = cloudList.map(function(c){
     var local = localMap[c.id];
     return {
-      id:      c.id,
-      date:    c.date,
-      staff:   c.staff,
-      name:    c.name,
-      mobile:  c.mobile,
-      arch:    c.arch||"",
-      addr:    c.addr||"",
-      total:   c.total,
-      rooms:   c.rooms,
-      updated: c.updated,
-      draft:   local ? local.draft : null, // null means load from cloud on open
-      fromCloud: true
+      id:       c.id,
+      date:     c.date,
+      staff:    c.staff,
+      staff2:   c.staff2||"",
+      name:     c.name,
+      mobile:   c.mobile,
+      arch:     c.arch||"",
+      addr:     c.addr||"",
+      total:    c.total,
+      rooms:    c.rooms,
+      updated:  c.updated,
+      draft:    local ? local.draft : null,
+      fromCloud:true
     };
   });
+  // Sort: newest quote number first
+  merged.sort(function(a,b){
+    var na = parseInt((a.id||"").replace(/[^0-9]/g,""))||0;
+    var nb = parseInt((b.id||"").replace(/[^0-9]/g,""))||0;
+    return nb - na;
+  });
+  return merged;
 }
 
 function filterQuotes(){
@@ -1628,10 +1688,17 @@ function filterQuotes(){
   if(!isCloudReady() || _cloudQuotes.length===0){
     // Offline: filter local only
     var list = getQuoteList();
+    list.sort(function(a,b){
+      var na=parseInt((a.id||"").replace(/[^0-9]/g,""))||0;
+      var nb=parseInt((b.id||"").replace(/[^0-9]/g,""))||0;
+      return nb-na;
+    });
     _filteredQuotes = q ? list.filter(function(e){
       return (e.name||"").toLowerCase().indexOf(q)!==-1
           || (e.mobile||"").indexOf(q)!==-1
           || (e.id||"").toLowerCase().indexOf(q)!==-1
+          || (e.staff||"").toLowerCase().indexOf(q)!==-1
+          || (e.staff2||"").toLowerCase().indexOf(q)!==-1
           || (e.arch||"").toLowerCase().indexOf(q)!==-1;
     }) : list;
     renderQuotesListHTML(_filteredQuotes, false);
@@ -1706,7 +1773,7 @@ function renderQuotesListHTML(list, loading){
       +'</div>'
       +'</div>'
       +'<div style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap">'
-      +'<span class="q-card-staff">&#128100; '+esc(q.staff||"Staff")+'</span>'
+      +'<span class="q-card-staff">&#128100; '+esc(q.staff||"Staff")+(q.staff2?' &amp; '+esc(q.staff2):'')+'</span>'
       +(rooms?'<span class="q-card-rooms">'+rooms+' room'+(rooms!==1?"s":"")+'</span>':'')
       +'<span class="q-card-rooms" style="margin-left:auto">&#128337; '+esc(q.updated||q.date||"")+'</span>'
       +'</div>'
