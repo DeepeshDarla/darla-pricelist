@@ -1412,26 +1412,40 @@ function getQuoteList(){
   catch(e){ return []; }
 }
 
+function isCloudReady(){
+  return APPS_SCRIPT_URL && APPS_SCRIPT_URL.indexOf("YOUR_")!==0;
+}
+
 function saveQuote(){
   saveDraft();
-  saveToQuoteList();
-  if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf("YOUR_")===0){
-    showToast("Quote saved ✓  "+APP.quote.id);
+  saveToQuoteList(); // always save locally too
+
+  if(!isCloudReady()){
+    showToast("Saved locally ✓  "+APP.quote.id);
     return;
   }
-  showToast("Saving...");
+
+  // Show saving indicator
+  var btn = document.querySelector(".bottom-bar .btn:last-child");
+  if(btn){ btn.textContent="Saving..."; btn.disabled=true; }
+
   fetch(APPS_SCRIPT_URL, {
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body: JSON.stringify({action:"saveQuote", quote:APP.quote})
   })
-  .then(function(r){return r.json();})
+  .then(function(r){ return r.json(); })
   .then(function(d){
     APP.quote.saved = true;
     saveDraft();
-    showToast("Quote saved ✓  "+APP.quote.id);
+    saveToQuoteList();
+    showToast("✓ Saved to cloud — "+APP.quote.id);
+    if(btn){ btn.textContent="💾 Save Quote"; btn.disabled=false; }
   })
-  .catch(function(){ showToast("Saved locally (offline)"); });
+  .catch(function(){
+    showToast("Saved locally (offline)");
+    if(btn){ btn.textContent="💾 Save Quote"; btn.disabled=false; }
+  });
 }
 
 function loadQuote(){
@@ -1441,28 +1455,49 @@ function loadQuote(){
 }
 
 function loadQuoteById(id){
-  if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf("YOUR_")===0){
-    showToast("Apps Script not configured");
+  // Try local cache first
+  var localList = getQuoteList();
+  var localEntry = localList.find(function(q){ return q.id===id; });
+
+  if(localEntry && localEntry.draft){
+    applyLoadedQuote(JSON.parse(localEntry.draft));
+    showToast("Loaded: "+id);
     return;
   }
-  showToast("Loading...");
+
+  if(!isCloudReady()){
+    showToast("Quote not found locally");
+    return;
+  }
+
+  showToast("Loading from cloud...");
   fetch(APPS_SCRIPT_URL+"?action=loadQuote&id="+encodeURIComponent(id))
-    .then(function(r){return r.json();})
+    .then(function(r){ return r.json(); })
     .then(function(d){
       if(d.quote){
-        APP.quote = d.quote;
-        saveDraft();
-        document.getElementById("custName").value   = APP.quote.customer.name||"";
-        document.getElementById("custMobile").value = APP.quote.customer.mobile||"";
-        document.getElementById("custArch").value   = APP.quote.customer.arch||"";
-        document.getElementById("custAddr").value   = APP.quote.customer.addr||"";
-        showToast("Quote loaded: "+id);
-        goTo("screen-customer");
+        applyLoadedQuote(d.quote);
+        // Also cache it locally
+        saveToQuoteList();
+        showToast("Loaded: "+id);
       } else {
         showToast("Quote not found: "+id);
       }
     })
     .catch(function(){ showToast("Error loading quote"); });
+}
+
+function applyLoadedQuote(q){
+  APP.quote = q;
+  saveDraft();
+  document.getElementById("custName").value   = q.customer.name||"";
+  document.getElementById("custMobile").value = q.customer.mobile||"";
+  document.getElementById("custArch").value   = q.customer.arch||"";
+  document.getElementById("custAddr").value   = q.customer.addr||"";
+  document.getElementById("builderCustomerName").textContent = q.customer.name;
+  document.getElementById("builderQuoteId").textContent      = q.id;
+  document.getElementById("tabNew").classList.add("active");
+  document.getElementById("tabAll").classList.remove("active");
+  goTo("screen-builder");
 }
 
 function shareQuote(){
@@ -1525,61 +1560,155 @@ function newQuoteFromList(){
 // ════════════════════════════════════════════
 var _filteredQuotes = [];
 
+var _cloudQuotes = []; // full list fetched from cloud
+
 function renderQuotesList(){
-  var list = getQuoteList();
-  _filteredQuotes = list;
-  var countEl = document.getElementById("quotesCount");
-  if(countEl) countEl.textContent = list.length + " quote" + (list.length!==1?"s":"") + " saved";
-  renderQuotesListHTML(list);
+  // Show local cache immediately while cloud loads
+  var localList = getQuoteList();
+  _filteredQuotes = localList;
+  renderQuotesListHTML(localList, true); // true = loading
+
+  if(!isCloudReady()){
+    renderQuotesListHTML(localList, false);
+    return;
+  }
+
+  // Fetch from cloud
+  fetch(APPS_SCRIPT_URL+"?action=listQuotes")
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.quotes && d.quotes.length >= 0){
+        _cloudQuotes = d.quotes;
+        // Merge: cloud summaries + local draft JSON
+        var merged = mergeCloudAndLocal(d.quotes);
+        _filteredQuotes = merged;
+        renderQuotesListHTML(merged, false);
+        var countEl = document.getElementById("quotesCount");
+        if(countEl) countEl.textContent = merged.length+" quote"+(merged.length!==1?"s":"")+" · cloud";
+      } else {
+        renderQuotesListHTML(localList, false);
+      }
+    })
+    .catch(function(){
+      renderQuotesListHTML(localList, false);
+      var countEl = document.getElementById("quotesCount");
+      if(countEl) countEl.textContent = localList.length+" (local only)";
+    });
+}
+
+function mergeCloudAndLocal(cloudList){
+  // cloudList has summaries; localList has full draft JSON
+  // Merge so we can open cloud quotes (load on demand) and local ones directly
+  var localMap = {};
+  getQuoteList().forEach(function(q){ localMap[q.id] = q; });
+
+  return cloudList.map(function(c){
+    var local = localMap[c.id];
+    return {
+      id:      c.id,
+      date:    c.date,
+      staff:   c.staff,
+      name:    c.name,
+      mobile:  c.mobile,
+      arch:    c.arch||"",
+      addr:    c.addr||"",
+      total:   c.total,
+      rooms:   c.rooms,
+      updated: c.updated,
+      draft:   local ? local.draft : null, // null means load from cloud on open
+      fromCloud: true
+    };
+  });
 }
 
 function filterQuotes(){
   var q = (document.getElementById("quotesSearch").value||"").trim().toLowerCase();
-  var list = getQuoteList();
-  if(!q){
-    _filteredQuotes = list;
-  } else {
-    _filteredQuotes = list.filter(function(e){
+  var base = _cloudQuotes.length > 0 ? _filteredQuotes : getQuoteList();
+
+  if(!isCloudReady() || _cloudQuotes.length===0){
+    // Offline: filter local only
+    var list = getQuoteList();
+    _filteredQuotes = q ? list.filter(function(e){
       return (e.name||"").toLowerCase().indexOf(q)!==-1
           || (e.mobile||"").indexOf(q)!==-1
           || (e.id||"").toLowerCase().indexOf(q)!==-1
           || (e.arch||"").toLowerCase().indexOf(q)!==-1;
-    });
+    }) : list;
+    renderQuotesListHTML(_filteredQuotes, false);
+    return;
   }
-  renderQuotesListHTML(_filteredQuotes);
+
+  // Cloud search
+  var searchEl = document.getElementById("quotesSearch");
+  if(searchEl) searchEl.disabled = true;
+
+  fetch(APPS_SCRIPT_URL+"?action=listQuotes&search="+encodeURIComponent(q))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(searchEl) searchEl.disabled = false;
+      if(d.quotes){
+        _filteredQuotes = mergeCloudAndLocal(d.quotes);
+        renderQuotesListHTML(_filteredQuotes, false);
+      }
+    })
+    .catch(function(){
+      if(searchEl) searchEl.disabled = false;
+      // Fall back to local filter
+      var list = getQuoteList();
+      _filteredQuotes = q ? list.filter(function(e){
+        return (e.name||"").toLowerCase().indexOf(q)!==-1
+            || (e.mobile||"").indexOf(q)!==-1;
+      }) : list;
+      renderQuotesListHTML(_filteredQuotes, false);
+    });
 }
 
-function renderQuotesListHTML(list){
+function renderQuotesListHTML(list, loading){
   var el = document.getElementById("quotesList");
   if(!el) return;
   var countEl = document.getElementById("quotesCount");
-  if(countEl) countEl.textContent = list.length + " quote" + (list.length!==1?"s":"");
 
-  if(!list.length){
-    el.innerHTML = '<div class="q-list-empty"><div class="ico">&#128196;</div>No quotes found<br><span style="font-size:13px;margin-top:6px;display:block">Save a quote to see it here</span></div>';
+  if(loading){
+    el.innerHTML = '<div class="q-list-empty"><div class="spinner-sm"></div>Loading quotes...</div>';
+    if(countEl) countEl.textContent = "Loading...";
     return;
   }
+
+  if(countEl) countEl.textContent = list.length+" quote"+(list.length!==1?"s":"");
+
+  if(!list.length){
+    el.innerHTML = '<div class="q-list-empty"><div class="ico">&#128196;</div>No quotes found<br><span style="font-size:13px;margin-top:6px;display:block">' 
+      + (isCloudReady() ? "No quotes in cloud yet. Save a quote to see it here." : "Save a quote to see it here.")
+      + '</span></div>';
+    return;
+  }
+
   var html = "";
   list.forEach(function(q, idx){
     var rooms = q.rooms||0;
     var total = q.total||0;
+    var hasLocal = !!q.draft;
     html += '<div class="q-card" onclick="openQuoteFromList('+idx+')">'
       +'<div class="q-card-row">'
-      +'<div>'
-      +'<div class="q-card-id">'+esc(q.id||"—")+'<button onclick="deleteQuoteFromList('+idx+',event)" style="background:transparent;border:none;color:#333;font-size:18px;cursor:pointer;padding:4px 8px;-webkit-tap-highlight-color:transparent">&#128465;</button>'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">'
+      +'<div class="q-card-id">'+esc(q.id||"—")+'</div>'
+      +(q.fromCloud ? '<span style="background:#0a2a1a;color:#81c784;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:1px">CLOUD</span>' : '')
+      +(!hasLocal && q.fromCloud ? '<span style="background:#1a1a0a;color:#f39c12;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:1px">TAP TO LOAD</span>' : '')
       +'</div>'
       +'<div class="q-card-name">'+esc(q.name||"Unknown")+'</div>'
       +'<div class="q-card-meta">'+esc(q.mobile||"")+(q.arch?' &nbsp;·&nbsp; '+esc(q.arch):'')+'</div>'
       +'<div class="q-card-meta">'+esc(q.date||"")+'</div>'
       +'</div>'
-      +'<div style="text-align:right;flex-shrink:0;margin-left:12px">'
+      +'<div style="text-align:right;flex-shrink:0;margin-left:12px;display:flex;flex-direction:column;align-items:flex-end;gap:6px">'
       +(total?'<div class="q-card-total">&#8377;'+Number(Math.round(total)).toLocaleString("en-IN")+'</div>':'')
+      +'<button onclick="deleteQuoteFromList('+idx+',event)" style="background:transparent;border:1px solid #2a2a2a;border-radius:6px;color:#444;font-size:13px;cursor:pointer;padding:4px 8px;-webkit-tap-highlight-color:transparent">&#128465;</button>'
       +'</div>'
       +'</div>'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">'
+      +'<div style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap">'
       +'<span class="q-card-staff">&#128100; '+esc(q.staff||"Staff")+'</span>'
       +(rooms?'<span class="q-card-rooms">'+rooms+' room'+(rooms!==1?"s":"")+'</span>':'')
-      +'<span class="q-card-rooms" style="float:right;color:#555">'+esc(q.updated||q.date||"")+'</span>'
+      +'<span class="q-card-rooms" style="margin-left:auto">&#128337; '+esc(q.updated||q.date||"")+'</span>'
       +'</div>'
       +'</div>';
   });
@@ -1588,25 +1717,50 @@ function renderQuotesListHTML(list){
 
 function openQuoteFromList(idx){
   var entry = _filteredQuotes[idx];
-  if(!entry || !entry.draft) return;
-  try{
-    APP.quote = JSON.parse(entry.draft);
-    saveDraft();
-    // Fill customer form
-    document.getElementById("custName").value   = APP.quote.customer.name||"";
-    document.getElementById("custMobile").value = APP.quote.customer.mobile||"";
-    document.getElementById("custArch").value   = APP.quote.customer.arch||"";
-    document.getElementById("custAddr").value   = APP.quote.customer.addr||"";
-    document.getElementById("builderCustomerName").textContent = APP.quote.customer.name;
-    document.getElementById("builderQuoteId").textContent      = APP.quote.id;
-    // Switch tabs back
-    document.getElementById("tabNew").classList.add("active");
-    document.getElementById("tabAll").classList.remove("active");
-    goTo("screen-builder");
-    showToast("Loaded: "+entry.id);
-  } catch(e){
-    showToast("Error loading quote");
+  if(!entry) return;
+
+  if(entry.draft){
+    // Has local copy — open immediately
+    try{
+      applyLoadedQuote(JSON.parse(entry.draft));
+      showToast("Opened: "+entry.id);
+    } catch(e){ showToast("Error opening quote"); }
+    return;
   }
+
+  // No local copy — fetch full quote from cloud
+  if(!isCloudReady()){
+    showToast("Cannot load — Apps Script not configured");
+    return;
+  }
+
+  showToast("Loading from cloud...");
+  fetch(APPS_SCRIPT_URL+"?action=loadQuote&id="+encodeURIComponent(entry.id))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.quote){
+        // Cache it locally for next time
+        entry.draft = JSON.stringify(d.quote);
+        saveToQuoteListEntry(entry);
+        applyLoadedQuote(d.quote);
+        showToast("Loaded: "+entry.id);
+      } else {
+        showToast("Quote not found in cloud");
+      }
+    })
+    .catch(function(){ showToast("Error loading from cloud"); });
+}
+
+function saveToQuoteListEntry(entry){
+  // Update a single entry in local list
+  var list = getQuoteList();
+  var found = false;
+  list = list.map(function(q){
+    if(q.id === entry.id){ found=true; return entry; }
+    return q;
+  });
+  if(!found) list.unshift(entry);
+  localStorage.setItem("darla_quotes_list", JSON.stringify(list));
 }
 
 function deleteQuoteFromList(idx, event){
@@ -1614,10 +1768,22 @@ function deleteQuoteFromList(idx, event){
   var entry = _filteredQuotes[idx];
   if(!entry) return;
   if(!confirm("Delete quote "+entry.id+" for "+entry.name+"?")) return;
+
+  // Remove from local
   var list = getQuoteList().filter(function(q){ return q.id !== entry.id; });
   localStorage.setItem("darla_quotes_list", JSON.stringify(list));
-  filterQuotes();
+  _filteredQuotes.splice(idx,1);
+  renderQuotesListHTML(_filteredQuotes, false);
   showToast("Deleted "+entry.id);
+
+  // Also mark deleted in cloud
+  if(isCloudReady()){
+    fetch(APPS_SCRIPT_URL, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({action:"deleteQuote", id:entry.id})
+    }).catch(function(){});
+  }
 }
 
 // ════════════════════════════════════════════
