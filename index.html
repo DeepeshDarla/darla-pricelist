@@ -13,7 +13,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .hdr{background:#111;border-bottom:2px solid #c0392b;padding:22px 20px 18px;text-align:center}
 .hdr-logo{width:200px;height:72px;display:block;margin:0 auto 14px;object-fit:contain;object-position:center}
 .hdr-brand{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#777;margin-bottom:8px}
-.hdr-title{font-size:34px;font-weight:900;color:#fff;letter-spacing:-1.5px;line-height:1;margin-bottom:10px}
+.hdr-title{font-size:34px;font-weight:900;color:#fff;letter-spacing:-1.5px;line-height:1;margin-bottom:6px}
 .hdr-code{display:inline-block;background:#1c1c1c;border:1px solid #333;color:#aaa;font-size:13px;font-weight:700;letter-spacing:2px;padding:6px 16px;border-radius:8px;margin-bottom:6px}
 .staff-badge{display:none;margin-top:8px;background:#0e2b0e;color:#4caf50;font-size:10px;font-weight:800;letter-spacing:1.5px;padding:5px 14px;border-radius:6px}
 .wrap{padding:12px 12px 0;display:flex;flex-direction:column;gap:8px}
@@ -70,6 +70,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .cat-btn:active{background:#1e1e1e}
 .cat-ico{font-size:28px;margin-bottom:8px}
 .cat-name{font-size:18px;font-weight:800;color:#fff;letter-spacing:-0.5px}
+.ctx-hdr{background:#161616;border:1px solid #252525;border-top:3px solid #1a6bbf;border-radius:14px;padding:14px 16px;margin-bottom:10px}
+.ctx-chips{display:flex;gap:8px;flex-wrap:wrap}
+.ctx-chip{background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;padding:5px 12px;min-width:60px}
+.ctx-chip-lbl{font-size:10px;font-weight:700;color:#555;letter-spacing:1px;text-transform:uppercase}
+.ctx-chip-val{font-size:14px;font-weight:800;color:#fff;margin-top:2px}
 .count-badge{background:#1a1a1a;border:1px solid #252525;border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
 .count-txt{color:#888;font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
 .count-num{color:#c0392b;font-size:15px;font-weight:800}
@@ -151,15 +156,64 @@ var SK  = "darla_staff_v1";
 var SAK = "darla_search_v1";
 var BASE= window.location.origin+window.location.pathname;
 
+// ── CATEGORY DEFINITIONS ──
+// inputs: search fields in order (first is always Brand except Hangers)
+// ctxCols: chips shown above results [label, firebaseKey]
+// tblCols: columns in results table [label, firebaseKey]
+// mrpLabel: label for MRP card
 var CATS = {
-  fabric:     {label:"Fabric",     icon:"&#129525;", hasSno:true,  codeSearch:false},
-  hangers:    {label:"Hangers",    icon:"&#129693;", hasSno:false, codeSearch:true},
-  blinds:     {label:"Blinds",     icon:"&#129695;", hasSno:false, codeSearch:false},
-  wallpapers: {label:"Wallpapers", icon:"&#128444;", hasSno:true,  codeSearch:false},
-  motors:     {label:"Motors",     icon:"&#9881;",   hasSno:true,  codeSearch:false},
-  beds:       {label:"Beds",       icon:"&#128716;", hasSno:false, codeSearch:false}
+  fabric: {
+    label:"Fabric", icon:"&#129525;", codeSearch:false,
+    inputs:["Brand","Catalog","S.No"],
+    ctxCols:[["Brand","brand"],["Catalog","catalog"],["S.No","s_no"]],
+    tblCols:[["Catalog","catalog"],["S.No","s_no"],["Item Details","item_details"],["MRP","mrp"],["Width","width"]],
+    mrpLabel:"MRP / METRE"
+  },
+  hangers: {
+    label:"Hangers", icon:"&#129693;", codeSearch:true,
+    inputs:["Code"],
+    ctxCols:[["Code","code"]],
+    tblCols:[["Brand","brand"],["Catalog","catalog"],["S.No","s_no"],["Item Details","item_details"],["MRP","mrp"],["Width","width"]],
+    mrpLabel:"MRP / METRE"
+  },
+  blinds: {
+    label:"Blinds", icon:"&#129695;", codeSearch:false,
+    inputs:["Brand","Blind Type","Catalog","Mechanism","Others"],
+    ctxCols:[["Brand","brand"],["Blind Type","blind_type"],["Catalog","catalog"],["Mechanism","mechanism"],["Others","others"]],
+    tblCols:[["Brand","brand"],["Blind Type","blind_type"],["Catalog","catalog"],["Mechanism","mechanism"],["Others","others"],["MRP","mrp"]],
+    mrpLabel:"MRP"
+  },
+  wallpapers: {
+    label:"Wallpapers", icon:"&#128444;", codeSearch:false,
+    inputs:["Brand","Catalog","Design Details"],
+    ctxCols:[["Brand","brand"],["Catalog","catalog"],["Design Details","design_details"]],
+    tblCols:[["Design Details","design_details"],["Size","size"],["MRP","mrp"]],
+    mrpLabel:"MRP / METRE"
+  },
+  motors: {
+    label:"Motors", icon:"&#9881;", codeSearch:false,
+    inputs:["Brand","Category","Product","Item Details"],
+    ctxCols:[["Brand","brand"],["Category","category"],["Product","product"]],
+    tblCols:[["Product","product"],["Item Details","item_details"],["MRP","mrp"],["Other Details","other_details"]],
+    mrpLabel:"MRP"
+  },
+  beds: {
+    label:"Beds", icon:"&#128716;", codeSearch:false,
+    inputs:["Brand","Model","Thickness","Length","Width"],
+    ctxCols:[["Brand","brand"],["Model","model"],["Thickness","thickness"],["Length","length"],["Width","width"]],
+    tblCols:[["Model","model"],["Size","size"],["MRP","mrp"]],
+    mrpLabel:"MRP"
+  },
+  sleepwell: {
+    label:"Sleepwell", icon:"&#128716;", codeSearch:false,
+    inputs:["Brand","Model","Thickness","Length","Width"],
+    ctxCols:[["Brand","brand"],["Model","model"],["Thickness","thickness"],["Length","length"],["Width","width"]],
+    tblCols:[["Model","model"],["Size","size"],["MRP","mrp"]],
+    mrpLabel:"MRP"
+  }
 };
 
+// ── SANITIZERS ──
 function sk(str){
   return String(str||"").trim()
     .replace(/[^a-zA-Z0-9\-_]/g,"_")
@@ -184,6 +238,7 @@ function spinner(m){return '<div class="spinner"><div class="spinner-ring"></div
 function isStaff(){return localStorage.getItem(SK)==="1";}
 function hasSearchAccess(){return localStorage.getItem(SAK)==="1";}
 
+// ── INIT ──
 window.addEventListener("DOMContentLoaded",function(){
   var code    =getParam("code").trim().toUpperCase();
   var category=getParam("category").trim().toLowerCase()||"fabric";
@@ -191,6 +246,7 @@ window.addEventListener("DOMContentLoaded",function(){
   else     showHome();
 });
 
+// ── HEADER ──
 function hdr(title,code,badge){
   return '<div class="hdr">'
     +'<img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display=\'none\'" alt="Darla">'
@@ -201,6 +257,7 @@ function hdr(title,code,badge){
     +'</div>';
 }
 
+// ── HOME ──
 function showHome(){
   var html=hdr("Product Lookup","",false)
     +'<div style="padding:16px 12px 8px;text-align:center">'
@@ -221,6 +278,7 @@ function goSearch(cat){
   else showSearchGate(cat);
 }
 
+// ── PIN GATE ──
 var gateEn="",gateCat="";
 function showSearchGate(cat){
   gateCat=cat; gateEn="";
@@ -255,16 +313,19 @@ function gChk(){
   else{gDots(true);setTimeout(function(){gateEn="";gDots();},800);}
 }
 
-var BCM={},BCSM={},allBrands=[],currentCat="fabric";
+// ── SEARCH STATE ──
+var BCM={},BCSM={},allBrands=[],currentCat="fabric",searchCtx={};
 
+// ── ADVANCED SEARCH ──
 function showAdvancedSearch(cat){
   currentCat=String(cat||"fabric").toLowerCase();
-  var catInfo=CATS[currentCat]||CATS.fabric;
-  BCM={};BCSM={};allBrands=[];
+  var ci=CATS[currentCat]||CATS.fabric;
+  BCM={};BCSM={};allBrands=[];searchCtx={};
 
-  if(catInfo.codeSearch){
+  // Code search (Hangers)
+  if(ci.codeSearch){
     document.getElementById("app").innerHTML=
-      hdr(catInfo.label+" Search","",true)
+      hdr(ci.label+" Search","",true)
       +'<div class="search-wrap"><div class="search-card">'
       +'<div class="field-lbl">Code</div><div class="lbl-line-sm"></div>'
       +'<div class="autocomplete-wrap">'
@@ -277,23 +338,27 @@ function showAdvancedSearch(cat){
       +'<div class="results-wrap"><div id="results"></div></div>';
     setTimeout(function(){
       var inp=document.getElementById("codeInp");
-      if(inp) inp.addEventListener("keyup",function(e){if(e.key==="Enter")doCodeSearch();this.value=this.value.toUpperCase();});
+      if(inp)inp.addEventListener("keyup",function(e){if(e.key==="Enter")doCodeSearch();this.value=this.value.toUpperCase();});
     },0);
     return;
   }
 
+  // Build dynamic input fields
+  var fieldsHtml='';
+  ci.inputs.forEach(function(label,idx){
+    var fid=toFid(label);
+    fieldsHtml+='<div class="field-lbl">'+label+'</div><div class="lbl-line-sm"></div>'
+      +'<div class="autocomplete-wrap">'
+      +'<input class="ac-input" id="f_'+fid+'" placeholder="'+(idx===0?'Loading...':'Select above first...')+'" '+(idx===0?'disabled':'')+' autocomplete="off" spellcheck="false">'
+      +'<div class="dropdown" id="fd_'+fid+'"></div>'
+      +'</div>';
+  });
+
   document.getElementById("app").innerHTML=
-    hdr(catInfo.label+" Search","",true)
+    hdr(ci.label+" Search","",true)
     +'<div class="search-wrap"><div class="search-card">'
     +'<div id="status" class="status">Loading...</div>'
-    +'<div class="field-lbl">Brand</div><div class="lbl-line-sm"></div>'
-    +'<div class="autocomplete-wrap"><input class="ac-input" id="bInp" placeholder="Loading..." disabled autocomplete="off" spellcheck="false"><div class="dropdown" id="bDrop"></div></div>'
-    +'<div class="field-lbl">Product</div><div class="lbl-line-sm"></div>'
-    +'<div class="autocomplete-wrap"><input class="ac-input" id="cInp" placeholder="Select brand first..." disabled autocomplete="off" spellcheck="false"><div class="dropdown" id="cDrop"></div></div>'
-    +(catInfo.hasSno
-      ?'<div class="field-lbl">S.No</div><div class="lbl-line-sm"></div>'
-      +'<div class="autocomplete-wrap"><input class="ac-input" id="sInp" placeholder="Optional..." autocomplete="off" spellcheck="false" disabled><div class="dropdown" id="sDrop"></div></div>'
-      :'')
+    +fieldsHtml
     +'<button class="submit-btn" id="searchBtn" onclick="doSearch()" disabled>Search &#8594;</button>'
     +'<button class="clear-btn" onclick="clearSearch()">Clear All</button>'
     +'<button class="clear-btn" style="margin-top:6px;color:#c0392b;border-color:#c0392b" onclick="showHome()">&#8592; Categories</button>'
@@ -304,30 +369,28 @@ function showAdvancedSearch(cat){
   setTimeout(function(){loadMeta(1);},150);
 }
 
+function toFid(label){ return label.toLowerCase().replace(/[^a-z0-9]/g,"_"); }
+
+// ── LOAD META ──
 function loadMeta(attempt){
   if(window._metaLoading&&attempt===1)return;
   if(attempt===1)window._metaLoading=true;
-
   var st=document.getElementById("status");
   if(!st){window._metaLoading=false;return;}
-
   st.textContent=attempt>1?"Retrying... ("+attempt+"/3)":"Loading...";
-  st.style.color="#555";
-  st.style.cursor="default";
-  st.onclick=null;
+  st.style.color="#555";st.style.cursor="default";st.onclick=null;
 
   fetch(FB+"/"+currentCat+"/meta.json")
     .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json();})
     .then(function(d){
       window._metaLoading=false;
       var st2=document.getElementById("status");
-      var bi =document.getElementById("bInp");
       var btn=document.getElementById("searchBtn");
       if(!st2)return;
       if(!d||!d.brandList||!d.brandList.length){
-        st2.textContent="No data yet for this category.";
-        return;
+        st2.textContent="No data yet for this category.";return;
       }
+      // Populate brand/catalog/sno maps
       allBrands=d.brandList.map(function(b){return b.label||b;}).sort();
       d.brandList.forEach(function(b){
         var bKey=b.key||b,bLabel=b.label||b;
@@ -337,79 +400,83 @@ function loadMeta(attempt){
           BCSM[bLabel+"|||"+cLabel]=(d.bcsmArr[bKey+"|||"+cKey]||[]).map(function(s){return s.label||s;});
         });
       });
-      if(bi){bi.disabled=false;bi.placeholder="Type brand name...";}
+      // Enable first field
+      var ci=CATS[currentCat];
+      var f0=document.getElementById("f_"+toFid(ci.inputs[0]));
+      if(f0){f0.disabled=false;f0.placeholder="Type to search...";}
       if(btn)btn.disabled=false;
       st2.style.display="none";
-      bindSearchEvents();
+      bindInputEvents();
     })
     .catch(function(){
       window._metaLoading=false;
       var st3=document.getElementById("status");
       if(!st3)return;
-      if(attempt<3){
-        setTimeout(function(){loadMeta(attempt+1);},3000);
-      } else {
+      if(attempt<3){setTimeout(function(){loadMeta(attempt+1);},3000);}
+      else{
         st3.textContent="Tap here to retry";
-        st3.style.color="#c0392b";
-        st3.style.cursor="pointer";
+        st3.style.color="#c0392b";st3.style.cursor="pointer";
         st3.onclick=function(){window._metaLoading=false;loadMeta(1);};
       }
     });
 }
 
-function bindSearchEvents(){
-  var bInp=document.getElementById("bInp");
-  var cInp=document.getElementById("cInp");
-  var sInp=document.getElementById("sInp");
-  var bDrop=document.getElementById("bDrop");
-  var cDrop=document.getElementById("cDrop");
-  var sDrop=document.getElementById("sDrop");
-  if(!bInp||!cInp)return;
+// ── BIND INPUT EVENTS ──
+function bindInputEvents(){
+  var ci=CATS[currentCat];if(!ci)return;
+  ci.inputs.forEach(function(label,idx){
+    var fid=toFid(label);
+    var el=document.getElementById("f_"+fid);
+    var drop=document.getElementById("fd_"+fid);
+    if(!el)return;
+    el.addEventListener("focus",function(){showDrop(drop,getOpts(idx),el,function(v){pickOpt(idx,v);});});
+    el.addEventListener("input",function(){showDrop(drop,filt(getOpts(idx),this.value),el,function(v){pickOpt(idx,v);});});
+    el.addEventListener("blur",function(){setTimeout(function(){if(drop)drop.classList.remove("show");},200);});
+  });
+}
 
-  bInp.addEventListener("focus",function(){showDrop(bDrop,filt(allBrands,this.value),bInp,pickBrand);});
-  bInp.addEventListener("input",function(){
-    if(cInp){cInp.value="";cInp.disabled=true;}
-    if(sInp){sInp.value="";sInp.disabled=true;}
-    showDrop(bDrop,filt(allBrands,this.value),bInp,pickBrand);
-  });
-  bInp.addEventListener("blur",function(){setTimeout(function(){if(bDrop)bDrop.classList.remove("show");},200);});
-  cInp.addEventListener("focus",function(){showDrop(cDrop,filt(BCM[bInp.value.trim()]||[],this.value),cInp,pickCatalog);});
-  cInp.addEventListener("input",function(){
-    if(sInp){sInp.value="";sInp.disabled=true;}
-    showDrop(cDrop,filt(BCM[bInp.value.trim()]||[],this.value),cInp,pickCatalog);
-  });
-  cInp.addEventListener("blur",function(){setTimeout(function(){if(cDrop)cDrop.classList.remove("show");},200);});
-  if(sInp){
-    sInp.addEventListener("focus",function(){
-      showDrop(sDrop,filt(BCSM[bInp.value.trim()+"|||"+cInp.value.trim()]||[],this.value),sInp,pickSno);
-    });
-    sInp.addEventListener("input",function(){
-      showDrop(sDrop,filt(BCSM[bInp.value.trim()+"|||"+cInp.value.trim()]||[],this.value),sInp,pickSno);
-    });
-    sInp.addEventListener("blur",function(){setTimeout(function(){if(sDrop)sDrop.classList.remove("show");},200);});
+function getOpts(idx){
+  var ci=CATS[currentCat];
+  if(idx===0) return allBrands;
+  var brand=getFieldVal(ci.inputs[0]);
+  if(idx===1) return BCM[brand]||[];
+  if(idx>=2){
+    var lvl1=getFieldVal(ci.inputs[1]);
+    var third=BCSM[brand+"|||"+lvl1]||[];
+    if(idx===2) return third;
+    // For idx>=3, return same third level options as no deeper hierarchy
+    return third;
+  }
+  return [];
+}
+
+function getFieldVal(label){
+  var el=document.getElementById("f_"+toFid(label));
+  return el?el.value.trim():"";
+}
+
+function pickOpt(idx,val){
+  var ci=CATS[currentCat];
+  var fid=toFid(ci.inputs[idx]);
+  var el=document.getElementById("f_"+fid);
+  var drop=document.getElementById("fd_"+fid);
+  if(el)el.value=val;
+  if(drop)drop.classList.remove("show");
+  // Enable next, reset subsequent
+  for(var j=idx+1;j<ci.inputs.length;j++){
+    var jEl=document.getElementById("f_"+toFid(ci.inputs[j]));
+    if(jEl){
+      if(j===idx+1){jEl.disabled=false;jEl.placeholder="Type to search...";}
+      else{jEl.value="";jEl.disabled=true;}
+    }
   }
 }
 
-function pickBrand(v){
-  var bi=document.getElementById("bInp");if(bi)bi.value=v;
-  var bd=document.getElementById("bDrop");if(bd)bd.classList.remove("show");
-  var ci=document.getElementById("cInp");if(ci){ci.disabled=false;ci.placeholder="Type product...";ci.value="";}
-  var si=document.getElementById("sInp");if(si){si.disabled=true;si.value="";}
-  if(ci)ci.focus();
-}
-function pickCatalog(v){
-  var ci=document.getElementById("cInp");if(ci)ci.value=v;
-  var cd=document.getElementById("cDrop");if(cd)cd.classList.remove("show");
-  var si=document.getElementById("sInp");if(si){si.disabled=false;si.placeholder="Optional — leave blank for all";si.value="";si.focus();}
-}
-function pickSno(v){
-  var si=document.getElementById("sInp");if(si)si.value=v;
-  var sd=document.getElementById("sDrop");if(sd)sd.classList.remove("show");
-}
-
+// ── SEARCH ──
 function doCodeSearch(){
   var inp=document.getElementById("codeInp");if(!inp)return;
   var code=codeKey(inp.value.trim());if(!code)return;
+  searchCtx={code:inp.value.trim().toUpperCase()};
   var res=document.getElementById("results");if(res)res.innerHTML=spinner("Searching...");
   fetch(FB+"/"+currentCat+"/by_code/"+encodeURIComponent(code)+".json")
     .then(function(r){return r.json();})
@@ -421,15 +488,21 @@ function doCodeSearch(){
 }
 
 function doSearch(){
-  var bInp=document.getElementById("bInp");
-  var cInp=document.getElementById("cInp");
-  var sInp=document.getElementById("sInp");
-  var b=bInp?bInp.value.trim():"";
-  var c=cInp?cInp.value.trim():"";
-  var s=sInp?sInp.value.trim():"";
-  if(!b&&!c&&!s)return;
+  var ci=CATS[currentCat];if(!ci)return;
   var res=document.getElementById("results");if(res)res.innerHTML=spinner("Searching...");
-  var bKey=sk(b),cKey=sk(c),sKey=sk(s);
+
+  // Collect all field values into searchCtx
+  searchCtx={};
+  ci.inputs.forEach(function(label){
+    var fid=toFid(label);
+    searchCtx[fid]=getFieldVal(label);
+  });
+
+  var brand=searchCtx[toFid(ci.inputs[0])]||"";
+  var lvl1 =ci.inputs[1]?searchCtx[toFid(ci.inputs[1])]||"":"";
+  var lvl2 =ci.inputs[2]?searchCtx[toFid(ci.inputs[2])]||"":"";
+  var bKey=sk(brand),cKey=sk(lvl1),sKey=sk(lvl2);
+
   var url;
   if(bKey&&bKey!="_"&&cKey&&cKey!="_"&&sKey&&sKey!="_")
     url=FB+"/"+currentCat+"/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+"/"+encodeURIComponent(sKey)+".json";
@@ -439,6 +512,7 @@ function doSearch(){
     url=FB+"/"+currentCat+"/by_brand/"+encodeURIComponent(bKey)+".json";
   else
     url=FB+"/"+currentCat+"/by_code.json";
+
   fetch(url)
     .then(function(r){return r.json();})
     .then(function(data){
@@ -455,13 +529,20 @@ function doSearch(){
 }
 
 function clearSearch(){
-  ["bInp","cInp","sInp","codeInp"].forEach(function(id){
-    var el=document.getElementById(id);
-    if(el){el.value="";if(id!=="bInp"&&id!=="codeInp")el.disabled=true;}
-  });
+  var ci=CATS[currentCat];if(!ci)return;
+  if(ci.codeSearch){
+    var inp=document.getElementById("codeInp");if(inp)inp.value="";
+  } else {
+    ci.inputs.forEach(function(label,idx){
+      var el=document.getElementById("f_"+toFid(label));
+      if(el){el.value="";if(idx>0)el.disabled=true;}
+    });
+  }
+  searchCtx={};
   var r=document.getElementById("results");if(r)r.innerHTML="";
 }
 
+// ── PRODUCT PAGE (QR scan) ──
 function showProductPage(code,cat){
   var safeCode=codeKey(code);
   var safeCat=String(cat||"fabric").toLowerCase();
@@ -481,6 +562,7 @@ function showProductPage(code,cat){
     });
 }
 
+// ── RENDER ──
 function renderRows(rows,cat){
   var el=document.getElementById("results");if(!el)return;
   if(!rows||!rows.length){
@@ -488,125 +570,154 @@ function renderRows(rows,cat){
     return;
   }
   window._rows=rows;window._cat=cat;
+  var ci=CATS[cat]||CATS.fabric;
   var staff=isStaff();
-  el.innerHTML=staff?buildStaff(rows,cat):buildPublic(rows,cat);
+
+  // Build context chips header
+  var ctxHtml="";
+  if(Object.keys(searchCtx).length>0){
+    var chips="";
+    if(ci.codeSearch){
+      chips+='<div class="ctx-chip"><div class="ctx-chip-lbl">Code</div><div class="ctx-chip-val">'+esc(searchCtx.code||"")+'</div></div>';
+    } else {
+      ci.ctxCols.forEach(function(col){
+        var val=searchCtx[col[1]]||searchCtx[toFid(col[0])]||gv(rows[0],col[1])||"";
+        if(val)chips+='<div class="ctx-chip"><div class="ctx-chip-lbl">'+col[0]+'</div><div class="ctx-chip-val">'+esc(val)+'</div></div>';
+      });
+    }
+    if(chips)ctxHtml='<div class="ctx-hdr"><div class="ctx-chips">'+chips+'</div></div>';
+  }
+
+  var tbl=rows.length===1?buildSingleCard(rows[0],cat,ci,staff):buildTable(rows,cat,ci,staff);
+  el.innerHTML=ctxHtml+tbl;
+
   var fb=document.getElementById("fabBtn");
   var sb=document.getElementById("sBadge");
   if(staff){if(sb)sb.style.display="inline-block";if(fb)fb.style.display="none";}
   else{if(fb)fb.style.display="flex";}
 }
 
-function isBedsCat(cat){return cat==="beds";}
-
-function buildPublic(rows,cat){return rows.length===1?buildSinglePublic(rows[0],cat):buildTablePublic(rows,cat);}
-function buildStaff(rows,cat){return rows.length===1?buildSingleStaff(rows[0],cat):buildTableStaff(rows,cat);}
-
-function buildSinglePublic(r,cat){
-  var isBeds=isBedsCat(cat);
-  var sno=gv(r,"s_no")||gv(r,"s.no")||"";
-  var product=r.product||r.catalog||"";
-  var mrpLbl=isBeds?"MRP":"MRP / METRE";
+// ── SINGLE CARD VIEW ──
+function buildSingleCard(r,cat,ci,staff){
   var html='<div class="item-group">';
-  if(product)      html+=card(isBeds?"PRODUCT":"CATALOG",product,"card-accent-blue");
-  if(sno)          html+=card("S.NO",sno,"card-accent-blue");
-  if(r.width)      html+=card("WIDTH",r.width,"");
-  if(r.length)     html+=card("LENGTH",r.length,"");
-  if(r.thickness)  html+=card("THICKNESS",r.thickness,"");
-  if(r.size)       html+=card("SIZE",r.size,"");
-  if(r.mrp)        html+=cardMrp(r.mrp,mrpLbl);
-  return html+'</div>';
-}
+  if(staff&&r.code) html+=card("CODE",r.code,"card-accent-blue");
+  if(r.brand)       html+=card("BRAND",r.brand,"card-accent-red");
 
-function buildSingleStaff(r,cat){
-  var isBeds=isBedsCat(cat);
-  var sno=gv(r,"s_no")||gv(r,"s.no")||"";
-  var product=r.product||r.catalog||"";
-  var item=gv(r,"item_details")||gv(r,"item details")||"";
-  var blind=gv(r,"blind_type")||gv(r,"blind type")||"";
-  var mrpLbl=isBeds?"MRP":"MRP / METRE";
-  var html='<div class="item-group">';
-  if(r.code)      html+=card("CODE",r.code,"card-accent-blue");
-  if(r.brand)     html+=card("BRAND",r.brand,"card-accent-red");
-  if(product)     html+=card(isBeds?"PRODUCT":"CATALOG",product,"card-accent-blue");
-  if(blind)       html+=card("BLIND TYPE",blind,"card-accent-blue");
-  if(sno)         html+=card("S.NO",sno,"");
-  if(item)        html+=cardSm("ITEM DETAILS",item);
-  if(r.mechanism) html+=card("MECHANISM",r.mechanism,"");
-  if(r.others)    html+=card("OTHERS",r.others,"");
-  if(r.width)     html+=card("WIDTH",r.width,"");
-  if(r.length)    html+=card("LENGTH",r.length,"");
-  if(r.thickness) html+=card("THICKNESS",r.thickness,"");
-  if(r.size)      html+=card("SIZE",r.size,"");
-  if(r.mrp)       html+=cardMrp(r.mrp,mrpLbl);
+  if(cat==="fabric"){
+    if(r.catalog)           html+=card("CATALOG",r.catalog,"card-accent-blue");
+    if(gv(r,"s_no"))        html+=card("S.NO",gv(r,"s_no"),"");
+    if(gv(r,"item_details"))html+=cardSm("ITEM DETAILS",gv(r,"item_details"));
+    if(r.width)             html+=card("WIDTH",r.width,"");
+    if(r.mrp)               html+=cardMrp(r.mrp,ci.mrpLabel);
+  } else if(cat==="hangers"){
+    if(r.catalog)           html+=card("CATALOG",r.catalog,"card-accent-blue");
+    if(gv(r,"s_no"))        html+=card("S.NO",gv(r,"s_no"),"");
+    if(gv(r,"item_details"))html+=cardSm("ITEM DETAILS",gv(r,"item_details"));
+    if(r.width)             html+=card("WIDTH",r.width,"");
+    if(r.mrp)               html+=cardMrp(r.mrp,ci.mrpLabel);
+  } else if(cat==="blinds"){
+    if(gv(r,"blind_type"))  html+=card("BLIND TYPE",gv(r,"blind_type"),"card-accent-blue");
+    if(r.catalog)           html+=card("CATALOG",r.catalog,"");
+    if(r.mechanism)         html+=card("MECHANISM",r.mechanism,"");
+    if(r.others)            html+=card("OTHERS",r.others,"");
+    if(r.mrp)               html+=cardMrp(r.mrp,ci.mrpLabel);
+  } else if(cat==="wallpapers"){
+    if(r.catalog)               html+=card("CATALOG",r.catalog,"card-accent-blue");
+    if(gv(r,"design_details"))  html+=cardSm("DESIGN DETAILS",gv(r,"design_details"));
+    if(r.size)                  html+=card("SIZE",r.size,"");
+    if(r.mrp)                   html+=cardMrp(r.mrp,ci.mrpLabel);
+  } else if(cat==="motors"){
+    if(r.category)              html+=card("CATEGORY",r.category,"card-accent-blue");
+    if(r.product)               html+=card("PRODUCT",r.product,"");
+    if(gv(r,"item_details"))    html+=cardSm("ITEM DETAILS",gv(r,"item_details"));
+    if(gv(r,"other_details"))   html+=cardSm("OTHER DETAILS",gv(r,"other_details"));
+    if(r.mrp)                   html+=cardMrp(r.mrp,ci.mrpLabel);
+  } else if(cat==="beds"||cat==="sleepwell"){
+    if(r.model)     html+=card("MODEL",r.model,"card-accent-blue");
+    if(r.thickness) html+=card("THICKNESS",r.thickness,"");
+    if(r.width)     html+=card("WIDTH",r.width,"");
+    if(r.length)    html+=card("LENGTH",r.length,"");
+    if(r.size)      html+=card("SIZE",r.size,"");
+    if(r.mrp)       html+=cardMrp(r.mrp,ci.mrpLabel);
+  }
+
   if(r.link&&r.link.indexOf("http")===0)
     html+='<div class="card"><div class="lbl">LINK</div><div class="lbl-line"></div><a href="'+esc(r.link)+'" target="_blank" class="link-btn">View Product &#8599;</a></div>';
   return html+'</div>';
 }
 
-function buildTablePublic(rows,cat){
-  var isBeds=isBedsCat(cat);
-  var colHdr=isBeds?"Size":"Width";
+// ── TABLE VIEW ──
+function buildTable(rows,cat,ci,staff){
+  var tblCols=ci.tblCols||[["MRP","mrp"]];
+
+  // Build grid columns: first col flexible, rest fixed, arrow
+  var gridCols="2fr";
+  tblCols.slice(1).forEach(function(){gridCols+=" 70px";});
+  gridCols+=" 24px";
+
   var html='<div class="count-badge"><span class="count-txt">Items Found</span><span class="count-num">'+rows.length+' items</span></div>'
-    +'<div class="tbl-wrap"><div class="tbl-head" style="grid-template-columns:1fr 80px 80px 24px">'
-    +'<span>Product / Details</span><span style="text-align:center">'+colHdr+'</span><span style="text-align:center">MRP</span><span></span></div>';
+    +'<div class="tbl-wrap">'
+    +'<div class="tbl-head" style="grid-template-columns:'+gridCols+'">'
+    +'<span>'+tblCols[0][0]+'</span>';
+  tblCols.slice(1).forEach(function(c){html+='<span style="text-align:center">'+c[0]+'</span>';});
+  html+='<span></span></div>';
+
   rows.forEach(function(r){
-    var product=r.product||r.catalog||gv(r,"blind_type")||gv(r,"blind type")||"";
-    var sno=gv(r,"s_no")||gv(r,"s.no")||"";
-    var item=gv(r,"item_details")||gv(r,"item details")||"";
-    var colVal=isBeds?(r.size||(r.width&&r.length?r.width+"x"+r.length:r.width)||r.thickness||""):(r.width||r.size||r.thickness||"");
-    var mrp=r.mrp||"";
-    var main=product||"—";
-    var sub=isBeds?(r.thickness?r.thickness+" thick":""):(sno||item||"");
-    var hasX=isBeds?(r.width||r.length||r.thickness||r.size||r.link):(item||r.mechanism||r.others||r.link);
-    html+='<div class="tbl-row" style="grid-template-columns:1fr 80px 80px 24px" onclick="toggleRow(this)">'
-      +'<div><div class="tr-main">'+esc(main)+'</div>'+(sub?'<div class="tr-sub">'+esc(sub)+'</div>':'')+'</div>'
-      +'<div style="text-align:center;font-size:13px;color:#aaa;font-weight:600">'+(colVal?esc(colVal):"—")+'</div>'
-      +'<div style="text-align:center">'+(mrp?'<span class="tr-mrp">&#8377;'+esc(mrp)+'</span>':'<span style="color:#555;font-size:13px">—</span>')+'</div>'
-      +'<div class="tr-arr">'+(hasX?"&#8250;":"")+'</div></div>'
-      +'<div class="exp-panel">'
-      +(isBeds
-        ?expLine("Width",r.width)+expLine("Length",r.length)+expLine("Thickness",r.thickness)+expLine("Size",r.size)+expLinkLine(r.link)
-        :expLine("S.No",sno)+expLine("Item Details",item)+expLine("Mechanism",r.mechanism)+expLine("Others",r.others)+expLinkLine(r.link))
-      +'</div>';
+    // Main column value
+    var mainVal=gv(r,tblCols[0][1])||r[tblCols[0][1]]||"—";
+    // Sub text under main
+    var sub="";
+    if(cat==="fabric"||cat==="hangers") sub=gv(r,"s_no")||"";
+    else if(cat==="blinds") sub=gv(r,"blind_type")||"";
+
+    // Extra columns
+    var extraHtml="";
+    tblCols.slice(1).forEach(function(c){
+      var v=gv(r,c[1])||r[c[1]]||"";
+      if(c[1]==="mrp"&&v){
+        extraHtml+='<div style="text-align:center"><span class="tr-mrp">&#8377;'+esc(v)+'</span></div>';
+      } else {
+        extraHtml+='<div style="text-align:center;font-size:12px;color:#aaa;font-weight:600">'+(v?esc(v):"—")+'</div>';
+      }
+    });
+
+    // Expand panel — all fields not already in table columns
+    var shown={};
+    tblCols.forEach(function(c){shown[c[1]]=true;});
+    if(cat==="fabric"||cat==="hangers") shown["s_no"]=true; // already in sub
+
+    var allFields=[
+      ["Code","code"],["Brand","brand"],["Catalog","catalog"],
+      ["S.No","s_no"],["Item Details","item_details"],
+      ["Blind Type","blind_type"],["Mechanism","mechanism"],["Others","others"],
+      ["Design Details","design_details"],
+      ["Category","category"],["Product","product"],["Other Details","other_details"],
+      ["Model","model"],["Thickness","thickness"],["Width","width"],
+      ["Length","length"],["Size","size"],["MRP","mrp"]
+    ];
+    var expandHtml="";
+    allFields.forEach(function(f){
+      if(!shown[f[1]]){
+        var v=gv(r,f[1])||r[f[1]]||"";
+        if(v)expandHtml+=expLine(f[0],v);
+      }
+    });
+    if(r.link&&r.link.indexOf("http")===0)expandHtml+=expLinkLine(r.link);
+
+    html+='<div class="tbl-row" style="grid-template-columns:'+gridCols+'" onclick="toggleRow(this)">'
+      +'<div><div class="tr-main">'+esc(mainVal)+'</div>'+(sub?'<div class="tr-sub">'+esc(sub)+'</div>':'')+'</div>'
+      +extraHtml
+      +'<div class="tr-arr">'+(expandHtml?"&#8250;":"")+'</div></div>'
+      +'<div class="exp-panel">'+expandHtml+'</div>';
   });
+
   return html+'</div><div class="tbl-hint">Tap row to expand details</div>';
 }
 
-function buildTableStaff(rows,cat){
-  var isBeds=isBedsCat(cat);
-  var colHdr=isBeds?"Size":"Width";
-  var html='<div class="count-badge"><span class="count-txt">Items Found</span><span class="count-num">'+rows.length+' items</span></div>'
-    +'<div class="tbl-wrap"><div class="tbl-head" style="grid-template-columns:1fr 80px 80px 24px">'
-    +'<span>Product / Details</span><span style="text-align:center">'+colHdr+'</span><span style="text-align:center">MRP</span><span></span></div>';
-  rows.forEach(function(r){
-    var product=r.product||r.catalog||gv(r,"blind_type")||gv(r,"blind type")||"";
-    var sno=gv(r,"s_no")||gv(r,"s.no")||"";
-    var item=gv(r,"item_details")||gv(r,"item details")||"";
-    var blind=gv(r,"blind_type")||gv(r,"blind type")||"";
-    var colVal=isBeds?(r.size||(r.width&&r.length?r.width+"x"+r.length:r.width)||r.thickness||""):(r.width||r.size||r.thickness||"");
-    var mrp=r.mrp||"";
-    var main=product||"—";
-    var sub=isBeds?(r.thickness?r.thickness+" thick":""):(sno||item||"");
-    var hasX=true;
-    html+='<div class="tbl-row" style="grid-template-columns:1fr 80px 80px 24px" onclick="toggleRow(this)">'
-      +'<div><div class="tr-main">'+esc(main)+'</div>'+(sub?'<div class="tr-sub">'+esc(sub)+'</div>':'')+'</div>'
-      +'<div style="text-align:center;font-size:13px;color:#aaa;font-weight:600">'+(colVal?esc(colVal):"—")+'</div>'
-      +'<div style="text-align:center">'+(mrp?'<span class="tr-mrp">&#8377;'+esc(mrp)+'</span>':'<span style="color:#555;font-size:13px">—</span>')+'</div>'
-      +'<div class="tr-arr">&#8250;</div></div>'
-      +'<div class="exp-panel">'
-      +expLine("Code",r.code)+expLine("Brand",r.brand)
-      +(isBeds
-        ?expLine("Width",r.width)+expLine("Length",r.length)+expLine("Thickness",r.thickness)+expLine("Size",r.size)
-        :expLine("S.No",sno)+expLine("Item Details",item)+expLine("Blind Type",blind)+expLine("Mechanism",r.mechanism)+expLine("Others",r.others))
-      +expLinkLine(r.link)
-      +'</div>';
-  });
-  return html+'</div><div class="tbl-hint">Tap row to expand details</div>';
-}
-
+// ── CARD HELPERS ──
 function card(lbl,val,cls){if(!val)return"";return '<div class="card '+(cls||'')+'"><div class="lbl">'+lbl+'</div><div class="lbl-line"></div><div class="val">'+esc(val)+'</div></div>';}
 function cardSm(lbl,val){if(!val)return"";return '<div class="card"><div class="lbl">'+lbl+'</div><div class="lbl-line"></div><div class="val-sm">'+esc(val)+'</div></div>';}
-function cardMrp(val,lbl){if(!val)return"";return '<div class="card card-mrp"><div class="lbl lbl-dark">'+(lbl||"MRP / METRE")+'</div><div class="lbl-line"></div><div class="mrp-row"><span class="rsym">&#8377;</span><span class="mrp-val">'+esc(val)+'</span></div></div>';}
+function cardMrp(val,lbl){if(!val)return"";return '<div class="card card-mrp"><div class="lbl lbl-dark">'+(lbl||"MRP")+'</div><div class="lbl-line"></div><div class="mrp-row"><span class="rsym">&#8377;</span><span class="mrp-val">'+esc(val)+'</span></div></div>';}
 function expLine(lbl,val){if(!val)return"";return '<div class="exp-line"><span class="exp-lbl">'+lbl+'</span><span class="exp-val">'+esc(val)+'</span></div>';}
 function expLinkLine(url){if(!url||url.indexOf("http")!==0)return"";return '<div class="exp-line"><span class="exp-lbl">Link</span><span class="exp-val"><a class="exp-link" href="'+esc(url)+'" target="_blank">View &#8599;</a></span></div>';}
 
@@ -635,6 +746,7 @@ function showDrop(drop,items,inp,onSel){
 }
 function selItem(el,ev){ev.preventDefault();var cb=el.parentElement._cb;if(cb)cb(el.textContent);}
 
+// ── STAFF PIN ──
 var staffEn="";
 function openStaffPin(){staffEn="";sDots();document.getElementById("pOv").classList.add("open");}
 function closeStaffPin(){document.getElementById("pOv").classList.remove("open");staffEn="";sDots();}
