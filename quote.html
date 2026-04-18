@@ -620,7 +620,7 @@ transition: background-color 5000s ease-in-out 0s;
 // ════════════════════════════════════════════
 // CONFIG — UPDATE THESE AFTER DEPLOYING APPS SCRIPT
 // ════════════════════════════════════════════
-var APPS_SCRIPT_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx9A43LVU7Ikyxj5MNgRAnCvf9PSR5GisthNyC9oc_ye56OkTag32IUXstlDXtoWJ6v/exec";
 var PRODUCT_SEARCH_URL = "index.html";
 
 // ════════════════════════════════════════════
@@ -657,25 +657,36 @@ function newQuote(){
 // INIT
 // ════════════════════════════════════════════
 window.addEventListener("DOMContentLoaded", function(){
+  // ALWAYS populate staff dropdown first — regardless of what else happens
+  populateStaffDropdown();
+
   // Check if returning from product search
   var selected = localStorage.getItem("darla_selected_product");
   var ctx      = localStorage.getItem("quote_product_ctx");
 
   if(selected && ctx){
-    // Restore quote from localStorage
-    var saved = localStorage.getItem("darla_quote_draft");
-    if(saved) APP.quote = JSON.parse(saved);
-    var product = JSON.parse(selected);
-    var context = JSON.parse(ctx);
-    attachProduct(context, product);
-    localStorage.removeItem("darla_selected_product");
-    localStorage.removeItem("quote_product_ctx");
-    // Restore staff
-    var staffStr = localStorage.getItem("darla_quote_staff");
-    if(staffStr) APP.staff = JSON.parse(staffStr);
-    goTo("screen-builder");
-    renderBuilder();
-    showToast("Product added ✓");
+    try{
+      var saved = localStorage.getItem("darla_quote_draft");
+      if(saved) APP.quote = JSON.parse(saved);
+      var product = JSON.parse(selected);
+      var context = JSON.parse(ctx);
+      attachProduct(context, product);
+      localStorage.removeItem("darla_selected_product");
+      localStorage.removeItem("quote_product_ctx");
+      var staffStr = localStorage.getItem("darla_quote_staff");
+      if(staffStr) APP.staff = JSON.parse(staffStr);
+      // Restore staff name display
+      if(APP.staff && APP.staff.name){
+        var sd = document.getElementById("staffNameDisplay");
+        if(sd) sd.textContent = APP.staff.name;
+      }
+      goTo("screen-builder");
+      renderBuilder();
+      showToast("Product added ✓");
+    }catch(e){
+      // If anything fails, go to login
+      goTo("screen-login");
+    }
     return;
   }
 
@@ -686,10 +697,8 @@ window.addEventListener("DOMContentLoaded", function(){
     return;
   }
 
-  // Load staff list
+  // Try to load updated staff list from cloud in background
   loadStaffList();
-  // Always start fresh — don't restore draft to the form on login
-  // (draft is only used when returning from product search, handled above)
 });
 
 function getParam(n){ return new URLSearchParams(window.location.search).get(n)||""; }
@@ -698,21 +707,40 @@ function getParam(n){ return new URLSearchParams(window.location.search).get(n)|
 // STAFF / LOGIN
 // ════════════════════════════════════════════
 function loadStaffList(){
-  if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf("YOUR_")===0){
-    populateStaffDropdown();
-    return;
+  // Step 1: Load from localStorage cache immediately (instant)
+  var cached = localStorage.getItem("darla_staff_cache");
+  if(cached){
+    try{
+      var cachedList = JSON.parse(cached);
+      if(cachedList && cachedList.length){
+        STAFF_LIST = cachedList;
+        populateStaffDropdown();
+      }
+    }catch(e){}
   }
+
+  // Step 2: If no Apps Script URL, stop here (use hardcoded list)
+  if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf("YOUR_")===0) return;
+
+  // Step 3: Fetch fresh from cloud in background, update cache + dropdown
   fetch(APPS_SCRIPT_URL+"?action=getStaff")
-    .then(function(r){return r.json();})
+    .then(function(r){ return r.json(); })
     .then(function(d){
-      if(d.staff && d.staff.length) STAFF_LIST = d.staff;
-      populateStaffDropdown();
+      if(d.staff && d.staff.length){
+        STAFF_LIST = d.staff;
+        localStorage.setItem("darla_staff_cache", JSON.stringify(d.staff));
+        populateStaffDropdown(); // Refresh dropdown with latest
+      }
     })
-    .catch(function(){ populateStaffDropdown(); });
+    .catch(function(){}); // Cache or hardcoded list still works offline
 }
 
 function populateStaffDropdown(){
   var sel = document.getElementById("staffSelect");
+  if(!sel) return;
+  // Clear all options except the first placeholder
+  while(sel.options.length > 1) sel.remove(1);
+  // Add staff options
   STAFF_LIST.forEach(function(s){
     var opt = document.createElement("option");
     opt.value = s.name;
