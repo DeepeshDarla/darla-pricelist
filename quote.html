@@ -240,6 +240,24 @@ select.inp option{background:#1e1e1e}
 /* QUOTE SAVED STATE */
 .saved-badge{display:inline-block;background:#0a2a1a;color:#81c784;border:1px solid #1a4a2a;border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-left:8px}
 
+/* ── QUOTES LIST SCREEN ── */
+.tab-bar{display:flex;background:#111;border-bottom:2px solid var(--border);padding:0 12px}
+.tab-btn{flex:1;padding:12px 8px;font-size:13px;font-weight:700;color:var(--muted);border:none;background:transparent;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;letter-spacing:0.3px;-webkit-tap-highlight-color:transparent}
+.tab-btn.active{color:#fff;border-bottom-color:var(--red)}
+.search-bar-wrap{display:flex;gap:8px;padding:12px;background:#0f0f0f;border-bottom:1px solid var(--border)}
+.search-bar-wrap .inp{margin-top:0;flex:1;font-size:15px;padding:11px 14px}
+.q-list-empty{text-align:center;padding:60px 20px;color:var(--muted);font-size:15px}
+.q-list-empty .ico{font-size:44px;margin-bottom:12px}
+.q-card{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--red);border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.q-card:active{background:#1e1e1e}
+.q-card-row{display:flex;justify-content:space-between;align-items:flex-start}
+.q-card-name{font-size:16px;font-weight:800;color:#fff}
+.q-card-id{font-size:11px;font-weight:700;color:var(--red);letter-spacing:1px}
+.q-card-meta{font-size:12px;color:var(--muted);margin-top:4px}
+.q-card-total{font-size:16px;font-weight:900;color:#fff;white-space:nowrap;margin-left:12px}
+.q-card-staff{display:inline-block;background:#1e1e1e;border-radius:5px;padding:2px 8px;font-size:10px;font-weight:700;color:#aaa;margin-top:6px}
+.q-card-rooms{display:inline-block;background:#1a1a1a;border-radius:5px;padding:2px 8px;font-size:10px;font-weight:600;color:#666;margin-top:6px;margin-left:6px}
+
 /* PRICE HIDE MODE */
 body.hide-prices .price-col,
 body.hide-prices .summary-comp-amt,
@@ -339,8 +357,12 @@ input:-webkit-autofill:focus {
 <div id="screen-customer" class="screen">
   <div class="hdr">
     <img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display='none'" alt="Darla">
-    <div class="hdr-title">New Quote</div>
+    <div class="hdr-title">Quote Builder</div>
     <div class="hdr-sub" id="staffNameDisplay">Staff</div>
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tabNew" onclick="switchTab('new')">&#43; New Quote</button>
+      <button class="tab-btn" id="tabAll" onclick="switchTab('all')">&#128196; All Quotes</button>
+    </div>
   </div>
   <div class="page-wrap">
     <div class="section-title">Customer Details</div>
@@ -512,6 +534,30 @@ input:-webkit-autofill:focus {
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SCREEN 5: ALL QUOTES                   -->
+<!-- ═══════════════════════════════════════ -->
+<div id="screen-quotes" class="screen">
+  <div class="hdr">
+    <img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display='none'" alt="Darla">
+    <div class="hdr-row">
+      <button class="hdr-back" onclick="goTo('screen-customer')">&#8592; Back</button>
+      <div style="text-align:center">
+        <div class="hdr-title">All Quotes</div>
+        <div class="hdr-sub" id="quotesCount"></div>
+      </div>
+      <button class="hdr-action" onclick="newQuoteFromList()">&#43; New</button>
+    </div>
+  </div>
+  <div class="search-bar-wrap">
+    <input class="inp" id="quotesSearch" placeholder="Search by name or mobile..." oninput="filterQuotes()" autocomplete="off">
+    <button class="btn btn-ghost btn-sm" style="margin-top:0;white-space:nowrap;flex-shrink:0" onclick="document.getElementById('quotesSearch').value='';filterQuotes()">Clear</button>
+  </div>
+  <div style="padding:10px 12px 100px">
+    <div id="quotesList"></div>
+  </div>
+</div>
 
 <script>
 // ════════════════════════════════════════════
@@ -1334,10 +1380,43 @@ function saveDraft(){
   localStorage.setItem("darla_quote_draft", JSON.stringify(APP.quote));
 }
 
+function saveToQuoteList(){
+  // Save quote summary to local quotes list for the All Quotes screen
+  var q = APP.quote;
+  if(!q.id) return;
+  var grandTotal = getGrandTotal();
+  var list = getQuoteList();
+  // Remove existing entry with same ID
+  list = list.filter(function(e){ return e.id !== q.id; });
+  // Add updated entry at front
+  list.unshift({
+    id:       q.id,
+    date:     q.date,
+    staff:    q.staff||"",
+    name:     q.customer.name||"",
+    mobile:   q.customer.mobile||"",
+    arch:     q.customer.arch||"",
+    addr:     q.customer.addr||"",
+    total:    grandTotal,
+    rooms:    q.rooms.length,
+    updated:  new Date().toLocaleString("en-IN"),
+    draft:    JSON.stringify(q)
+  });
+  // Keep last 200 quotes
+  if(list.length > 200) list = list.slice(0, 200);
+  localStorage.setItem("darla_quotes_list", JSON.stringify(list));
+}
+
+function getQuoteList(){
+  try{ return JSON.parse(localStorage.getItem("darla_quotes_list")||"[]"); }
+  catch(e){ return []; }
+}
+
 function saveQuote(){
   saveDraft();
+  saveToQuoteList();
   if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf("YOUR_")===0){
-    showToast("Draft saved locally ✓");
+    showToast("Quote saved ✓  "+APP.quote.id);
     return;
   }
   showToast("Saving...");
@@ -1411,6 +1490,134 @@ function goTo(screenId){
   window.scrollTo(0,0);
   if(screenId==="screen-summary") renderSummary();
   if(screenId==="screen-builder") renderBuilder();
+  if(screenId==="screen-quotes")  renderQuotesList();
+}
+
+// ════════════════════════════════════════════
+// TAB SWITCHING (customer screen)
+// ════════════════════════════════════════════
+function switchTab(tab){
+  if(tab==="all"){
+    document.getElementById("tabNew").classList.remove("active");
+    document.getElementById("tabAll").classList.add("active");
+    goTo("screen-quotes");
+  } else {
+    document.getElementById("tabNew").classList.add("active");
+    document.getElementById("tabAll").classList.remove("active");
+    goTo("screen-customer");
+  }
+}
+
+function newQuoteFromList(){
+  // Reset to blank new quote and go to customer screen
+  APP.quote = newQuote();
+  localStorage.removeItem("darla_quote_draft");
+  ["custName","custMobile","custArch","custAddr"].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value="";
+  });
+  document.getElementById("tabNew").classList.add("active");
+  document.getElementById("tabAll").classList.remove("active");
+  goTo("screen-customer");
+}
+
+// ════════════════════════════════════════════
+// QUOTES LIST
+// ════════════════════════════════════════════
+var _filteredQuotes = [];
+
+function renderQuotesList(){
+  var list = getQuoteList();
+  _filteredQuotes = list;
+  var countEl = document.getElementById("quotesCount");
+  if(countEl) countEl.textContent = list.length + " quote" + (list.length!==1?"s":"") + " saved";
+  renderQuotesListHTML(list);
+}
+
+function filterQuotes(){
+  var q = (document.getElementById("quotesSearch").value||"").trim().toLowerCase();
+  var list = getQuoteList();
+  if(!q){
+    _filteredQuotes = list;
+  } else {
+    _filteredQuotes = list.filter(function(e){
+      return (e.name||"").toLowerCase().indexOf(q)!==-1
+          || (e.mobile||"").indexOf(q)!==-1
+          || (e.id||"").toLowerCase().indexOf(q)!==-1
+          || (e.arch||"").toLowerCase().indexOf(q)!==-1;
+    });
+  }
+  renderQuotesListHTML(_filteredQuotes);
+}
+
+function renderQuotesListHTML(list){
+  var el = document.getElementById("quotesList");
+  if(!el) return;
+  var countEl = document.getElementById("quotesCount");
+  if(countEl) countEl.textContent = list.length + " quote" + (list.length!==1?"s":"");
+
+  if(!list.length){
+    el.innerHTML = '<div class="q-list-empty"><div class="ico">&#128196;</div>No quotes found<br><span style="font-size:13px;margin-top:6px;display:block">Save a quote to see it here</span></div>';
+    return;
+  }
+  var html = "";
+  list.forEach(function(q, idx){
+    var rooms = q.rooms||0;
+    var total = q.total||0;
+    html += '<div class="q-card" onclick="openQuoteFromList('+idx+')">'
+      +'<div class="q-card-row">'
+      +'<div>'
+      +'<div class="q-card-id">'+esc(q.id||"—")+'<button onclick="deleteQuoteFromList('+idx+',event)" style="background:transparent;border:none;color:#333;font-size:18px;cursor:pointer;padding:4px 8px;-webkit-tap-highlight-color:transparent">&#128465;</button>'
+      +'</div>'
+      +'<div class="q-card-name">'+esc(q.name||"Unknown")+'</div>'
+      +'<div class="q-card-meta">'+esc(q.mobile||"")+(q.arch?' &nbsp;·&nbsp; '+esc(q.arch):'')+'</div>'
+      +'<div class="q-card-meta">'+esc(q.date||"")+'</div>'
+      +'</div>'
+      +'<div style="text-align:right;flex-shrink:0;margin-left:12px">'
+      +(total?'<div class="q-card-total">&#8377;'+Number(Math.round(total)).toLocaleString("en-IN")+'</div>':'')
+      +'</div>'
+      +'</div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">'
+      +'<span class="q-card-staff">&#128100; '+esc(q.staff||"Staff")+'</span>'
+      +(rooms?'<span class="q-card-rooms">'+rooms+' room'+(rooms!==1?"s":"")+'</span>':'')
+      +'<span class="q-card-rooms" style="float:right;color:#555">'+esc(q.updated||q.date||"")+'</span>'
+      +'</div>'
+      +'</div>';
+  });
+  el.innerHTML = html;
+}
+
+function openQuoteFromList(idx){
+  var entry = _filteredQuotes[idx];
+  if(!entry || !entry.draft) return;
+  try{
+    APP.quote = JSON.parse(entry.draft);
+    saveDraft();
+    // Fill customer form
+    document.getElementById("custName").value   = APP.quote.customer.name||"";
+    document.getElementById("custMobile").value = APP.quote.customer.mobile||"";
+    document.getElementById("custArch").value   = APP.quote.customer.arch||"";
+    document.getElementById("custAddr").value   = APP.quote.customer.addr||"";
+    document.getElementById("builderCustomerName").textContent = APP.quote.customer.name;
+    document.getElementById("builderQuoteId").textContent      = APP.quote.id;
+    // Switch tabs back
+    document.getElementById("tabNew").classList.add("active");
+    document.getElementById("tabAll").classList.remove("active");
+    goTo("screen-builder");
+    showToast("Loaded: "+entry.id);
+  } catch(e){
+    showToast("Error loading quote");
+  }
+}
+
+function deleteQuoteFromList(idx, event){
+  event.stopPropagation();
+  var entry = _filteredQuotes[idx];
+  if(!entry) return;
+  if(!confirm("Delete quote "+entry.id+" for "+entry.name+"?")) return;
+  var list = getQuoteList().filter(function(q){ return q.id !== entry.id; });
+  localStorage.setItem("darla_quotes_list", JSON.stringify(list));
+  filterQuotes();
+  showToast("Deleted "+entry.id);
 }
 
 // ════════════════════════════════════════════
