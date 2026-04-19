@@ -3,2046 +3,1656 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="theme-color" content="#0a0a0a">
 <title>Darla — Quote Builder</title>
 <style>
+/* ══════════════════════════════════════════════
+   RESET + TOKENS
+══════════════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0a0a0a;color:#fff;min-height:100vh;-webkit-font-smoothing:antialiased}
-:root{--red:#c0392b;--dark:#0a0a0a;--card:#161616;--border:#252525;--muted:#555;--sub:#888}
+:root{
+  --bg:#0a0a0a; --bg2:#111111; --bg3:#161616;
+  --card:#1a1a1a; --card2:#222222; --card3:#2a2a2a;
+  --border:#2a2a2a; --border2:#383838;
+  --red:#c0392b; --red-dim:#8b2a1f; --red-glow:rgba(192,57,43,0.3);
+  --blue:#1a6bbf; --green:#27ae60; --amber:#d4a45a;
+  --text:#ffffff; --text2:#cccccc; --text3:#999999; --text4:#666666;
+  --radius:14px; --radius-sm:9px; --radius-lg:20px;
+}
+html{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+body{min-height:100vh}
 
-/* ── SCREENS ── */
+/* ══════════════════════════════════════════════
+SCREENS
+══════════════════════════════════════════════ */
 .screen{display:none;min-height:100vh;padding-bottom:100px}
 .screen.active{display:block}
 
-/* ── HEADER ── */
-.hdr{background:#111;border-bottom:2px solid var(–red);padding:18px 20px 14px;text-align:center;position:sticky;top:0;z-index:50}
-.hdr-logo{width:160px;height:58px;display:block;margin:0 auto 10px;object-fit:contain}
-.hdr-title{font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.5px}
-.hdr-sub{font-size:11px;color:var(–muted);letter-spacing:2px;text-transform:uppercase;margin-top:3px}
-.hdr-row{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
-.hdr-back{background:transparent;border:1px solid #333;color:#aaa;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer}
-.hdr-action{background:var(–red);border:none;color:#fff;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer}
+/* ══════════════════════════════════════════════
+HEADER
+══════════════════════════════════════════════ */
+.hdr{
+background:rgba(17,17,17,0.96);
+border-bottom:1px solid var(–border);
+padding:14px 18px 10px;
+text-align:center;
+position:sticky;top:0;z-index:50;
+backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+}
+.hdr::after{content:””;position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);width:48px;height:2px;background:var(–red);border-radius:2px}
+.hdr-logo{width:130px;height:44px;display:block;margin:0 auto 6px;object-fit:contain}
+.hdr-title{font-size:18px;font-weight:800;letter-spacing:-0.3px}
+.hdr-sub{font-size:10px;color:var(–text4);letter-spacing:2px;text-transform:uppercase;margin-top:2px;font-weight:600}
+.hdr-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px}
+.hdr-back{background:transparent;border:1px solid var(–border2);color:var(–text3);border-radius:8px;padding:7px 13px;font-size:13px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hdr-act{background:var(–red);border:none;color:#fff;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hdr-act.blue{background:var(–blue)}
+.hdr-act.ghost{background:transparent;border:1px solid var(–border2);color:var(–text3)}
 
-/* ── LAYOUT ── */
-.page-wrap{padding:12px}
-.section-title{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(–muted);margin:20px 0 8px;padding:0 4px}
+/* ══════════════════════════════════════════════
+LAYOUT
+══════════════════════════════════════════════ */
+.wrap{padding:14px;padding-bottom:120px}
+.sec-title{
+font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+color:var(–text4);margin:20px 0 10px;padding:0 2px;
+display:flex;align-items:center;gap:8px
+}
+.sec-title::before{content:””;width:3px;height:11px;background:var(–red);border-radius:2px;flex-shrink:0}
 
-/* ── CARDS ── */
-.card{background:var(–card);border:1px solid var(–border);border-radius:14px;padding:16px;margin-bottom:10px}
+/* ══════════════════════════════════════════════
+CARDS
+══════════════════════════════════════════════ */
+.card{background:var(–card);border:1px solid var(–border);border-radius:var(–radius);padding:16px;margin-bottom:10px}
 .card-red{border-top:3px solid var(–red)}
-.card-blue{border-top:3px solid #1a6bbf}
-.card-green{border-top:3px solid #27ae60}
-.card-gold{border-top:3px solid #f39c12}
+.card-blue{border-top:3px solid var(–blue)}
+.card-green{border-top:3px solid var(–green)}
 
-/* ── INPUTS ── */
-.field{margin-bottom:14px}
-.field-label{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(–muted);margin-bottom:6px;display:block}
-.inp{width:100%;background:#1e1e1e;border:1.5px solid #2a2a2a;border-radius:10px;color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;caret-color:#fff!important;font-size:16px;font-weight:600;padding:12px 14px;outline:none;-webkit-appearance:none}
-.inp:focus{border-color:var(–red);color:#ffffff!important;-webkit-text-fill-color:#ffffff!important}
-.inp::placeholder{color:#555!important;font-weight:400}
+/* ══════════════════════════════════════════════
+INPUTS
+══════════════════════════════════════════════ */
+.field{margin-bottom:13px}
+.field-label{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(–text4);margin-bottom:7px;display:block}
+.inp{
+width:100%;background:#1c1c1c!important;
+border:1.5px solid var(–border);border-radius:10px;
+color:#fff!important;-webkit-text-fill-color:#fff!important;
+caret-color:#fff!important;font-size:16px;font-weight:600;
+padding:12px 14px;outline:none;-webkit-appearance:none;
+transition:border-color 0.15s
+}
+.inp:focus{border-color:var(–red)}
+.inp::placeholder{color:#3a3a3a!important;-webkit-text-fill-color:#3a3a3a!important;font-weight:400}
+.inp:disabled{opacity:0.45;cursor:not-allowed}
 .inp-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.inp-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-select.inp{color:#fff!important!important;appearance:none;background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’ viewBox=‘0 0 12 8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%23555’ stroke-width=‘2’ fill=‘none’/%3E%3C/svg%3E”);background-repeat:no-repeat;background-position:right 14px center}
-select.inp option{background:#1e1e1e}
+select.inp{
+appearance:none;color:#fff!important;
+background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘14’ height=‘9’ viewBox=‘0 0 14 9’%3E%3Cpath d=‘M1 1l6 6 6-6’ stroke=’%23666’ stroke-width=‘1.8’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”);
+background-repeat:no-repeat;background-position:right 15px center;padding-right:40px
+}
+select.inp option{background:#1c1c1c;color:#fff}
+input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus{
+-webkit-text-fill-color:#fff!important;
+-webkit-box-shadow:0 0 0 1000px #1c1c1c inset!important;
+transition:background-color 5000s
+}
 
-/* ── BUTTONS ── */
-.btn{width:100%;background:var(–red);color:#fff;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;display:block;margin-top:12px;box-shadow:0 4px 20px rgba(192,57,43,0.35);-webkit-tap-highlight-color:transparent}
-.btn:active{opacity:0.85}
-.btn-ghost{background:transparent;border:1.5px solid #2a2a2a;color:#aaa;font-weight:600;box-shadow:none}
-.btn-sm{padding:10px 16px;font-size:13px;font-weight:700;border-radius:9px;width:auto;display:inline-block;margin-top:0}
-.btn-blue{background:#1a6bbf;box-shadow:0 4px 20px rgba(26,107,191,0.3)}
-.btn-green{background:#27ae60;box-shadow:0 4px 20px rgba(39,174,96,0.3)}
-.btn-add{background:#1e1e1e;border:1.5px dashed #333;color:#666;font-size:13px;font-weight:600;letter-spacing:0.5px;box-shadow:none;padding:12px}
-.btn-add:hover{border-color:var(–red);color:var(–red)}
+/* ══════════════════════════════════════════════
+BUTTONS
+══════════════════════════════════════════════ */
+.btn{
+width:100%;background:var(–red);color:#fff;border:none;
+border-radius:12px;padding:15px;font-size:15px;font-weight:800;
+letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;
+display:block;margin-top:12px;
+box-shadow:0 4px 20px var(–red-glow);
+-webkit-tap-highlight-color:transparent;transition:transform 0.12s,opacity 0.12s
+}
+.btn:active{transform:scale(0.98);opacity:0.88}
+.btn-ghost{background:transparent;border:1.5px solid var(–border2);color:var(–text3);box-shadow:none;font-weight:600}
+.btn-ghost:active{background:var(–card2)}
+.btn-blue{background:var(–blue);box-shadow:0 4px 20px rgba(26,107,191,0.3)}
+.btn-green{background:var(–green);box-shadow:0 4px 20px rgba(39,174,96,0.25)}
+.btn-sm{padding:9px 15px;font-size:12px;border-radius:8px;width:auto;display:inline-block;margin-top:0}
+.btn-add{
+background:var(–bg3);border:1.5px dashed var(–border2);color:var(–text4);
+font-size:13px;font-weight:700;letter-spacing:0.5px;
+text-transform:uppercase;box-shadow:none;padding:13px
+}
 .btn-row{display:flex;gap:8px;margin-top:10px}
 .btn-row .btn{margin-top:0}
 
-/* ── PIN PAD ── */
-.pin-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px 24px 80px}
-.pin-logo{width:180px;height:65px;object-fit:contain;margin-bottom:24px}
-.pin-title{font-size:28px;font-weight:900;margin-bottom:4px}
-.pin-sub{font-size:13px;color:var(–muted);margin-bottom:10px}
-.staff-select{width:100%;max-width:320px;margin-bottom:24px}
-.pin-dots{display:flex;gap:16px;margin-bottom:28px}
-.dot{width:16px;height:16px;border-radius:50%;background:#222;border:2px solid #333;transition:all 0.12s}
-.dot.on{background:var(–red);border-color:var(–red);transform:scale(1.15)}
+/* ══════════════════════════════════════════════
+PIN PAD
+══════════════════════════════════════════════ */
+.pin-wrap{
+display:flex;flex-direction:column;align-items:center;justify-content:center;
+min-height:100vh;padding:30px 24px 50px;
+background:radial-gradient(ellipse at 50% 20%, #1a0808 0%, var(–bg) 65%)
+}
+.pin-logo{width:170px;height:60px;object-fit:contain;margin-bottom:26px}
+.pin-title{
+font-size:28px;font-weight:900;margin-bottom:5px;letter-spacing:-0.5px;
+background:linear-gradient(180deg,#fff 30%,#bbb 100%);
+-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent
+}
+.pin-sub{font-size:13px;color:var(–text4);margin-bottom:24px}
+.staff-pick{width:100%;max-width:320px;margin-bottom:26px}
+.pin-dots{display:flex;gap:18px;margin-bottom:30px}
+.dot{width:13px;height:13px;border-radius:50%;background:#1e1e1e;border:2px solid #2e2e2e;transition:all 0.12s}
+.dot.on{background:var(–red);border-color:var(–red);transform:scale(1.25);box-shadow:0 0 10px var(–red-glow)}
 .dot.err{background:#e53935;border-color:#e53935}
-.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:320px}
-.pk{background:#1e1e1e;border:1px solid #2a2a2a;border-radius:14px;height:66px;font-size:26px;font-weight:700;color:#fff;cursor:pointer;width:100%;-webkit-tap-highlight-color:transparent;transition:background 0.1s,transform 0.1s}
-.pk:active{background:var(–red);border-color:var(–red);transform:scale(0.94)}
-.pk.del{font-size:20px;color:var(–muted)}
+.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;width:100%;max-width:320px}
+.pk{
+background:var(–card);border:1px solid var(–border2);border-radius:15px;
+height:70px;font-size:26px;font-weight:600;color:var(–text);
+cursor:pointer;width:100%;-webkit-tap-highlight-color:transparent;
+transition:background 0.1s,transform 0.1s;
+box-shadow:0 2px 8px rgba(0,0,0,0.25)
+}
+.pk:active{background:var(–red);border-color:var(–red);transform:scale(0.93)}
+.pk.del{font-size:20px;color:var(–text4)}
 .pk.ghost{opacity:0;pointer-events:none}
-.pin-error{color:#e53935;font-size:13px;margin-top:12px;text-align:center;min-height:20px}
+.pin-err{color:#ff6b6b;font-size:13px;margin-top:14px;text-align:center;min-height:18px;font-weight:600}
+.pin-skip{
+margin-top:22px;max-width:320px;width:100%;
+background:transparent;border:1px solid var(–border2);
+border-radius:11px;color:var(–text4);
+padding:12px;font-size:12px;font-weight:700;
+letter-spacing:1px;text-transform:uppercase;cursor:pointer;
+-webkit-tap-highlight-color:transparent
+}
 
-/* ── ROOM CARDS ── */
-.room-card{background:var(–card);border:1px solid var(–border);border-top:3px solid var(–red);border-radius:14px;margin-bottom:12px;overflow:hidden}
-.room-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer}
-.room-name{font-size:17px;font-weight:800;color:#fff}
-.room-meta{font-size:11px;color:var(–muted);margin-top:2px}
-.room-toggle{color:var(–muted);font-size:20px;transition:transform 0.2s}
+/* ══════════════════════════════════════════════
+TAB BAR
+══════════════════════════════════════════════ */
+.tab-bar{display:flex;background:#0e0e0e;border-bottom:1px solid var(–border);padding:0 12px}
+.tab-btn{
+flex:1;padding:13px 8px;font-size:13px;font-weight:700;color:var(–text4);
+border:none;background:transparent;cursor:pointer;
+border-bottom:3px solid transparent;margin-bottom:-1px;letter-spacing:0.3px;
+-webkit-tap-highlight-color:transparent;transition:color 0.15s
+}
+.tab-btn.active{color:var(–text);border-bottom-color:var(–red)}
+
+/* ══════════════════════════════════════════════
+ROOM CARDS (builder)
+══════════════════════════════════════════════ */
+.room-card{
+background:var(–card);border:1px solid var(–border);
+border-radius:var(–radius);margin-bottom:12px;overflow:hidden;
+position:relative;box-shadow:0 2px 12px rgba(0,0,0,0.2)
+}
+.room-card::before{
+content:””;position:absolute;top:0;left:0;bottom:0;width:4px;
+background:linear-gradient(180deg,var(–red),var(–red-dim))
+}
+.room-hdr{
+display:flex;align-items:center;justify-content:space-between;
+padding:15px 16px 15px 20px;cursor:pointer;-webkit-tap-highlight-color:transparent
+}
+.room-name{font-size:17px;font-weight:800;letter-spacing:-0.3px}
+.room-meta{font-size:11px;color:var(–text4);margin-top:3px;font-weight:500}
+.room-total-inline{color:var(–red);font-weight:800}
+.room-toggle{color:var(–text4);font-size:20px;transition:transform 0.2s;width:26px;text-align:center}
 .room-card.open .room-toggle{transform:rotate(90deg)}
-.room-body{display:none;padding:0 12px 12px}
+.room-body{display:none;padding:0 14px 14px}
 .room-card.open .room-body{display:block}
-.room-actions{display:flex;gap:8px;padding:8px 16px 12px;border-top:1px solid var(–border)}
+.room-actions{display:flex;gap:8px;padding:10px 16px 14px;border-top:1px solid var(–border)}
 
-/* ── WINDOW CARDS ── */
-.win-card{background:#111;border:1px solid #1e1e1e;border-radius:12px;margin-bottom:8px;overflow:hidden}
-.win-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer}
-.win-name{font-size:15px;font-weight:700}
-.win-dims{font-size:11px;color:var(–muted);margin-top:2px}
-.win-body{display:none;padding:0 12px 12px}
-.win-card.open .win-body{display:block}
-.win-toggle{color:var(–muted);font-size:18px;transition:transform 0.2s}
+/* ══════════════════════════════════════════════
+WINDOW CARDS
+══════════════════════════════════════════════ */
+.win-card{
+background:#111;border:1px solid var(–border);
+border-radius:12px;margin-bottom:8px;overflow:hidden
+}
+.win-hdr{
+display:flex;align-items:center;gap:10px;
+padding:12px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent
+}
+.win-num{
+width:26px;height:26px;border-radius:50%;
+background:var(–red);color:#fff;
+display:flex;align-items:center;justify-content:center;
+font-size:12px;font-weight:800;flex-shrink:0;
+box-shadow:0 2px 8px var(–red-glow)
+}
+.win-info{flex:1;min-width:0}
+.win-title{font-size:14px;font-weight:700;letter-spacing:-0.2px}
+.win-dims{font-size:11px;color:var(–text4);margin-top:2px;font-weight:500}
+.win-toggle{color:var(–text4);font-size:17px;margin-left:auto;transition:transform 0.2s}
 .win-card.open .win-toggle{transform:rotate(90deg)}
+.win-body{display:none;padding:6px 14px 12px;border-top:1px solid var(–border)}
+.win-card.open .win-body{display:block}
 
-/* ── TREATMENT ── */
-.treatment-card{background:#161616;border:1px solid #252525;border-radius:10px;margin-bottom:8px;padding:12px}
-.treatment-type-badge{display:inline-block;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#aaa;margin-bottom:10px}
-.treatment-type-badge.curtains{color:#1a6bbf;border-color:#1a3a5c}
-.treatment-type-badge.roman_blinds{color:#27ae60;border-color:#1a3d27}
-.treatment-type-badge.blinds{color:#f39c12;border-color:#5a4010}
-
-/* ── COMPONENT ── */
-.comp-card{background:#0f0f0f;border:1px solid #1a1a1a;border-radius:9px;padding:10px 12px;margin-bottom:6px}
-.comp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.comp-layer{font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:5px}
-.comp-layer.main{background:#1a3a5c;color:#5b9bd5}
-.comp-layer.sheer{background:#1a3a27;color:#5bd57e}
-.comp-layer.blind{background:#3a2a0a;color:#d5a05b}
-.comp-product{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px}
-.comp-brand{font-size:11px;color:var(–muted)}
-.comp-calc{background:#111;border-radius:7px;padding:8px 10px;margin-top:8px}
-.comp-calc-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:2px 0}
-.comp-calc-row .lbl{color:var(–muted)}
-.comp-calc-row .val{font-weight:700;color:#fff}
-.comp-calc-row .val.total{color:var(–red);font-size:14px}
-.comp-del{background:transparent;border:none;color:#333;font-size:16px;cursor:pointer;padding:4px}
-.comp-del:active{color:#e53935}
-
-/* ── SUMMARY ── */
-.summary-wrap{padding:12px}
-.quote-id-badge{background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;padding:8px 14px;font-size:11px;color:var(–muted);text-align:center;margin-bottom:16px}
-.quote-id-badge span{color:#fff;font-weight:700;font-size:14px;display:block;margin-top:2px}
-.summary-customer{background:#1a1a1a;border:1.5px solid #333;border-top:3px solid #1a6bbf;border-radius:12px;padding:14px;margin-bottom:12px}
-.summary-field{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #2a2a2a;font-size:13px}
-.summary-field:last-child{border-bottom:none}
-.summary-field .lbl{color:#aaa;font-weight:600;flex-shrink:0;margin-right:12px}
-.summary-field .val{font-weight:700;color:#fff;text-align:right}
-.summary-room{background:#1a1a1a;border:1.5px solid #333;border-top:3px solid var(–red);border-radius:12px;margin-bottom:12px;overflow:hidden}
-.summary-room-hdr{background:#252525;padding:13px 16px;font-size:15px;font-weight:800;color:#fff;letter-spacing:-0.3px}
-.summary-win-block{padding:12px 16px;border-bottom:1px solid #252525}
-.summary-win-block:last-child{border-bottom:none}
-.summary-win-title{font-size:14px;font-weight:800;color:#fff;margin-bottom:4px}
-.summary-win-dims{font-size:12px;color:#888;margin-bottom:10px;font-weight:600}
-.summary-comp-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid #252525}
-.summary-comp-row:last-child{border-bottom:none}
-.summary-comp-info .lbl{font-size:10px;font-weight:800;color:#777;text-transform:uppercase;letter-spacing:1.5px}
-.summary-comp-info .name{font-size:14px;font-weight:800;color:#fff;margin-top:3px}
-.summary-comp-info .detail{font-size:12px;color:#999;margin-top:2px;font-weight:500}
-.summary-comp-amt{font-size:16px;font-weight:900;color:#fff;white-space:nowrap;margin-left:12px;padding-top:14px}
-.grand-total-card{background:#fff;border-radius:14px;padding:20px;text-align:center;margin:16px 0;border:2px solid #eee}
-.grand-total-lbl{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#555;margin-bottom:6px}
-.grand-total-val{font-size:48px;font-weight:900;color:#000;letter-spacing:-2px;line-height:1}
-.grand-total-sub{font-size:11px;color:#888;margin-top:6px}
-
-/* ── BOTTOM BAR ── */
-.bottom-bar{position:fixed;bottom:0;left:0;right:0;background:#111;border-top:1px solid var(–border);padding:12px 16px;display:flex;gap:8px;z-index:50}
-#screen-login.active ~ * .bottom-bar,
-#screen-login:not(.active) + * .bottom-bar{display:none}
-body:has(#screen-login.active) .bottom-bar{display:none!important}
-
-/* ── QUOTE MODE BANNER ── */
-.quote-mode-banner{background:var(–red);color:#fff;text-align:center;padding:10px;font-size:13px;font-weight:700;letter-spacing:0.5px}
-
-/* ── PRINT STYLES ── */
-@media print{
-/* Hide everything except summary */
-.no-print,
-#screen-login,
-#screen-customer,
-#screen-builder,
-.bottom-bar,
-.hdr .hdr-back,
-.hdr .hdr-action{display:none!important}
-
-/* Show summary */
-#screen-summary{display:block!important}
-.screen{padding-bottom:0}
-
-/* White background, black text throughout */
-*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-body,html{background:#fff!important;color:#000!important}
-
-/* Summary wrapper */
-.summary-wrap{padding:0!important}
-
-/* Quote ID badge */
-.quote-id-badge{background:#f5f5f5!important;border:1px solid #ddd!important;color:#333!important;border-radius:6px!important;padding:8px 14px!important}
-.quote-id-badge span{color:#000!important}
-
-/* Customer card */
-.summary-customer{background:#fff!important;border:1.5px solid #000!important;border-top:3px solid #c0392b!important;border-radius:8px!important;padding:14px!important;margin-bottom:12px!important}
-.summary-field{border-bottom:1px solid #eee!important;padding:6px 0!important}
-.summary-field .lbl{color:#555!important}
-.summary-field .val{color:#000!important}
-
-/* Room blocks */
-.summary-room{background:#fff!important;border:1.5px solid #333!important;border-top:3px solid #c0392b!important;border-radius:8px!important;margin-bottom:10px!important;break-inside:avoid!important}
-.summary-room-hdr{background:#f5f5f5!important;color:#000!important;border-bottom:1px solid #ddd!important;padding:10px 14px!important}
-.summary-win-block{border-bottom:1px solid #eee!important;padding:10px 14px!important}
-.summary-win-block:last-child{border-bottom:none!important}
-.summary-win-title{color:#000!important}
-.summary-win-dims{color:#555!important}
-.summary-comp-row{border-bottom:1px solid #f0f0f0!important}
-.summary-comp-info .lbl{color:#777!important}
-.summary-comp-info .name{color:#000!important}
-.summary-comp-info .detail{color:#555!important}
-.summary-comp-amt{color:#000!important}
-
-/* Grand total */
-.grand-total-card{background:#000!important;border-radius:8px!important;padding:16px!important}
-.grand-total-lbl{color:#fff!important}
-.grand-total-val{color:#fff!important}
-.grand-total-sub{color:#ccc!important}
-
-/* Terms */
-.summary-wrap>div:last-child{background:#fff!important;border:1px solid #ddd!important;border-radius:6px!important}
-
-/* Print header */
-.print-only-hdr{display:block!important}
-.hdr{display:none!important}
+/* ══════════════════════════════════════════════
+TREATMENT CARD
+══════════════════════════════════════════════ */
+.tx-card{background:#161616;border:1px solid var(–border);border-radius:11px;margin:10px 0;padding:13px}
+.tx-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.tx-badge{
+display:inline-flex;align-items:center;gap:5px;
+border-radius:7px;padding:5px 11px;
+font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase
 }
-.print-only-hdr{display:none}
+.tx-badge.curtains{background:#0d1e2f;color:#64b5f6;border:1px solid #1a3a5c}
+.tx-badge.roman_blinds{background:#0d1f10;color:#81c784;border:1px solid #1a3d27}
+.tx-badge.blinds{background:#251b07;color:#ffb74d;border:1px solid #5a4010}
 
-/* ── SPINNER ── */
-.spinner-sm{width:20px;height:20px;border:2px solid #333;border-top-color:var(–red);border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;margin-right:8px;vertical-align:middle}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* ══════════════════════════════════════════════
+COMPONENT CARD
+══════════════════════════════════════════════ */
+.comp-card{background:#0d0d0d;border:1px solid var(–border);border-radius:10px;padding:12px;margin-bottom:7px}
+.comp-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.comp-layer-tag{font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;border-radius:5px}
+.comp-layer-tag.main{background:#0d1e2f;color:#64b5f6}
+.comp-layer-tag.sheer{background:#0d1f10;color:#81c784}
+.comp-layer-tag.blind{background:#251b07;color:#ffb74d}
+.comp-del{background:transparent;border:none;color:#2a2a2a;font-size:15px;cursor:pointer;padding:4px 6px;-webkit-tap-highlight-color:transparent}
+.comp-del:active{color:#ff6b6b}
+.comp-product-name{font-size:15px;font-weight:800;color:var(–text);margin-bottom:3px;letter-spacing:-0.2px}
+.comp-brand-row{font-size:11px;color:var(–text4);margin-bottom:2px;font-weight:500}
+.comp-mrp-row{
+display:flex;align-items:center;gap:8px;margin-top:9px;
+background:#0a0a0a;border:1px solid var(–border);
+border-radius:8px;padding:8px 12px
+}
+.comp-mrp-lbl{font-size:10px;font-weight:800;color:var(–text4);letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap}
+.comp-mrp-inp{
+background:transparent!important;border:none;
+color:#fff!important;-webkit-text-fill-color:#fff!important;
+font-size:15px;font-weight:800;padding:2px 6px;
+flex:1;min-width:60px;max-width:110px;outline:none;
+-webkit-appearance:none;text-align:right;
+border-bottom:1.5px solid var(–border)
+}
+.comp-mrp-inp:focus{border-bottom-color:var(–red)}
+.comp-mrp-unit{font-size:10px;color:var(–text4);font-weight:600;white-space:nowrap}
+.comp-calc{background:#080808;border:1px solid var(–border);border-radius:8px;padding:9px 11px;margin-top:9px}
+.calc-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:2.5px 0}
+.calc-row .l{color:var(–text4);font-weight:500}
+.calc-row .v{font-weight:700;color:var(–text2)}
+.calc-row.total{border-top:1px solid var(–border);margin-top:5px;padding-top:7px}
+.calc-row.total .l{font-weight:800;color:var(–text2);font-size:10px;letter-spacing:1.5px;text-transform:uppercase}
+.calc-row.total .v{color:var(–red);font-size:15px;font-weight:900}
 
-/* ── BADGES ── */
-.tag{display:inline-block;border-radius:5px;padding:2px 8px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
-.tag-red{background:#3a1010;color:#e57373}
-.tag-blue{background:#0a1a3a;color:#64b5f6}
-.tag-green{background:#0a2a1a;color:#81c784}
+/* ══════════════════════════════════════════════
+NEXT-ACTION FLOW
+══════════════════════════════════════════════ */
+.next-wrap{margin-top:10px;padding:11px;background:#0c0c0c;border-radius:10px;border:1px dashed var(–border2)}
+.next-lbl{font-size:9px;font-weight:800;letter-spacing:1.5px;color:var(–text4);text-transform:uppercase;margin-bottom:8px}
+.next-row{display:flex;gap:7px;margin-top:6px}
+.next-row:first-of-type{margin-top:0}
+.nab{
+flex:1;padding:11px 8px;font-size:13px;font-weight:700;
+border-radius:9px;border:none;cursor:pointer;
+-webkit-tap-highlight-color:transparent;text-align:center;
+transition:transform 0.1s;letter-spacing:0.3px
+}
+.nab:active{transform:scale(0.95)}
+.nab-main{background:#0d1e2f;color:#64b5f6;border:1px solid #1a3a5c}
+.nab-sheer{background:#0d1f10;color:#81c784;border:1px solid #1a3d27}
+.nab-blind{background:#251b07;color:#ffb74d;border:1px solid #5a4010}
+.nab-window,.nab-room{background:var(–card2);color:var(–text3);border:1px solid var(–border2)}
+.nab-done{display:flex;align-items:center;justify-content:center;gap:5px;padding:8px;color:var(–green);font-size:12px;font-weight:700;width:100%}
 
-/* ── TOAST ── */
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#fff;color:#000;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:700;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap}
-.toast.show{opacity:1}
+/* ══════════════════════════════════════════════
+BOTTOM BAR
+══════════════════════════════════════════════ */
+.btm-bar{
+position:fixed;bottom:0;left:0;right:0;
+background:rgba(14,14,14,0.97);
+border-top:1px solid var(–border);
+padding:12px 14px;padding-bottom:calc(12px + env(safe-area-inset-bottom));
+display:none;gap:8px;z-index:50;
+backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)
+}
 
-/* ── MODAL ── */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;align-items:flex-end;justify-content:center}
-.modal-overlay.open{display:flex}
-.modal-sheet{background:#161616;border:1px solid #2a2a2a;border-top:3px solid var(–red);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px}
-.modal-handle{width:40px;height:4px;background:#2e2e2e;border-radius:2px;margin:0 auto 16px}
-.modal-title{font-size:18px;font-weight:900;margin-bottom:14px}
+/* ══════════════════════════════════════════════
+SUMMARY — ON SCREEN
+══════════════════════════════════════════════ */
+.sum-wrap{padding:14px;padding-bottom:120px}
+.qid-badge{
+background:var(–card);border:1px solid var(–border);border-radius:9px;
+padding:10px 16px;font-size:10px;color:var(–text4);
+text-align:center;margin-bottom:14px;
+letter-spacing:1px;text-transform:uppercase;font-weight:700
+}
+.qid-badge span{color:var(–text);font-weight:900;font-size:16px;display:block;margin-top:3px;letter-spacing:2px}
+.sum-cust{background:var(–card);border:1px solid var(–border);border-top:3px solid var(–blue);border-radius:var(–radius);padding:15px 17px;margin-bottom:12px}
+.sum-field{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(–border);font-size:13px;gap:14px}
+.sum-field:last-child{border-bottom:none}
+.sum-field .l{color:var(–text3);font-weight:600;flex-shrink:0}
+.sum-field .v{font-weight:700;color:var(–text);text-align:right;word-break:break-word}
+.sum-room{background:var(–card);border:1px solid var(–border);border-top:3px solid var(–red);border-radius:var(–radius);margin-bottom:12px;overflow:hidden}
+.sum-room-hdr{
+background:var(–card2);padding:13px 17px;
+display:flex;justify-content:space-between;align-items:center;
+border-bottom:1px solid var(–border)
+}
+.sum-room-name{font-size:16px;font-weight:900;letter-spacing:-0.3px}
+.sum-room-total{font-size:15px;font-weight:900;color:var(–red)}
+.sum-win-block{padding:13px 17px;border-bottom:1px solid var(–border)}
+.sum-win-block:last-of-type{border-bottom:none}
+.sum-win-title-row{display:flex;align-items:center;gap:9px;margin-bottom:4px}
+.win-badge{
+display:inline-flex;align-items:center;justify-content:center;
+width:24px;height:24px;background:var(–red);color:#fff;
+border-radius:50%;font-size:11px;font-weight:800;flex-shrink:0;
+box-shadow:0 2px 8px var(–red-glow)
+}
+.sum-win-title{font-size:14px;font-weight:800;letter-spacing:-0.2px}
+.sum-win-dims{font-size:12px;color:var(–text3);margin-bottom:10px;font-weight:600;margin-top:2px}
+.sum-tx-lbl{font-size:9px;font-weight:800;color:var(–text4);letter-spacing:1.5px;text-transform:uppercase;margin:9px 0 5px}
+.sum-comp-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(–border);gap:12px}
+.sum-comp-row:last-child{border-bottom:none}
+.sum-comp-info{flex:1;min-width:0}
+.sum-comp-info .tag{font-size:9px;font-weight:800;color:var(–text4);letter-spacing:1.5px;text-transform:uppercase;background:var(–bg3);border:1px solid var(–border);border-radius:4px;padding:2px 6px;display:inline-block;margin-bottom:4px}
+.sum-comp-info .name{font-size:14px;font-weight:800;color:var(–text);letter-spacing:-0.2px;margin-top:1px}
+.sum-comp-info .detail{font-size:12px;color:var(–text3);margin-top:2px;font-weight:500}
+.sum-comp-amt{font-size:16px;font-weight:900;color:var(–text);white-space:nowrap;padding-top:4px}
+.win-sub-line{
+display:flex;justify-content:space-between;align-items:center;
+padding:9px 0 4px;border-top:1px solid var(–border);margin-top:9px
+}
+.win-sub-lbl{font-size:10px;font-weight:800;color:var(–text4);letter-spacing:1.5px;text-transform:uppercase}
+.win-sub-val{font-size:14px;font-weight:900;color:var(–red)}
+.room-sub-footer{
+background:#150808;border-top:2px solid #2a1010;
+padding:12px 17px;
+display:flex;justify-content:space-between;align-items:center
+}
+.room-sub-footer .l{font-size:10px;font-weight:800;color:var(–text2);letter-spacing:1.5px;text-transform:uppercase}
+.room-sub-footer .v{font-size:17px;font-weight:900;color:var(–red)}
+.grand-card{
+background:linear-gradient(135deg,#fff 0%,#f2f2f2 100%);
+border-radius:var(–radius);padding:22px 20px;text-align:center;margin:14px 0;
+box-shadow:0 10px 40px rgba(192,57,43,0.12)
+}
+.grand-lbl{font-size:10px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:#666;margin-bottom:6px}
+.grand-val{font-size:50px;font-weight:900;color:#000;letter-spacing:-2.5px;line-height:1}
+.grand-sub{font-size:11px;color:#888;margin-top:5px;font-weight:500}
+.terms-card{background:var(–card);border:1px solid var(–border);border-radius:12px;padding:14px;margin-bottom:60px}
+.terms-card .title{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(–text4);margin-bottom:8px}
+.terms-card .body{font-size:12px;color:#777;line-height:1.9;font-weight:500}
 
-/* ── ROOM NAME PILLS ── */
-.name-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
-.name-pill{background:#1e1e1e;border:1.5px solid #2a2a2a;border-radius:20px;padding:7px 14px;font-size:13px;font-weight:600;color:#aaa;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.name-pill.selected{background:#3a1010;border-color:var(–red);color:#fff}
+/* ══════════════════════════════════════════════
+QUOTES LIST
+══════════════════════════════════════════════ */
+.search-row{display:flex;gap:8px;padding:13px 14px;background:#0e0e0e;border-bottom:1px solid var(–border);position:sticky;top:0;z-index:40}
+.search-row .inp{margin-top:0;flex:1;padding:11px 14px;font-size:15px}
+.q-empty{text-align:center;padding:70px 20px;color:var(–text4);font-size:14px}
+.q-empty .ico{font-size:48px;opacity:0.4;margin-bottom:14px}
+.q-card{
+background:var(–card);border:1px solid var(–border);border-radius:var(–radius);
+padding:15px 16px;margin-bottom:10px;cursor:pointer;
+-webkit-tap-highlight-color:transparent;
+position:relative;overflow:hidden;transition:border-color 0.15s
+}
+.q-card::before{content:””;position:absolute;top:0;left:0;bottom:0;width:4px;background:var(–red)}
+.q-card:active{border-color:var(–red-dim)}
+.q-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.q-left{flex:1;min-width:0}
+.q-id{font-size:10px;font-weight:800;color:var(–red);letter-spacing:1.5px;margin-bottom:4px}
+.q-name{font-size:17px;font-weight:800;letter-spacing:-0.3px}
+.q-meta{font-size:12px;color:var(–text3);margin-top:3px;font-weight:500}
+.q-right{text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.q-total{font-size:17px;font-weight:900}
+.q-del{background:transparent;border:1px solid var(–border2);border-radius:7px;color:var(–text4);font-size:13px;cursor:pointer;padding:5px 9px;-webkit-tap-highlight-color:transparent}
+.q-del:active{color:#ff6b6b;border-color:var(–red)}
+.q-bottom{display:flex;align-items:center;gap:6px;margin-top:9px;flex-wrap:wrap}
+.q-tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px}
+.q-tag-staff{background:var(–card2);color:var(–text3)}
+.q-tag-rooms{background:#141414;color:var(–text4)}
+.q-tag-cloud{background:#0a2418;color:#81c784;letter-spacing:1px;text-transform:uppercase}
+.q-tag-load{background:#251b07;color:#ffb74d;letter-spacing:1px;text-transform:uppercase}
 
-/* QUOTE SAVED STATE */
-.saved-badge{display:inline-block;background:#0a2a1a;color:#81c784;border:1px solid #1a4a2a;border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-left:8px}
-
-/* ── NEXT ACTION BUTTONS (after product added) ── */
-.next-actions{display:flex;flex-direction:column;gap:8px;margin-top:10px;padding:10px;background:#0f0f0f;border-radius:10px;border:1px dashed #252525}
-.next-actions-label{font-size:10px;font-weight:800;letter-spacing:1.5px;color:#555;text-transform:uppercase;margin-bottom:2px}
-.next-action-row{display:flex;gap:8px}
-.nab{flex:1;padding:11px 8px;font-size:13px;font-weight:700;border-radius:9px;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;text-align:center}
-.nab-sheer{background:#1a3d27;color:#81c784}
-.nab-main{background:#1a3a5c;color:#64b5f6}
-.nab-blind{background:#3a2a0a;color:#f39c12}
-.nab-window{background:#1e1e1e;color:#aaa;border:1px solid #2a2a2a}
-.nab-room{background:#1e1e1e;color:#aaa;border:1px solid #2a2a2a}
-
-/* ── COMPONENT PRODUCT DISPLAY ── */
-.comp-catalog{font-size:15px;font-weight:800;color:#fff;margin-bottom:2px}
-.comp-sno{font-size:12px;color:#aaa;margin-bottom:3px}
-.comp-brand-row{font-size:11px;color:#666;margin-bottom:2px}
-.comp-mrp-row{display:flex;align-items:center;gap:8px;margin-top:6px}
-.comp-mrp-lbl{font-size:11px;color:#888;font-weight:600;white-space:nowrap}
-.comp-mrp-inp{background:#1a1a1a;border:1.5px solid #333;border-radius:7px;color:#fff;font-size:14px;font-weight:800;padding:5px 10px;width:110px;outline:none;-webkit-appearance:none;text-align:right;-webkit-text-fill-color:#fff!important}
-.comp-mrp-inp:focus{border-color:var(–red)}
-.comp-mrp-unit{font-size:11px;color:#666}
-
-/* ── QUOTES LIST SCREEN ── */
-.tab-bar{display:flex;background:#111;border-bottom:2px solid var(–border);padding:0 12px}
-.tab-btn{flex:1;padding:12px 8px;font-size:13px;font-weight:700;color:var(–muted);border:none;background:transparent;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;letter-spacing:0.3px;-webkit-tap-highlight-color:transparent}
-.tab-btn.active{color:#fff;border-bottom-color:var(–red)}
-.search-bar-wrap{display:flex;gap:8px;padding:12px;background:#0f0f0f;border-bottom:1px solid var(–border)}
-.search-bar-wrap .inp{margin-top:0;flex:1;font-size:15px;padding:11px 14px}
-.q-list-empty{text-align:center;padding:60px 20px;color:var(–muted);font-size:15px}
-.q-list-empty .ico{font-size:44px;margin-bottom:12px}
-.q-card{background:var(–card);border:1px solid var(–border);border-left:4px solid var(–red);border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.q-card:active{background:#1e1e1e}
-.q-card-row{display:flex;justify-content:space-between;align-items:flex-start}
-.q-card-name{font-size:16px;font-weight:800;color:#fff}
-.q-card-id{font-size:11px;font-weight:700;color:var(–red);letter-spacing:1px}
-.q-card-meta{font-size:12px;color:var(–muted);margin-top:4px}
-.q-card-total{font-size:16px;font-weight:900;color:#fff;white-space:nowrap;margin-left:12px}
-.q-card-staff{display:inline-block;background:#1e1e1e;border-radius:5px;padding:2px 8px;font-size:10px;font-weight:700;color:#aaa;margin-top:6px}
-.q-card-rooms{display:inline-block;background:#1a1a1a;border-radius:5px;padding:2px 8px;font-size:10px;font-weight:600;color:#666;margin-top:6px;margin-left:6px}
-
-/* PRICE HIDE MODE */
+/* ══════════════════════════════════════════════
+PRICE HIDE MODE
+══════════════════════════════════════════════ */
 body.hide-prices .price-col,
-body.hide-prices .summary-comp-amt,
-body.hide-prices .grand-total-card,
-body.hide-prices .room-total-amt,
-body.hide-prices .win-total-line{display:none!important}
+body.hide-prices .sum-comp-amt,
+body.hide-prices .grand-card,
+body.hide-prices .room-sub-footer,
+body.hide-prices .win-sub-line{display:none!important}
 
-/* WINDOW NUMBER BADGE */
-.win-num-badge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:var(–red);color:#fff;border-radius:50%;font-size:12px;font-weight:800;margin-right:8px;flex-shrink:0}
-.win-title-row{display:flex;align-items:center;margin-bottom:4px}
-.win-subtotal{display:flex;justify-content:space-between;align-items:center;padding:6px 0 2px;border-top:1px solid #333;margin-top:8px}
-.win-subtotal-lbl{font-size:11px;font-weight:700;color:#888;letter-spacing:1px;text-transform:uppercase}
-.win-subtotal-val{font-size:14px;font-weight:900;color:var(–red)}
+/* ══════════════════════════════════════════════
+MODAL
+══════════════════════════════════════════════ */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:200;align-items:flex-end;justify-content:center;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.modal.open{display:flex}
+.modal-sheet{
+background:var(–card);border:1px solid var(–border2);
+border-top:3px solid var(–red);border-radius:22px 22px 0 0;
+padding:20px 20px calc(40px + env(safe-area-inset-bottom));
+width:100%;max-width:480px
+}
+.modal-handle{width:40px;height:4px;background:#3a3a3a;border-radius:2px;margin:0 auto 18px}
+.modal-title{font-size:18px;font-weight:900;margin-bottom:16px;letter-spacing:-0.3px}
+.pill-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.pill{
+background:var(–card2);border:1.5px solid var(–border2);border-radius:20px;
+padding:7px 14px;font-size:13px;font-weight:600;color:var(–text3);
+cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 0.15s
+}
+.pill.on{background:#2a0a0a;border-color:var(–red);color:#fff}
+.copy-hint{
+background:#0a2418;border:1px solid #1a4a2a;border-radius:9px;
+padding:9px 13px;font-size:12px;color:#81c784;
+margin-bottom:12px;text-align:center;font-weight:600
+}
 
-/* ── FORCE WHITE TEXT IN ALL INPUTS ── */
-input.inp, select.inp, textarea.inp {
-color: #fff !important;
--webkit-text-fill-color: #fff !important;
+/* ══════════════════════════════════════════════
+TOAST + SPINNER
+══════════════════════════════════════════════ */
+.toast{
+position:fixed;bottom:calc(88px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+background:var(–text);color:var(–bg);border-radius:10px;
+padding:11px 22px;font-size:14px;font-weight:700;
+z-index:999;opacity:0;transition:opacity 0.25s;pointer-events:none;white-space:nowrap;
+box-shadow:0 6px 24px rgba(0,0,0,0.4)
 }
-input.inp::placeholder { color: #444 !important; }
-select.inp option { color: #fff; background: #1e1e1e; }
+.toast.show{opacity:1}
+.spin{width:18px;height:18px;border:2px solid var(–border);border-top-color:var(–red);border-radius:50%;animation:sp 0.7s linear infinite;display:inline-block;margin-right:8px;vertical-align:middle}
+@keyframes sp{to{transform:rotate(360deg)}}
 
-/* Force white text in all inputs on dark background */
-input, select, textarea {
-color: #ffffff !important;
--webkit-text-fill-color: #ffffff !important;
-caret-color: #fff;
+/* ══════════════════════════════════════════════
+A5 PRINT — 148mm × 210mm
+══════════════════════════════════════════════ */
+.print-only{display:none}
+@page{size:A5 portrait;margin:9mm 11mm}
+
+@media print{
+/* ── SHOW/HIDE ── */
+.no-print,.hdr,.tab-bar,.btm-bar,.qid-badge,
+.sum-tx-lbl ~ .sum-tx-lbl,
+.next-wrap,.comp-del,.comp-mrp-row,.comp-calc,
+.nab,button,
+#screen-login,#screen-customer,#screen-builder,#screen-quotes,
+.pin-wrap{display:none!important}
+#screen-summary{display:block!important}
+.screen{padding-bottom:0!important}
+.print-only{display:block}
+
+/* ── BASE ── */
+*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
+html,body{background:#fff!important;color:#000!important;font-size:9pt;line-height:1.3}
+.sum-wrap{padding:0!important;max-width:100%!important}
+
+/* ── PRINT HEADER ── */
+.print-hdr{
+display:flex;justify-content:space-between;align-items:flex-start;
+padding-bottom:5mm;margin-bottom:4mm;
+border-bottom:1.5pt solid #000
 }
-input::placeholder, select::placeholder, textarea::placeholder {
-color: #555 !important;
--webkit-text-fill-color: #555 !important;
+.print-brand .name{font-size:20pt;font-weight:900;color:#c0392b;letter-spacing:-0.5pt;line-height:1}
+.print-brand .tag{font-size:7pt;letter-spacing:2pt;text-transform:uppercase;color:#888;margin-top:1mm;font-weight:600}
+.print-qinfo{text-align:right}
+.print-qinfo .qid{font-size:13pt;font-weight:900;color:#000;letter-spacing:0.5pt}
+.print-qinfo .date{font-size:8pt;color:#777;margin-top:1mm}
+
+/* ── CUSTOMER BLOCK — 2 COLUMN ── */
+.sum-cust{
+display:grid!important;grid-template-columns:1fr 1fr;
+gap:5mm;padding:4mm 0!important;margin-bottom:4mm!important;
+background:transparent!important;border:none!important;
+border-bottom:0.75pt solid #ddd!important;
+border-top:none!important;border-radius:0!important
 }
-input:disabled, select:disabled {
--webkit-text-fill-color: #444 !important;
-color: #444 !important;
+.cust-print-col h4{font-size:7pt;font-weight:800;letter-spacing:1.5pt;text-transform:uppercase;color:#aaa;margin-bottom:1.5mm}
+.cust-print-col .cname{font-size:14pt;font-weight:900;color:#000;letter-spacing:-0.3pt;margin-bottom:1mm}
+.cust-print-col .cval{font-size:9pt;color:#333;font-weight:500;margin-bottom:0.5mm}
+.cust-print-col .clabel{font-size:7pt;color:#888;font-weight:700;letter-spacing:0.5pt;text-transform:uppercase;margin-right:1.5mm}
+.cust-print-right{text-align:right}
+/* hide the on-screen sum-field layout */
+.sum-field{display:none!important}
+
+/* ── ROOM ── */
+.sum-room{background:#fff!important;border:none!important;border-radius:0!important;margin-bottom:4mm!important;break-inside:avoid!important;page-break-inside:avoid!important}
+.sum-room-hdr{background:#000!important;padding:2.5mm 3mm!important;border-bottom:none!important}
+.sum-room-name{font-size:11pt!important;color:#fff!important;font-weight:900!important}
+.sum-room-total{font-size:11pt!important;color:#ddd!important;font-weight:900!important}
+
+/* ── WINDOW BLOCK — 2 COLUMN: measurements | selections ── */
+.sum-win-block{
+display:grid!important;
+grid-template-columns:34mm 1fr!important;
+gap:4mm!important;
+padding:3mm!important;
+border-bottom:0.5pt solid #ddd!important;
+break-inside:avoid!important;
+align-items:start!important
 }
-/* Fix iOS autofill yellow background */
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus {
--webkit-text-fill-color: #ffffff !important;
--webkit-box-shadow: 0 0 0px 1000px #1e1e1e inset !important;
-transition: background-color 5000s ease-in-out 0s;
+.sum-win-block:last-of-type{border-bottom:none!important}
+
+/* left = measurements column */
+.win-print-left{border-right:0.5pt dashed #ccc;padding-right:3mm}
+.win-print-left .win-badge{width:5mm!important;height:5mm!important;font-size:7pt!important;background:#c0392b!important;box-shadow:none!important}
+.win-print-left .sum-win-title{font-size:9pt!important;color:#000!important;font-weight:800!important}
+.win-print-left .sum-win-dims{font-size:8pt!important;color:#444!important;margin-bottom:2mm!important}
+.print-meas{margin-top:1mm}
+.print-meas-row{display:flex;justify-content:space-between;padding:0.4mm 0;font-size:7.5pt}
+.print-meas-row .k{color:#888;font-weight:600;font-size:7pt;text-transform:uppercase;letter-spacing:0.3pt}
+.print-meas-row .mv{color:#000;font-weight:700}
+
+/* right = selections column */
+.win-print-right{}
+.sum-win-title-row{display:none!important}
+.sum-win-dims{display:none!important}
+.sum-tx-lbl{font-size:7pt!important;color:#888!important;font-weight:800!important;letter-spacing:1pt!important;margin:1.5mm 0 0.5mm!important}
+.sum-comp-row{padding:0.8mm 0!important;border-bottom:0.25pt dashed #eee!important;gap:2mm!important}
+.sum-comp-info .tag{background:#f0f0f0!important;color:#555!important;border:none!important;font-size:5.5pt!important;padding:0.3mm 1.2mm!important;margin-bottom:0.5mm!important}
+.sum-comp-info .name{font-size:8.5pt!important;color:#000!important;font-weight:800!important;letter-spacing:-0.2pt}
+.sum-comp-info .detail{font-size:7pt!important;color:#666!important;margin-top:0.2mm!important}
+.sum-comp-amt{font-size:9pt!important;color:#000!important;font-weight:800!important;padding-top:0!important}
+.win-sub-line{padding:1.5mm 0 0.5mm!important;border-top:0.5pt solid #999!important;margin-top:1.5mm!important}
+.win-sub-lbl{font-size:7pt!important;color:#555!important;font-weight:800!important}
+.win-sub-val{font-size:9pt!important;color:#c0392b!important;font-weight:900!important}
+
+/* room subtotal footer */
+.room-sub-footer{background:#f0f0f0!important;border-top:1pt solid #000!important;padding:2mm 3mm!important}
+.room-sub-footer .l{font-size:7pt!important;color:#000!important;font-weight:800!important}
+.room-sub-footer .v{font-size:10pt!important;color:#000!important;font-weight:900!important}
+
+/* grand total */
+.grand-card{background:#000!important;border-radius:2mm!important;padding:3.5mm!important;margin:3mm 0!important;box-shadow:none!important;break-inside:avoid!important}
+.grand-lbl{font-size:7pt!important;color:#bbb!important;letter-spacing:2pt!important;margin-bottom:1mm!important}
+.grand-val{font-size:22pt!important;color:#fff!important;letter-spacing:-1pt!important}
+.grand-sub{font-size:6.5pt!important;color:#999!important;margin-top:1mm!important}
+
+/* terms */
+.terms-card{background:#fff!important;border:0.5pt solid #ddd!important;border-radius:1mm!important;padding:2.5mm!important;margin-bottom:0!important}
+.terms-card .title{font-size:6.5pt!important;color:#555!important;margin-bottom:1mm!important}
+.terms-card .body{font-size:6.5pt!important;color:#666!important;line-height:1.55!important}
+
+/* hide price elements if hide-prices active */
+body.hide-prices .price-col,
+body.hide-prices .sum-comp-amt,
+body.hide-prices .grand-card,
+body.hide-prices .room-sub-footer,
+body.hide-prices .win-sub-line{display:none!important}
 }
 </style>
 
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════ -->
-
-<!-- SCREEN 1: STAFF LOGIN                  -->
-
-<!-- ═══════════════════════════════════════ -->
+<!-- SCREEN 1: LOGIN -->
 
 <div id="screen-login" class="screen active">
   <div class="pin-wrap">
     <img class="pin-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display='none'" alt="Darla">
     <div class="pin-title">Quote Builder</div>
     <div class="pin-sub" id="loginSub">Select your name to continue</div>
-
-```
-<div class="staff-select">
-  <select class="inp" id="staffSelect" onchange="onStaffSelect()">
-    <option value="">— Select Staff Member —</option>
-    <option value="Deepesh Darla">Deepesh Darla</option>
-  </select>
-</div>
-
-<div class="pin-dots">
-  <div class="dot" id="pd0"></div>
-  <div class="dot" id="pd1"></div>
-  <div class="dot" id="pd2"></div>
-  <div class="dot" id="pd3"></div>
-</div>
-
-<div class="pin-grid">
-  <button class="pk" onclick="lPk('1')">1</button>
-  <button class="pk" onclick="lPk('2')">2</button>
-  <button class="pk" onclick="lPk('3')">3</button>
-  <button class="pk" onclick="lPk('4')">4</button>
-  <button class="pk" onclick="lPk('5')">5</button>
-  <button class="pk" onclick="lPk('6')">6</button>
-  <button class="pk" onclick="lPk('7')">7</button>
-  <button class="pk" onclick="lPk('8')">8</button>
-  <button class="pk" onclick="lPk('9')">9</button>
-  <button class="pk ghost"></button>
-  <button class="pk" onclick="lPk('0')">0</button>
-  <button class="pk del" onclick="lPd()">&#9003;</button>
-</div>
-
-<div class="pin-error" id="loginError"></div>
-
-<button class="btn btn-ghost" style="max-width:320px;margin-top:20px" onclick="skipLogin()">
-  Skip (Demo Mode)
-</button>
-```
-
+    <div class="staff-pick">
+      <select class="inp" id="staffSel" onchange="onStaffPick()">
+        <option value="">— Select Staff Member —</option>
+        <option value="Deepesh Darla">Deepesh Darla</option>
+      </select>
+    </div>
+    <div class="pin-dots">
+      <div class="dot" id="pd0"></div><div class="dot" id="pd1"></div>
+      <div class="dot" id="pd2"></div><div class="dot" id="pd3"></div>
+    </div>
+    <div class="pin-grid">
+      <button class="pk" onclick="pk('1')">1</button><button class="pk" onclick="pk('2')">2</button><button class="pk" onclick="pk('3')">3</button>
+      <button class="pk" onclick="pk('4')">4</button><button class="pk" onclick="pk('5')">5</button><button class="pk" onclick="pk('6')">6</button>
+      <button class="pk" onclick="pk('7')">7</button><button class="pk" onclick="pk('8')">8</button><button class="pk" onclick="pk('9')">9</button>
+      <button class="pk ghost"></button><button class="pk" onclick="pk('0')">0</button><button class="pk del" onclick="pd()">&#9003;</button>
+    </div>
+    <div class="pin-err" id="pinErr"></div>
+    <button class="pin-skip" onclick="skipLogin()">Skip — Demo Mode</button>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════ -->
-
-<!-- SCREEN 2: CUSTOMER DETAILS            -->
-
-<!-- ═══════════════════════════════════════ -->
+<!-- SCREEN 2: CUSTOMER -->
 
 <div id="screen-customer" class="screen">
   <div class="hdr">
     <img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display='none'" alt="Darla">
     <div class="hdr-title">Quote Builder</div>
-    <div class="hdr-sub" id="staffNameDisplay">Staff</div>
+    <div class="hdr-sub" id="staffLabel">Staff</div>
     <div class="tab-bar">
       <button class="tab-btn active" id="tabNew" onclick="switchTab('new')">&#43; New Quote</button>
       <button class="tab-btn" id="tabAll" onclick="switchTab('all')">&#128196; All Quotes</button>
     </div>
   </div>
-  <div class="page-wrap">
-    <div class="section-title">Customer Details</div>
+  <div class="wrap">
+    <div class="sec-title">Customer Details</div>
     <div class="card card-blue">
-      <div class="field">
-        <label class="field-label">Customer Name *</label>
-        <input class="inp" id="custName" placeholder="Full name" type="text">
-      </div>
-      <div class="field">
-        <label class="field-label">Mobile Number *</label>
-        <input class="inp" id="custMobile" placeholder="10-digit number" type="tel" maxlength="10">
-      </div>
-      <div class="field">
-        <label class="field-label">Architect / Interior Designer</label>
-        <input class="inp" id="custArch" placeholder="Optional" type="text">
-      </div>
-      <div class="field">
-        <label class="field-label">Address / Project</label>
-        <input class="inp" id="custAddr" placeholder="Optional" type="text">
-      </div>
+      <div class="field"><label class="field-label">Customer Name *</label><input class="inp" id="cName" placeholder="Full name" type="text" autocapitalize="words"></div>
+      <div class="field"><label class="field-label">Mobile Number *</label><input class="inp" id="cMobile" placeholder="10-digit number" type="tel" maxlength="10" inputmode="numeric"></div>
+      <div class="field"><label class="field-label">Architect / Interior Designer</label><input class="inp" id="cArch" placeholder="Optional" type="text" autocapitalize="words"></div>
+      <div class="field"><label class="field-label">Address / Project</label><input class="inp" id="cAddr" placeholder="Optional" type="text"></div>
     </div>
-
-```
-<div class="section-title">Sales Staff</div>
-<div class="card card-red">
-  <div class="field">
-    <label class="field-label">Salesman 1 (Primary)</label>
-    <input class="inp" id="custSales1" placeholder="Staff name" type="text">
-  </div>
-  <div class="field">
-    <label class="field-label">Salesman 2 (Optional)</label>
-    <input class="inp" id="custSales2" placeholder="Second staff — if two attended" type="text">
+    <div class="sec-title">Sales Staff</div>
+    <div class="card card-red">
+      <div class="field"><label class="field-label">Salesman 1 (Primary)</label><input class="inp" id="cSales1" placeholder="Primary staff name" type="text" autocapitalize="words"></div>
+      <div class="field"><label class="field-label">Salesman 2 (Optional)</label><input class="inp" id="cSales2" placeholder="If two staff attended" type="text" autocapitalize="words"></div>
+    </div>
+    <button class="btn" onclick="startQuote()">Start Quote &#8594;</button>
   </div>
 </div>
 
-<button class="btn" onclick="startQuote()">Start Quote &#8594;</button>
-```
-
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════ -->
-
-<!-- SCREEN 3: QUOTE BUILDER               -->
-
-<!-- ═══════════════════════════════════════ -->
+<!-- SCREEN 3: BUILDER -->
 
 <div id="screen-builder" class="screen">
   <div class="hdr">
     <img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display='none'" alt="Darla">
     <div class="hdr-row">
       <button class="hdr-back" onclick="goTo('screen-customer')">&#8592; Back</button>
-      <div style="text-align:center">
-        <div class="hdr-title" id="builderCustomerName">Quote</div>
-        <div class="hdr-sub" id="builderQuoteId"></div>
+      <div style="text-align:center;flex:1;min-width:0">
+        <div class="hdr-title" id="bldName" style="font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Quote</div>
+        <div class="hdr-sub" id="bldId"></div>
       </div>
-      <button class="hdr-action" onclick="goTo('screen-summary')">Summary</button>
+      <button class="hdr-act" onclick="goTo('screen-summary')">Summary</button>
     </div>
   </div>
-  <div class="page-wrap">
-    <div id="roomsContainer"></div>
-    <button class="btn btn-add" onclick="showAddRoomModal()">&#43; Add Room</button>
+  <div class="wrap">
+    <div id="roomsWrap"></div>
+    <button class="btn btn-add" onclick="openRoomModal()">&#43; Add Room</button>
   </div>
-  <div class="bottom-bar no-print" style="gap:6px;display:none">
-    <button class="btn btn-ghost" style="margin-top:0;flex:1" onclick="saveAndGoList()">&#128196; All Quotes</button>
+  <div class="btm-bar" id="bldBar">
+    <button class="btn btn-ghost" style="margin-top:0;flex:1" onclick="saveAndList()">&#128196; All</button>
     <button class="btn btn-ghost" style="margin-top:0;flex:1" onclick="saveQuote()">&#128190; Save</button>
     <button class="btn" style="margin-top:0;flex:2" onclick="goTo('screen-summary')">Summary &#8594;</button>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════ -->
-
-<!-- SCREEN 4: SUMMARY / PRINT             -->
-
-<!-- ═══════════════════════════════════════ -->
+<!-- SCREEN 4: SUMMARY -->
 
 <div id="screen-summary" class="screen">
   <div class="hdr no-print">
     <img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display='none'" alt="Darla">
     <div class="hdr-row">
       <button class="hdr-back" onclick="goTo('screen-builder')">&#8592; Edit</button>
-      <div style="text-align:center">
+      <div style="text-align:center;flex:1;min-width:0">
         <div class="hdr-title">Quote Summary</div>
+        <div class="hdr-sub" id="sumId"></div>
       </div>
-      <div style="display:flex;gap:6px">
-        <button class="hdr-action" style="background:#1a6bbf" onclick="togglePriceMode()">&#128065; <span id="priceModeLabel">Hide Prices</span></button>
-        <button class="hdr-action" onclick="window.print()">&#128424; Print</button>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="hdr-act blue" id="priceBtn" onclick="togglePrices()" style="padding:7px 11px;font-size:11px">Hide &#8377;</button>
+        <button class="hdr-act" onclick="window.print()" style="padding:7px 11px;font-size:11px">&#128424;</button>
       </div>
     </div>
   </div>
-  <div class="summary-wrap" id="summaryContent"></div>
-  <div class="bottom-bar no-print" style="gap:6px;display:none">
+  <div class="sum-wrap" id="sumContent"></div>
+  <div class="btm-bar" id="sumBar">
     <button class="btn btn-ghost" style="margin-top:0;flex:1" onclick="shareQuote()">&#128279; Share</button>
     <button class="btn" style="margin-top:0;flex:2" onclick="saveAndExit()">&#128190; Save &amp; Exit</button>
-    <button class="btn btn-ghost" style="margin-top:0;flex:1" onclick="window.print()">&#128424;</button>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════ -->
-
-<!-- MODAL: ADD ROOM                        -->
-
-<!-- ═══════════════════════════════════════ -->
-
-<div class="modal-overlay" id="addRoomModal">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Add Room</div>
-    <div class="name-pills" id="roomNamePills"></div>
-    <div class="field">
-      <label class="field-label">Custom Name</label>
-      <input class="inp" id="customRoomName" placeholder="Enter room name">
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-ghost" style="margin-top:0" onclick="closeModal('addRoomModal')">Cancel</button>
-      <button class="btn" style="margin-top:0" onclick="confirmAddRoom()">Add Room</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════ -->
-
-<!-- MODAL: ADD WINDOW                      -->
-
-<!-- ═══════════════════════════════════════ -->
-
-<div class="modal-overlay" id="addWindowModal">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Add Window</div>
-    <input type="hidden" id="winRoomIdx">
-    <div class="field">
-      <label class="field-label">Window Name</label>
-      <input class="inp" id="winName" placeholder="e.g. Bay Window, Sliding Door">
-    </div>
-    <div class="inp-row">
-      <div class="field">
-        <label class="field-label">Width (inches)</label>
-        <input class="inp" id="winWidth" type="number" placeholder="e.g. 84">
-      </div>
-      <div class="field">
-        <label class="field-label">Height (inches)</label>
-        <input class="inp" id="winHeight" type="number" placeholder="e.g. 108">
-      </div>
-    </div>
-    <div class="inp-row">
-      <div class="field">
-        <label class="field-label">Qty</label>
-        <input class="inp" id="winQty" type="number" value="1" min="1">
-      </div>
-      <div class="field">
-        <label class="field-label">Remarks</label>
-        <input class="inp" id="winRemarks" placeholder="Optional">
-      </div>
-    </div>
-    <div id="winCopyHint" style="display:none;background:#0a2a1a;border:1px solid #1a4a2a;border-radius:8px;padding:8px 12px;font-size:12px;color:#81c784;margin-bottom:10px;text-align:center"></div>
-    <div class="btn-row">
-      <button class="btn btn-ghost" style="margin-top:0" onclick="closeModal('addWindowModal')">Cancel</button>
-      <button class="btn" style="margin-top:0" onclick="confirmAddWindow()">Add Window</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════ -->
-
-<!-- MODAL: ADD TREATMENT                   -->
-
-<!-- ═══════════════════════════════════════ -->
-
-<div class="modal-overlay" id="addTreatmentModal">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Select Treatment</div>
-    <input type="hidden" id="txRoomIdx">
-    <input type="hidden" id="txWinIdx">
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
-      <button class="btn btn-blue" style="margin-top:0" onclick="confirmAddTreatment('curtains')">
-        &#129525; Curtains
-      </button>
-      <button class="btn btn-green" style="margin-top:0" onclick="confirmAddTreatment('roman_blinds')">
-        &#129695; Roman Blinds
-      </button>
-      <button class="btn" style="background:#f39c12;box-shadow:0 4px 20px rgba(243,156,18,0.3);margin-top:0" onclick="confirmAddTreatment('blinds')">
-        &#9000; Blinds
-      </button>
-    </div>
-    <button class="btn btn-ghost" style="margin-top:0" onclick="closeModal('addTreatmentModal')">Cancel</button>
-  </div>
-</div>
-
-<!-- TOAST -->
-
-<div class="toast" id="toast"></div>
-
-<!-- ═══════════════════════════════════════ -->
-
-<!-- SCREEN 5: ALL QUOTES                   -->
-
-<!-- ═══════════════════════════════════════ -->
+<!-- SCREEN 5: ALL QUOTES -->
 
 <div id="screen-quotes" class="screen">
   <div class="hdr">
     <img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display='none'" alt="Darla">
     <div class="hdr-row">
-      <button class="hdr-back" onclick="goTo('screen-customer')">&#8592; Back</button>
-      <div style="text-align:center">
+      <button class="hdr-back" onclick="switchTab('new')">&#8592; Back</button>
+      <div style="text-align:center;flex:1">
         <div class="hdr-title">All Quotes</div>
-        <div class="hdr-sub" id="quotesCount"></div>
+        <div class="hdr-sub" id="qCount"></div>
       </div>
-      <button class="hdr-action" onclick="newQuoteFromList()">&#43; New</button>
+      <button class="hdr-act" onclick="newQuoteBtn()">&#43; New</button>
     </div>
   </div>
-  <div class="search-bar-wrap">
-    <input class="inp" id="quotesSearch" placeholder="Search by name or mobile..." oninput="filterQuotes()" autocomplete="off">
-    <button class="btn btn-ghost btn-sm" style="margin-top:0;white-space:nowrap;flex-shrink:0" onclick="document.getElementById('quotesSearch').value='';filterQuotes()">Clear</button>
+  <div class="search-row">
+    <input class="inp" id="qSearch" placeholder="Name, mobile, salesman..." oninput="filterQ()" autocomplete="off">
+    <button class="btn btn-ghost btn-sm" style="margin-top:0;white-space:nowrap;flex-shrink:0" onclick="document.getElementById('qSearch').value='';filterQ()">Clear</button>
   </div>
-  <div style="padding:10px 12px 100px">
-    <div id="quotesList"></div>
+  <div style="padding:12px 14px 120px"><div id="qList"></div></div>
+</div>
+
+<!-- MODAL: ROOM -->
+
+<div class="modal" id="mRoom">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Room</div>
+    <div class="pill-wrap" id="roomPills"></div>
+    <div class="field"><label class="field-label">Custom Name</label><input class="inp" id="mRoomName" placeholder="Or type a custom name"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" style="margin-top:0" onclick="closeModal('mRoom')">Cancel</button>
+      <button class="btn" style="margin-top:0" onclick="confirmRoom()">Add Room</button>
+    </div>
   </div>
 </div>
 
+<!-- MODAL: WINDOW -->
+
+<div class="modal" id="mWin">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Window</div>
+    <input type="hidden" id="mWinRi">
+    <div id="mWinHint" class="copy-hint" style="display:none"></div>
+    <div class="field"><label class="field-label">Window Name</label><input class="inp" id="mWinName" placeholder="e.g. Bay Window, Main Door"></div>
+    <div class="inp-row">
+      <div class="field"><label class="field-label">Width (inches)</label><input class="inp" id="mWinW" type="number" placeholder="e.g. 84" inputmode="decimal"></div>
+      <div class="field"><label class="field-label">Height (inches)</label><input class="inp" id="mWinH" type="number" placeholder="e.g. 108" inputmode="decimal"></div>
+    </div>
+    <div class="inp-row">
+      <div class="field"><label class="field-label">Qty</label><input class="inp" id="mWinQ" type="number" value="1" min="1" inputmode="numeric"></div>
+      <div class="field"><label class="field-label">Remarks</label><input class="inp" id="mWinR" placeholder="Optional"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" style="margin-top:0" onclick="closeModal('mWin')">Cancel</button>
+      <button class="btn" style="margin-top:0" onclick="confirmWin()">Add Window</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: TREATMENT -->
+
+<div class="modal" id="mTx">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Select Treatment</div>
+    <input type="hidden" id="mTxRi"><input type="hidden" id="mTxWi">
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+      <button class="btn btn-blue" style="margin-top:0" onclick="confirmTx('curtains')">&#129525; Curtains</button>
+      <button class="btn btn-green" style="margin-top:0" onclick="confirmTx('roman_blinds')">&#129695; Roman Blinds</button>
+      <button class="btn" style="background:var(--amber);box-shadow:0 4px 20px rgba(212,164,90,0.3);margin-top:0" onclick="confirmTx('blinds')">&#9000; Blinds</button>
+    </div>
+    <button class="btn btn-ghost" style="margin-top:0" onclick="closeModal('mTx')">Cancel</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script>
-// ════════════════════════════════════════════
-// CONFIG — UPDATE THESE AFTER DEPLOYING APPS SCRIPT
-// ════════════════════════════════════════════
-var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx9A43LVU7Ikyxj5MNgRAnCvf9PSR5GisthNyC9oc_ye56OkTag32IUXstlDXtoWJ6v/exec";
-var PRODUCT_SEARCH_URL = "index.html";
+// ═══════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════
+var ASU = "https://script.google.com/macros/s/AKfycbx9A43LVU7Ikyxj5MNgRAnCvf9PSR5GisthNyC9oc_ye56OkTag32IUXstlDXtoWJ6v/exec";
 
-// ════════════════════════════════════════════
-// STAFF DATA — loaded from Apps Script or fallback
-// ════════════════════════════════════════════
-// ── STAFF LIST — shown instantly, updated from Google Sheet in background ──
-// Add your staff here as a fallback (used if cloud fetch fails / offline)
-// Your full staff list is managed in the Google Sheet > Staff tab
-var STAFF_LIST = [
-  {name:"Deepesh Darla", pin:"1516"}
-  // Cloud will add more staff from your Google Sheet automatically
-];
+var STAFF = [{name:"Deepesh Darla",pin:"1516"}];
+var APP   = {staff:null, quote:blankQ()};
 
-// ════════════════════════════════════════════
-// APP STATE
-// ════════════════════════════════════════════
-var APP = {
-  staff: null,
-  quote: newQuote()
-};
-
-function newQuote(){
-  return {
-    id: null,
-    date: new Date().toLocaleDateString("en-IN"),
-    staff: "",
-    customer: {name:"",mobile:"",arch:"",addr:""},
-    rooms: [],
-    saved: false
-  };
+function blankQ(){
+  return {id:null,date:new Date().toLocaleDateString("en-IN"),staff:"",staff2:"",customer:{name:"",mobile:"",arch:"",addr:""},rooms:[],saved:false};
 }
 
-// ════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // INIT
-// ════════════════════════════════════════════
-window.addEventListener("DOMContentLoaded", function(){
-  // ALWAYS populate staff dropdown first — regardless of what else happens
-  populateStaffDropdown();
-
-  // Check if returning from product search
-  var selected = localStorage.getItem("darla_selected_product");
-  var ctx      = localStorage.getItem("quote_product_ctx");
-
-  if(selected && ctx){
-    try{
-      var saved = localStorage.getItem("darla_quote_draft");
-      if(saved) APP.quote = JSON.parse(saved);
-      var product = JSON.parse(selected);
-      var context = JSON.parse(ctx);
-      attachProduct(context, product);
-      localStorage.removeItem("darla_selected_product");
-      localStorage.removeItem("quote_product_ctx");
-      var staffStr = localStorage.getItem("darla_quote_staff");
-      if(staffStr) APP.staff = JSON.parse(staffStr);
-      // Restore staff name display
-      if(APP.staff && APP.staff.name){
-        var sd = document.getElementById("staffNameDisplay");
-        if(sd) sd.textContent = APP.staff.name;
-      }
-      goTo("screen-builder");
-      renderBuilder();
-      showToast("Product added ✓");
-    }catch(e){
-      // If anything fails, go to login
-      goTo("screen-login");
-    }
-    return;
-  }
-
-  // Check if loading a quote by ID from URL
-  var urlId = getParam("load");
-  if(urlId){
-    loadQuoteById(urlId);
-    return;
-  }
-
-  // Try to load updated staff list from cloud in background
-  loadStaffList();
+// ═══════════════════════════════════════════════════════
+window.addEventListener("DOMContentLoaded",function(){
+  try{ init(); }catch(e){ console.error(e); }
 });
 
-function getParam(n){ return new URLSearchParams(window.location.search).get(n)||""; }
+function init(){
+  buildStaffDrop();
 
-// ════════════════════════════════════════════
-// STAFF / LOGIN
-// ════════════════════════════════════════════
-function loadStaffList(){
-  // Step 1: Load from localStorage cache immediately (instant)
-  var cached = localStorage.getItem("darla_staff_cache");
-  if(cached){
+  var sel = localStorage.getItem("darla_selected_product");
+  var ctx = localStorage.getItem("quote_product_ctx");
+  if(sel && ctx){
     try{
-      var cachedList = JSON.parse(cached);
-      if(cachedList && cachedList.length){
-        STAFF_LIST = cachedList;
-        populateStaffDropdown();
-      }
-    }catch(e){}
+      var draft = localStorage.getItem("darla_quote_draft");
+      if(draft) APP.quote = JSON.parse(draft);
+      attachProd(JSON.parse(ctx), JSON.parse(sel));
+      localStorage.removeItem("darla_selected_product");
+      localStorage.removeItem("quote_product_ctx");
+      var sf = localStorage.getItem("darla_quote_staff");
+      if(sf){ APP.staff=JSON.parse(sf); setStaffLabel(); }
+      goTo("screen-builder");
+      showToast("Product added \u2713");
+    }catch(e){ goTo("screen-login"); }
+    return;
   }
 
-  // Step 2: If no Apps Script URL, stop here (use hardcoded list)
-  if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf("YOUR_")===0) return;
+  var lid = qp("load");
+  if(lid){ loadById(lid); return; }
 
-  // Step 3: Fetch fresh from cloud in background, update cache + dropdown
-  fetch(APPS_SCRIPT_URL+"?action=getStaff&t="+Date.now()) // cache-bust
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(d.staff && d.staff.length){
-        STAFF_LIST = d.staff;
-        localStorage.setItem("darla_staff_cache", JSON.stringify(d.staff));
-        populateStaffDropdown(); // Refresh dropdown with full staff list
-        console.log("Staff loaded from cloud:", d.staff.length, "members");
-      } else {
-        console.log("Cloud returned no staff:", JSON.stringify(d));
-      }
-    })
-    .catch(function(e){
-      console.log("Staff cloud fetch failed:", e.message);
-    });
+  loadStaff();
 }
 
-function populateStaffDropdown(){
-  var sel = document.getElementById("staffSelect");
-  if(!sel || !STAFF_LIST || !STAFF_LIST.length) return;
-  // Replace ALL options with fresh list from STAFF_LIST
-  sel.innerHTML = '<option value="">— Select Staff Member —</option>';
-  STAFF_LIST.forEach(function(s){
-    var opt = document.createElement("option");
-    opt.value = s.name;
-    opt.textContent = s.name;
-    sel.appendChild(opt);
+function qp(n){ return new URLSearchParams(window.location.search).get(n)||""; }
+
+// ═══════════════════════════════════════════════════════
+// STAFF
+// ═══════════════════════════════════════════════════════
+function buildStaffDrop(){
+  var el = document.getElementById("staffSel");
+  if(!el || !STAFF.length) return;
+  el.innerHTML = '<option value="">— Select Staff Member —</option>';
+  STAFF.forEach(function(s){
+    var o=document.createElement("option"); o.value=s.name; o.textContent=s.name; el.appendChild(o);
   });
 }
 
-var loginPin="", selectedStaff=null;
-
-function onStaffSelect(){
-  var name = document.getElementById("staffSelect").value;
-  // Match by name (trim whitespace, case-insensitive for safety)
-  selectedStaff = STAFF_LIST.find(function(s){
-    return s.name.trim().toLowerCase() === name.trim().toLowerCase();
-  }) || null;
-  loginPin="";
-  updateLoginDots();
-  document.getElementById("loginError").textContent="";
-  document.getElementById("loginSub").textContent = name ? "Enter your PIN" : "Select your name to continue";
-  if(name && !selectedStaff){
-    // Name is in dropdown but not in STAFF_LIST — can happen if cloud added options but not list
-    document.getElementById("loginError").textContent = "Loading staff data... tap your name again";
-  }
+function loadStaff(){
+  // cache first
+  try{
+    var c=localStorage.getItem("darla_staff_cache");
+    if(c){var l=JSON.parse(c);if(l&&l.length){STAFF=l;buildStaffDrop();}}
+  }catch(e){}
+  if(!ASU||ASU.indexOf("YOUR_")===0) return;
+  fetch(ASU+"?action=getStaff&t="+Date.now())
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.staff&&d.staff.length){
+        STAFF=d.staff;
+        localStorage.setItem("darla_staff_cache",JSON.stringify(d.staff));
+        buildStaffDrop();
+      }
+    }).catch(function(){});
 }
 
-function lPk(k){
-  if(!selectedStaff){
-    document.getElementById("loginError").textContent="Please select your name first";
-    return;
-  }
-  if(loginPin.length>=4) return;
-  loginPin+=k;
-  updateLoginDots();
-  if(loginPin.length===4) setTimeout(checkLoginPin,80);
+// ═══════════════════════════════════════════════════════
+// LOGIN / PIN
+// ═══════════════════════════════════════════════════════
+var pinBuf="", pickedStaff=null;
+
+function onStaffPick(){
+  var n=document.getElementById("staffSel").value;
+  pickedStaff=STAFF.find(function(s){return s.name.trim().toLowerCase()===n.trim().toLowerCase()})||null;
+  pinBuf=""; dotUpdate();
+  document.getElementById("pinErr").textContent="";
+  document.getElementById("loginSub").textContent=n?"Enter your PIN":"Select your name to continue";
 }
 
-function lPd(){ loginPin=loginPin.slice(0,-1); updateLoginDots(); }
+function pk(k){
+  if(!pickedStaff){document.getElementById("pinErr").textContent="Select your name first";return;}
+  if(pinBuf.length>=4) return;
+  pinBuf+=k; dotUpdate();
+  if(pinBuf.length===4) setTimeout(checkPin,100);
+}
+function pd(){pinBuf=pinBuf.slice(0,-1);dotUpdate();}
 
-function updateLoginDots(err){
+function dotUpdate(err){
   for(var i=0;i<4;i++){
-    var d=document.getElementById("pd"+i);if(!d)return;
+    var d=document.getElementById("pd"+i);if(!d)continue;
     d.className="dot";
-    if(err) d.classList.add("err");
-    else if(i<loginPin.length) d.classList.add("on");
+    if(err)d.classList.add("err");
+    else if(i<pinBuf.length)d.classList.add("on");
   }
 }
 
-function checkLoginPin(){
-  if(!selectedStaff) return;
-  if(loginPin===selectedStaff.pin){
-    APP.staff = selectedStaff;
-    localStorage.setItem("darla_quote_staff", JSON.stringify(APP.staff));
-    document.getElementById("staffNameDisplay").textContent = APP.staff.name;
-    clearNewQuoteForm();
+function checkPin(){
+  if(!pickedStaff)return;
+  if(pinBuf===pickedStaff.pin){
+    APP.staff=pickedStaff;
+    localStorage.setItem("darla_quote_staff",JSON.stringify(APP.staff));
+    setStaffLabel();
+    clearForm();
     goTo("screen-customer");
   } else {
-    updateLoginDots(true);
-    document.getElementById("loginError").textContent="Incorrect PIN. Try again.";
-    setTimeout(function(){ loginPin=""; updateLoginDots(); document.getElementById("loginError").textContent=""; },1000);
+    dotUpdate(true);
+    document.getElementById("pinErr").textContent="Incorrect PIN — try again";
+    setTimeout(function(){pinBuf="";dotUpdate();document.getElementById("pinErr").textContent="";},1200);
   }
 }
 
 function skipLogin(){
-  APP.staff = {name:"Staff", pin:""};
-  document.getElementById("staffNameDisplay").textContent="Demo Mode";
-  clearNewQuoteForm();
+  APP.staff={name:"Staff",pin:""};
+  setStaffLabel();
+  clearForm();
   goTo("screen-customer");
 }
 
-// Always called when showing a blank New Quote form
-function clearNewQuoteForm(){
-  APP.quote = newQuote();
-  localStorage.removeItem("darla_quote_draft");
-  ["custName","custMobile","custArch","custAddr","custSales1","custSales2"].forEach(function(id){
-    var el=document.getElementById(id); if(el) el.value="";
-  });
-  // Pre-fill Salesman 1 with logged-in staff name
-  var s1 = document.getElementById("custSales1");
-  if(s1 && APP.staff && APP.staff.name) s1.value = APP.staff.name;
+function setStaffLabel(){
+  var el=document.getElementById("staffLabel");
+  if(el&&APP.staff) el.textContent=APP.staff.name;
 }
 
-// ════════════════════════════════════════════
-// CUSTOMER & QUOTE START
-// ════════════════════════════════════════════
+function clearForm(){
+  APP.quote=blankQ();
+  localStorage.removeItem("darla_quote_draft");
+  ["cName","cMobile","cArch","cAddr","cSales1","cSales2"].forEach(function(id){var e=document.getElementById(id);if(e)e.value="";});
+  var s1=document.getElementById("cSales1");
+  if(s1&&APP.staff&&APP.staff.name) s1.value=APP.staff.name;
+}
+
+// ═══════════════════════════════════════════════════════
+// START QUOTE
+// ═══════════════════════════════════════════════════════
 function startQuote(){
-  var name = document.getElementById("custName").value.trim();
-  var mob  = document.getElementById("custMobile").value.trim();
-  if(!name){ showToast("Enter customer name"); return; }
-  if(!mob || mob.length<10){ showToast("Enter valid mobile number"); return; }
-
-  var s1 = document.getElementById("custSales1").value.trim() || (APP.staff ? APP.staff.name : "Staff");
-  var s2 = document.getElementById("custSales2").value.trim();
-
-  APP.quote.customer = {
-    name:   name,
-    mobile: mob,
-    arch:   document.getElementById("custArch").value.trim(),
-    addr:   document.getElementById("custAddr").value.trim()
-  };
-  APP.quote.staff    = s1;
-  APP.quote.staff2   = s2;
-
-  if(!APP.quote.id){
-    APP.quote.id = nextQuoteId();
-    APP.quote.date = new Date().toLocaleDateString("en-IN");
-  }
-
-  document.getElementById("builderCustomerName").textContent = name;
-  document.getElementById("builderQuoteId").textContent = APP.quote.id;
-
+  var name=document.getElementById("cName").value.trim();
+  var mob=document.getElementById("cMobile").value.trim();
+  if(!name){showToast("Enter customer name");return;}
+  if(!mob||mob.length<10){showToast("Enter valid mobile number");return;}
+  APP.quote.customer={name:name,mobile:mob,arch:document.getElementById("cArch").value.trim(),addr:document.getElementById("cAddr").value.trim()};
+  APP.quote.staff=document.getElementById("cSales1").value.trim()||(APP.staff?APP.staff.name:"Staff");
+  APP.quote.staff2=document.getElementById("cSales2").value.trim();
+  if(!APP.quote.id){APP.quote.id=nextId();APP.quote.date=new Date().toLocaleDateString("en-IN");}
+  document.getElementById("bldName").textContent=name;
+  document.getElementById("bldId").textContent=APP.quote.id;
   saveDraft();
   goTo("screen-builder");
-  renderBuilder();
 }
 
-// ════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // ROOMS
-// ════════════════════════════════════════════
-var ROOM_PRESETS = [
-  "Living Room","Master Bedroom","Kids Room","Guest Room",
-  "Sons Room","Daughters Room","Parents Room","Home Theatre",
-  "Study","Kitchen","Dining Room","Pooja Room"
-];
+// ═══════════════════════════════════════════════════════
+var PRESETS=["Living Room","Master Bedroom","Kids Room","Guest Room","Sons Room","Daughters Room","Parents Room","Home Theatre","Study","Kitchen","Dining Room","Pooja Room"];
+var roomPreset="";
 
-var addRoomSelectedName = "";
-
-function showAddRoomModal(){
-  addRoomSelectedName = "";
-  document.getElementById("customRoomName").value = "";
-  // Build pills
-  var html="";
-  ROOM_PRESETS.forEach(function(n){
-    html+='<div class="name-pill" onclick="selectRoomPreset(this,\''+n+'\')">' +n+'</div>';
-  });
-  document.getElementById("roomNamePills").innerHTML=html;
-  openModal("addRoomModal");
+function openRoomModal(){
+  roomPreset="";
+  document.getElementById("mRoomName").value="";
+  document.getElementById("roomPills").innerHTML=PRESETS.map(function(n){
+    return '<div class="pill" onclick="pickPreset(this,&quot;'+n+'&quot;)">'+n+'</div>';
+  }).join("");
+  openModal("mRoom");
 }
 
-function selectRoomPreset(el, name){
-  document.querySelectorAll(".name-pill").forEach(function(p){p.classList.remove("selected");});
-  el.classList.add("selected");
-  addRoomSelectedName = name;
-  document.getElementById("customRoomName").value = "";
+function pickPreset(el,n){
+  document.querySelectorAll(".pill").forEach(function(p){p.classList.remove("on");});
+  el.classList.add("on");
+  roomPreset=n;
+  document.getElementById("mRoomName").value="";
 }
 
-function confirmAddRoom(){
-  var custom = document.getElementById("customRoomName").value.trim();
-  var name   = custom || addRoomSelectedName;
-  if(!name){ showToast("Select or enter a room name"); return; }
-  APP.quote.rooms.push({id:uid(), name:name, windows:[]});
-  closeModal("addRoomModal");
+function confirmRoom(){
+  var name=document.getElementById("mRoomName").value.trim()||roomPreset;
+  if(!name){showToast("Select or enter a room name");return;}
+  APP.quote.rooms.push({id:uid(),name:name,windows:[]});
+  closeModal("mRoom");
   saveDraft();
-  renderBuilder();
-  // Auto-flow: open Add Window for this new room
-  var ri = APP.quote.rooms.length - 1;
-  setTimeout(function(){ showAddWindowModal(ri); }, 300);
+  renderBld();
+  var ri=APP.quote.rooms.length-1;
+  setTimeout(function(){openWinModal(ri);},300);
 }
 
-// ════════════════════════════════════════════
+function delRoom(ri){
+  if(!confirm("Delete this room?"))return;
+  APP.quote.rooms.splice(ri,1);
+  saveDraft();renderBld();
+}
+
+// ═══════════════════════════════════════════════════════
 // WINDOWS
-// ════════════════════════════════════════════
-function showAddWindowModal(roomIdx){
-  var room    = APP.quote.rooms[roomIdx];
-  var winNum  = (room.windows.length + 1);
-  var prevWin = room.windows.length > 0 ? room.windows[room.windows.length-1] : null;
-
-  document.getElementById("winRoomIdx").value = roomIdx;
-  // Auto-number the window name
-  document.getElementById("winName").value    = "Window " + winNum;
-  // Pre-fill dimensions from previous window if exists
-  // Width/height/qty always blank — each window is a different size
-  document.getElementById("winWidth").value   = "";
-  document.getElementById("winHeight").value  = "";
-  document.getElementById("winQty").value     = "1";
-  document.getElementById("winRemarks").value = "";
-
-  // Show product copy hint if previous window has products
-  var hint = document.getElementById("winCopyHint");
-  if(hint){
-    if(prevWin && prevWin.treatments.length > 0){
-      var hasProducts = prevWin.treatments.some(function(t){
-        return t.components.some(function(c){ return !!c.product; });
-      });
-      if(hasProducts){
-        hint.style.display = "block";
-        hint.textContent   = "✓ Products from Window "+(winNum-1)+" will be copied — enter new dimensions";
-      } else {
-        hint.style.display = "none";
-      }
-    } else {
-      hint.style.display = "none";
-    }
-  }
-  openModal("addWindowModal");
+// ═══════════════════════════════════════════════════════
+function openWinModal(ri){
+  var room=APP.quote.rooms[ri];
+  var num=room.windows.length+1;
+  var prev=room.windows.length>0?room.windows[room.windows.length-1]:null;
+  document.getElementById("mWinRi").value=ri;
+  document.getElementById("mWinName").value="Window "+num;
+  document.getElementById("mWinW").value="";
+  document.getElementById("mWinH").value="";
+  document.getElementById("mWinQ").value="1";
+  document.getElementById("mWinR").value="";
+  var hint=document.getElementById("mWinHint");
+  var hasProd=prev&&prev.treatments&&prev.treatments.some(function(t){return t.components.some(function(c){return!!c.product;});});
+  if(hint){hint.style.display=hasProd?"block":"none";if(hasProd)hint.textContent="\u2713 Products from Window "+(num-1)+" will be copied";}
+  openModal("mWin");
 }
 
-function confirmAddWindow(){
-  var ri     = parseInt(document.getElementById("winRoomIdx").value);
-  var name   = document.getElementById("winName").value.trim() || "Window "+(APP.quote.rooms[ri].windows.length+1);
-  var width  = parseFloat(document.getElementById("winWidth").value)||0;
-  var height = parseFloat(document.getElementById("winHeight").value)||0;
-  var qty    = parseInt(document.getElementById("winQty").value)||1;
-  var rem    = document.getElementById("winRemarks").value.trim();
-  if(!width||!height){ showToast("Enter width and height"); return; }
-  var prevWin = APP.quote.rooms[ri].windows.length > 0
-    ? APP.quote.rooms[ri].windows[APP.quote.rooms[ri].windows.length-1]
-    : null;
-
-  // Deep-copy treatments from previous window (with no product selected)
-  var copiedTreatments = [];
-  if(prevWin && prevWin.treatments.length > 0){
-    copiedTreatments = JSON.parse(JSON.stringify(prevWin.treatments)).map(function(t){
-      t.id = uid();
-      t.components = t.components.map(function(c){
-        c.id   = uid();
-        c.calc = {};  // clear calc — will recalculate with new window dimensions
-        // product is KEPT — same fabric selection for this window
-        return c;
-      });
-      return t;
+function confirmWin(){
+  var ri=parseInt(document.getElementById("mWinRi").value);
+  var name=document.getElementById("mWinName").value.trim()||"Window "+(APP.quote.rooms[ri].windows.length+1);
+  var w=parseFloat(document.getElementById("mWinW").value)||0;
+  var h=parseFloat(document.getElementById("mWinH").value)||0;
+  var q=parseInt(document.getElementById("mWinQ").value)||1;
+  var rem=document.getElementById("mWinR").value.trim();
+  if(!w||!h){showToast("Enter width and height");return;}
+  var prev=APP.quote.rooms[ri].windows.length>0?APP.quote.rooms[ri].windows[APP.quote.rooms[ri].windows.length-1]:null;
+  var copied=[];
+  if(prev&&prev.treatments&&prev.treatments.length>0){
+    copied=JSON.parse(JSON.stringify(prev.treatments)).map(function(t){
+      t.id=uid();t.components=t.components.map(function(c){c.id=uid();c.calc={};return c;});return t;
     });
   }
-
-  APP.quote.rooms[ri].windows.push({
-    id:uid(), name:name, width:width, height:height, qty:qty, remarks:rem,
-    treatments: copiedTreatments
-  });
-  closeModal("addWindowModal");
-  saveDraft();
-  renderBuilder();
-
-  var wi = APP.quote.rooms[ri].windows.length - 1;
-  if(copiedTreatments.length > 0){
-    // Treatments copied — scroll to first component to select product
-    showToast("Products copied from Window "+wi+" — enter dimensions for Window "+(wi+1));
-    setTimeout(function(){
-      var winEl = document.getElementById("win_"+ri+"_"+wi);
-      if(winEl){ winEl.classList.add("open"); winEl.scrollIntoView({behavior:"smooth",block:"start"}); }
-    }, 300);
+  APP.quote.rooms[ri].windows.push({id:uid(),name:name,width:w,height:h,qty:q,remarks:rem,treatments:copied});
+  closeModal("mWin");
+  saveDraft();renderBld();
+  var wi=APP.quote.rooms[ri].windows.length-1;
+  if(copied.length>0){
+    showToast("Products copied \u2014 enter dimensions");
+    setTimeout(function(){var el=document.getElementById("w_"+ri+"_"+wi);if(el){el.classList.add("open");el.scrollIntoView({behavior:"smooth",block:"start"});}},300);
   } else {
-    // No previous treatments — open treatment modal
-    setTimeout(function(){ showAddTreatmentModal(ri, wi); }, 300);
+    setTimeout(function(){openTxModal(ri,wi);},300);
   }
 }
 
-// ════════════════════════════════════════════
-// TREATMENTS
-// ════════════════════════════════════════════
-function showAddTreatmentModal(ri, wi){
-  document.getElementById("txRoomIdx").value = ri;
-  document.getElementById("txWinIdx").value  = wi;
-  openModal("addTreatmentModal");
-}
-
-function confirmAddTreatment(type){
-  var ri = parseInt(document.getElementById("txRoomIdx").value);
-  var wi = parseInt(document.getElementById("txWinIdx").value);
-  APP.quote.rooms[ri].windows[wi].treatments.push({id:uid(), type:type, components:[]});
-  closeModal("addTreatmentModal");
-  saveDraft();
-  renderBuilder();
-  // Auto-flow: scroll to the new treatment's Add Component buttons and highlight them
-  var ti = APP.quote.rooms[ri].windows[wi].treatments.length - 1;
-  setTimeout(function(){
-    // Find the treatment card — it's the last .treatment-card inside the right window
-    var winEl = document.getElementById("win_"+ri+"_"+wi);
-    if(!winEl) return;
-    // Make sure the window is open
-    winEl.classList.add("open");
-    var txCards = winEl.querySelectorAll(".treatment-card");
-    var txEl    = txCards[ti] || txCards[txCards.length-1];
-    if(!txEl) return;
-    // Scroll it into view
-    txEl.scrollIntoView({behavior:"smooth", block:"center"});
-    // Pulse the add component buttons
-    var btnRow = txEl.querySelector(".btn-row") || txEl.querySelector(".btn-add");
-    if(btnRow){
-      btnRow.style.transition = "transform 0.15s, box-shadow 0.15s";
-      btnRow.style.transform  = "scale(1.04)";
-      btnRow.style.boxShadow  = "0 0 0 3px #c0392b";
-      btnRow.style.borderRadius = "10px";
-      setTimeout(function(){
-        btnRow.style.transform = "scale(1)";
-        btnRow.style.boxShadow = "none";
-      }, 800);
-    }
-    // Show a helpful toast
-    var label = type==="curtains"?"Tap + Main or + Sheer to add fabric":
-                type==="roman_blinds"?"Tap + Main or + Sheer to add fabric":
-                "Tap + Add Blind to add blind product";
-    showToast(label);
-  }, 350);
-}
-
-// ════════════════════════════════════════════
-// COMPONENTS
-// ════════════════════════════════════════════
-function addComponent(ri, wi, ti, layer){
-  // Push blank component then immediately open product search
-  var comp = {id:uid(), layer:layer, product:null, blindType:"", mechanism:"", calc:{}};
-  APP.quote.rooms[ri].windows[wi].treatments[ti].components.push(comp);
-  var ci = APP.quote.rooms[ri].windows[wi].treatments[ti].components.length - 1;
-  saveDraft();
-  // Go straight to product search
-  selectProduct(ri, wi, ti, ci);
-}
-
-function updateMrp(ri, wi, ti, ci, val){
-  var comp = APP.quote.rooms[ri].windows[wi].treatments[ti].components[ci];
-  if(!comp || !comp.product) return;
-  var v = parseFloat(val);
-  if(isNaN(v) || v < 0) return;
-  comp.product.mrp = v;
-  saveDraft();
-  // Recalc totals and re-render just the builder room totals
-  renderBuilder();
-}
-
-function deleteComponent(ri, wi, ti, ci){
-  APP.quote.rooms[ri].windows[wi].treatments[ti].components.splice(ci,1);
-  saveDraft();
-  renderBuilder();
-}
-
-function deleteTreatment(ri, wi, ti){
-  APP.quote.rooms[ri].windows[wi].treatments.splice(ti,1);
-  saveDraft();
-  renderBuilder();
-}
-
-function deleteWindow(ri, wi){
+function delWin(ri,wi){
+  if(!confirm("Remove this window?"))return;
   APP.quote.rooms[ri].windows.splice(wi,1);
+  saveDraft();renderBld();
+}
+
+// ═══════════════════════════════════════════════════════
+// TREATMENTS
+// ═══════════════════════════════════════════════════════
+function openTxModal(ri,wi){
+  document.getElementById("mTxRi").value=ri;
+  document.getElementById("mTxWi").value=wi;
+  openModal("mTx");
+}
+
+function confirmTx(type){
+  var ri=parseInt(document.getElementById("mTxRi").value);
+  var wi=parseInt(document.getElementById("mTxWi").value);
+  APP.quote.rooms[ri].windows[wi].treatments.push({id:uid(),type:type,components:[]});
+  closeModal("mTx");
+  saveDraft();renderBld();
+}
+
+function delTx(ri,wi,ti){
+  APP.quote.rooms[ri].windows[wi].treatments.splice(ti,1);
+  saveDraft();renderBld();
+}
+
+// ═══════════════════════════════════════════════════════
+// COMPONENTS — addComp goes straight to product search
+// ═══════════════════════════════════════════════════════
+function addComp(ri,wi,ti,layer){
+  APP.quote.rooms[ri].windows[wi].treatments[ti].components.push({id:uid(),layer:layer,product:null,calc:{}});
+  var ci=APP.quote.rooms[ri].windows[wi].treatments[ti].components.length-1;
   saveDraft();
-  renderBuilder();
+  pickProduct(ri,wi,ti,ci);
 }
 
-function deleteRoom(ri){
-  APP.quote.rooms.splice(ri,1);
+function delComp(ri,wi,ti,ci){
+  APP.quote.rooms[ri].windows[wi].treatments[ti].components.splice(ci,1);
+  saveDraft();renderBld();
+}
+
+function editMrp(ri,wi,ti,ci,v){
+  var c=APP.quote.rooms[ri].windows[wi].treatments[ti].components[ci];
+  if(!c||!c.product)return;
+  var n=parseFloat(v);
+  if(isNaN(n)||n<0)return;
+  c.product.mrp=n;
+  saveDraft();renderBld();
+}
+
+// ═══════════════════════════════════════════════════════
+// PRODUCT SELECTION
+// ═══════════════════════════════════════════════════════
+function pickProduct(ri,wi,ti,ci){
   saveDraft();
-  renderBuilder();
+  localStorage.setItem("darla_quote_staff",JSON.stringify(APP.staff));
+  localStorage.setItem("quote_product_ctx",JSON.stringify({ri:ri,wi:wi,ti:ti,ci:ci}));
+  var ttype=APP.quote.rooms[ri].windows[wi].treatments[ti].type;
+  var cat=ttype==="blinds"?"blinds":"fabric";
+  var base=window.location.href.split("?")[0];
+  window.location.href=base.replace("quote.html","index.html")+"?mode=quote&category="+cat+"&return="+encodeURIComponent(base);
 }
 
-// ════════════════════════════════════════════
-// PRODUCT SELECTION — opens search module
-// ════════════════════════════════════════════
-function selectProduct(ri, wi, ti, ci){
-  // Save current state
-  saveDraft();
-  localStorage.setItem("darla_quote_staff", JSON.stringify(APP.staff));
-  localStorage.setItem("quote_product_ctx", JSON.stringify({ri:ri,wi:wi,ti:ti,ci:ci}));
-  // Determine which category to open based on treatment type
-  var tType = APP.quote.rooms[ri].windows[wi].treatments[ti].type;
-  var cat = tType==="blinds" ? "blinds" : "fabric";
-  // Build return URL — use current page origin so it always works
-  var base = window.location.href.split("?")[0]; // removes any params
-  var returnUrl = base; // returns to quote.html
-  var searchUrl = base.replace("quote.html","index.html");
-  window.location.href = searchUrl+"?mode=quote&category="+cat+"&return="+encodeURIComponent(returnUrl);
+function attachProd(ctx,prod){
+  var c=APP.quote.rooms[ctx.ri].windows[ctx.wi].treatments[ctx.ti].components[ctx.ci];
+  if(!c)return;
+  c.product=prod;
+  c.calc=calcComp(APP.quote.rooms[ctx.ri].windows[ctx.wi],c);
 }
 
-function attachProduct(ctx, product){
-  var comp = APP.quote.rooms[ctx.ri].windows[ctx.wi].treatments[ctx.ti].components[ctx.ci];
-  if(!comp) return;
-  comp.product = product;
-  // Auto-calculate
-  var w = APP.quote.rooms[ctx.ri].windows[ctx.wi];
-  comp.calc = calcComponent(w, comp);
+// ═══════════════════════════════════════════════════════
+// CALCULATIONS — FIXED: consistent field names
+// calcCurtains returns panelLen (was panelLength — renamed for consistency)
+// ═══════════════════════════════════════════════════════
+function r2(v,s){return Math.round(v/s)*s;}
+
+function calcComp(win,comp){
+  if(!comp.product||!win)return{};
+  var mrp=parseFloat(comp.product.mrp)||0;
+  var w=parseFloat(win.width)||0,h=parseFloat(win.height)||0,q=parseInt(win.qty)||1;
+  var tt=comp.treatmentType||"curtains";
+  if(tt==="curtains")     return calcCurtains(w,h,mrp,q);
+  if(tt==="roman_blinds") return calcRoman(w,h,mrp,q);
+  if(tt==="blinds")       return calcBlinds(w,h,mrp,q);
+  return calcCurtains(w,h,mrp,q);
 }
 
-// ════════════════════════════════════════════
-// CALCULATIONS
-// ════════════════════════════════════════════
-function roundTo(val, step){
-  return Math.round(val / step) * step;
-}
-function ceilTo(val){
-  return Math.ceil(val);
+function calcCurtains(w,h,mrp,qty){
+  var p=Math.ceil((w+10)/24);
+  var l=r2((h+16)/39,0.05);   // panelLen
+  var f=p*l;
+  return {numPanels:p,panelLen:l,fabricQty:Math.round(f*100)/100,unitTotal:Math.round(f*mrp),total:Math.round(f*mrp*qty)};
 }
 
-function calcComponent(win, comp){
-  if(!comp.product || !win) return {};
-  var mrp    = parseFloat(comp.product.mrp)||0;
-  var width  = parseFloat(win.width)||0;
-  var height = parseFloat(win.height)||0;
-  var qty    = parseInt(win.qty)||1;
-  var type   = comp.layer; // main/sheer = curtains logic; blind = blind logic
-  var tType  = ""; // set from parent treatment
-
-  // Get treatment type from context — we'll pass it in comp
-  var tType = comp.treatmentType || "curtains";
-
-  if(tType === "curtains" || tType === "roman_blinds" && (type==="main"||type==="sheer")){
-    return calcCurtains(width, height, mrp, qty);
-  } else if(tType === "roman_blinds"){
-    return calcRomanBlinds(width, height, mrp, qty);
-  } else if(tType === "blinds"){
-    return calcBlinds(width, height, mrp, qty);
-  }
-  return calcCurtains(width, height, mrp, qty);
+function calcRoman(w,h,mrp,qty){
+  var wf=r2(w/12,0.25),hf=r2(h/12,0.25),sq=wf*hf;
+  var mc=sq*475;
+  var p=Math.ceil(w/48),l=r2((h+20)/39,0.05),f=p*l;
+  var fc=f*mrp,lin=f*200,ut=mc+fc+lin;
+  return {sqft:Math.round(sq*100)/100,matCost:Math.round(mc),panels:p,panelLen:l,fabricQty:Math.round(f*100)/100,fabCost:Math.round(fc),lining:Math.round(lin),unitTotal:Math.round(ut),total:Math.round(ut*qty)};
 }
 
-function calcCurtains(width, height, mrp, qty){
-  var numPanels   = ceilTo((width + 10) / 24);
-  var panelLength = roundTo((height + 16) / 39, 0.05);
-  var fabricQty   = numPanels * panelLength;
-  var unitTotal   = fabricQty * mrp;
-  var total       = unitTotal * qty;
-  return {
-    numPanels:numPanels, panelLength:panelLength,
-    fabricQty:Math.round(fabricQty*100)/100,
-    unitTotal:Math.round(unitTotal), total:Math.round(total),
-    unit:"mtrs"
-  };
+function calcBlinds(w,h,mrp,qty){
+  var sq=r2(w/12,0.25)*r2(h/12,0.25);
+  return {sqft:Math.round(sq*100)/100,unitTotal:Math.round(sq*mrp),total:Math.round(sq*mrp*qty)};
 }
 
-function calcRomanBlinds(width, height, mrp, qty){
-  var wFt      = roundTo(width/12, 0.25);
-  var hFt      = roundTo(height/12, 0.25);
-  var sqft     = wFt * hFt;
-  var matCost  = sqft * 475;
-  var panels   = ceilTo(width / 48);
-  var panelLen = roundTo((height + 20) / 39, 0.05);
-  var fabricQty= panels * panelLen;
-  var fabCost  = fabricQty * mrp;
-  var lining   = fabricQty * 200;
-  var unitTotal= matCost + fabCost + lining;
-  var total    = unitTotal * qty;
-  return {
-    sqft:Math.round(sqft*100)/100, matCost:Math.round(matCost),
-    panels:panels, panelLen:panelLen,
-    fabricQty:Math.round(fabricQty*100)/100,
-    fabCost:Math.round(fabCost), lining:Math.round(lining),
-    unitTotal:Math.round(unitTotal), total:Math.round(total),
-    unit:"mtrs"
-  };
-}
+function fmt(n){return "\u20B9"+Number(Math.round(n||0)).toLocaleString("en-IN");}
 
-function calcBlinds(width, height, mrp, qty){
-  var wFt   = roundTo(width/12, 0.25);
-  var hFt   = roundTo(height/12, 0.25);
-  var sqft  = wFt * hFt;
-  var unit  = sqft * mrp;
-  var total = unit * qty;
-  return {
-    sqft:Math.round(sqft*100)/100,
-    unitTotal:Math.round(unit), total:Math.round(total),
-    unit:"sqft"
-  };
-}
-
-function fmt(n){ return "₹"+Number(Math.round(n)).toLocaleString("en-IN"); }
-
-// ════════════════════════════════════════════
-// RENDER BUILDER
-// ════════════════════════════════════════════
-function renderBuilder(){
+// ═══════════════════════════════════════════════════════
+// BUILDER RENDER
+// ═══════════════════════════════════════════════════════
+function renderBld(){
   var html="";
   APP.quote.rooms.forEach(function(room,ri){
-    var winCount = room.windows.length;
-    var roomTotal= getRoomTotal(room);
-    html+='<div class="room-card" id="room_'+ri+'">'
+    var wc=room.windows.length,rt=roomTotal(room);
+    html+='<div class="room-card open" id="r_'+ri+'">'
       +'<div class="room-hdr" onclick="toggleRoom('+ri+')">'
-      +'<div>'
-      +'<div class="room-name">'+esc(room.name)+'</div>'
-      +'<div class="room-meta">'+winCount+' window'+(winCount!==1?"s":"")
-      +(roomTotal?' &nbsp;·&nbsp; '+fmt(roomTotal):'')+'</div>'
-      +'</div>'
-      +'<div class="room-toggle">&#8250;</div>'
-      +'</div>'
+      +'<div><div class="room-name">'+esc(room.name)+'</div>'
+      +'<div class="room-meta">'+wc+' window'+(wc!==1?"s":"")+(rt?' &middot; <span class="room-total-inline">'+fmt(rt)+'</span>':'')+'</div></div>'
+      +'<div class="room-toggle">&#8250;</div></div>'
       +'<div class="room-body">';
-
-    room.windows.forEach(function(win,wi){
-      html += renderWindow(win, ri, wi);
-    });
-
-    html+='<button class="btn btn-add" onclick="showAddWindowModal('+ri+')" style="margin-top:6px">&#43; Add Window</button>';
-    html+='</div>'
-      +'<div class="room-actions">'
-      +'<button class="btn btn-ghost btn-sm" onclick="deleteRoom('+ri+')" style="color:#e57373;border-color:#3a1010">&#128465; Delete Room</button>'
-      +'</div>'
-      +'</div>';
+    room.windows.forEach(function(win,wi){html+=renderWin(win,ri,wi);});
+    html+='<button class="btn btn-add" onclick="openWinModal('+ri+')" style="margin-top:8px">&#43; Add Window</button></div>'
+      +'<div class="room-actions"><button class="btn btn-ghost btn-sm" onclick="delRoom('+ri+')" style="color:#ff6b6b;border-color:#3a1010">&#128465; Delete Room</button></div></div>';
   });
-  document.getElementById("roomsContainer").innerHTML = html;
-  // Reopen rooms that were open
-  document.querySelectorAll(".room-card").forEach(function(el){el.classList.add("open");});
+  document.getElementById("roomsWrap").innerHTML=html;
 }
 
-function renderWindow(win, ri, wi){
-  var html='<div class="win-card" id="win_'+ri+'_'+wi+'">'
-    +'<div class="win-hdr" onclick="toggleWin(\'win_'+ri+'_'+wi+'\')">'
-    +'<div>'
-    +'<div class="win-name">'+esc(win.name)+'</div>'
-    +'<div class="win-dims">'+win.width+'" W × '+win.height+'" H &nbsp;·&nbsp; Qty: '+win.qty
-    +(win.remarks?' &nbsp;·&nbsp; '+esc(win.remarks):'')+'</div>'
-    +'</div>'
-    +'<div class="win-toggle">&#8250;</div>'
-    +'</div>'
+function renderWin(win,ri,wi){
+  var html='<div class="win-card open" id="w_'+ri+'_'+wi+'">'
+    +'<div class="win-hdr" onclick="toggleWin(&quot;w_'+ri+'_'+wi+'&quot;)">'
+    +'<div class="win-num">'+(wi+1)+'</div>'
+    +'<div class="win-info"><div class="win-title">'+esc(win.name)+'</div>'
+    +'<div class="win-dims">'+win.width+'" W \xd7 '+win.height+'" H &nbsp;&middot;&nbsp; Qty: '+win.qty+(win.remarks?' &middot; '+esc(win.remarks):'')+'</div></div>'
+    +'<div class="win-toggle">&#8250;</div></div>'
     +'<div class="win-body">';
-
-  win.treatments.forEach(function(t, ti){
-    html += renderTreatment(t, ri, wi, ti, win);
-  });
-
-  html+='<button class="btn btn-add" onclick="showAddTreatmentModal('+ri+','+wi+')" style="margin-bottom:6px">&#43; Add Treatment</button>';
-  html+='<button class="btn btn-ghost btn-sm" onclick="deleteWindow('+ri+','+wi+')" style="color:#e57373;border-color:#3a1010;margin-top:4px;width:100%">Remove Window</button>';
-  html+='</div></div>';
+  win.treatments.forEach(function(t,ti){html+=renderTx(t,ri,wi,ti,win);});
+  html+='<button class="btn btn-add" onclick="openTxModal('+ri+','+wi+')" style="margin:8px 0 4px">&#43; Add Treatment</button>'
+    +'<button class="btn btn-ghost btn-sm" onclick="delWin('+ri+','+wi+')" style="width:100%;color:#ff6b6b;border-color:#3a1010">Remove Window</button>'
+    +'</div></div>';
   return html;
 }
 
-function renderTreatment(t, ri, wi, ti, win){
-  var typeLabel = t.type==="curtains"?"Curtains":t.type==="roman_blinds"?"Roman Blinds":"Blinds";
-  var C = ri+","+wi+","+ti; // coordinate shorthand
+function renderTx(t,ri,wi,ti,win){
+  var lbl=t.type==="curtains"?"Curtains":t.type==="roman_blinds"?"Roman Blinds":"Blinds";
+  var C=ri+","+wi+","+ti;
+  t.components.forEach(function(c){c.treatmentType=t.type;});
+  var hasc=t.components.length>0;
 
-  var html='<div class="treatment-card">'
-    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-    +'<span class="treatment-type-badge '+t.type+'">'+typeLabel+'</span>'
-    +'<button class="btn btn-ghost btn-sm" style="color:#e57373;border-color:#3a1010;padding:4px 10px;font-size:11px" onclick="deleteTreatment('+C+')">&#10005; Remove</button>'
+  var html='<div class="tx-card"><div class="tx-head">'
+    +'<span class="tx-badge '+t.type+'">'+lbl+'</span>'
+    +'<button class="btn btn-ghost btn-sm" style="padding:4px 10px;font-size:11px;color:#ff6b6b;border-color:#3a1010" onclick="delTx('+C+')">&#10005;</button>'
     +'</div>';
 
-  t.components.forEach(function(c){ c.treatmentType = t.type; });
-  var hasComps = t.components.length > 0;
-
-  if(!hasComps){
+  if(!hasc){
     if(t.type==="curtains"||t.type==="roman_blinds"){
-      html+='<div class="next-actions">'
-        +'<div class="next-actions-label">Select fabric type to begin</div>'
-        +'<div class="next-action-row">'
-        +'<button class="nab nab-main" onclick="addComponent('+C+',\'main\')">&#129525; Main Fabric</button>'
-        +'<button class="nab nab-sheer" onclick="addComponent('+C+',\'sheer\')">&#129525; Sheer</button>'
+      html+='<div class="next-wrap"><div class="next-lbl">Select fabric type</div>'
+        +'<div class="next-row">'
+        +'<button class="nab nab-main" onclick="addComp('+C+',&quot;main&quot;)">&#43; Main Fabric</button>'
+        +'<button class="nab nab-sheer" onclick="addComp('+C+',&quot;sheer&quot;)">&#43; Sheer</button>'
         +'</div></div>';
     } else {
-      html+='<button class="nab nab-blind" style="width:100%;border:none;padding:12px;border-radius:9px;cursor:pointer" onclick="addComponent('+C+',\'blind\')">&#43; Select Blind Product</button>';
+      html+='<button class="nab nab-blind" style="width:100%" onclick="addComp('+C+',&quot;blind&quot;)">&#43; Select Blind Product</button>';
     }
   }
 
-  t.components.forEach(function(c, ci){
-    html += renderComponent(c, ri, wi, ti, ci, win, t);
-  });
+  t.components.forEach(function(c,ci){html+=renderComp(c,ri,wi,ti,ci,win,t);});
 
-  if(hasComps){
-    html+='<div class="next-actions"><div class="next-actions-label">What's next?</div>';
+  if(hasc){
+    html+='<div class="next-wrap">';
     if(t.type==="curtains"||t.type==="roman_blinds"){
-      var hasMain  = t.components.some(function(c){return c.layer==="main";});
-      var hasSheer = t.components.some(function(c){return c.layer==="sheer";});
-      html+='<div class="next-action-row">';
-      if(!hasMain)  html+='<button class="nab nab-main" onclick="addComponent('+C+',\'main\')">&#43; Add Main</button>';
-      if(!hasSheer) html+='<button class="nab nab-sheer" onclick="addComponent('+C+',\'sheer\')">&#43; Add Sheer</button>';
-      if(hasMain&&hasSheer) html+='<span style="font-size:12px;color:#4caf50;padding:6px 0">&#10003; Main &amp; Sheer added</span>';
+      var hm=t.components.some(function(c){return c.layer==="main";});
+      var hs=t.components.some(function(c){return c.layer==="sheer";});
+      html+='<div class="next-lbl">What\'s next?</div><div class="next-row">';
+      if(!hm) html+='<button class="nab nab-main" onclick="addComp('+C+',&quot;main&quot;)">&#43; Add Main</button>';
+      if(!hs) html+='<button class="nab nab-sheer" onclick="addComp('+C+',&quot;sheer&quot;)">&#43; Add Sheer</button>';
+      if(hm&&hs) html+='<div class="nab-done">&#10003; Main &amp; Sheer added</div>';
       html+='</div>';
     } else {
-      html+='<button class="nab nab-blind" style="width:100%;border:none;padding:10px;border-radius:9px;cursor:pointer;margin-bottom:4px" onclick="addComponent('+C+',\'blind\')">&#43; Add Another Blind</button>';
+      html+='<button class="nab nab-blind" style="width:100%" onclick="addComp('+C+',&quot;blind&quot;)">&#43; Add Another Blind</button>';
     }
-    html+='<div class="next-action-row" style="margin-top:6px">'
-      +'<button class="nab nab-window" onclick="showAddWindowModal('+ri+')">&#43; Add Window</button>'
-      +'<button class="nab nab-room" onclick="showAddRoomModal()">&#43; Add Room</button>'
+    html+='<div class="next-row" style="margin-top:7px">'
+      +'<button class="nab nab-window" onclick="openWinModal('+ri+')">&#43; Window</button>'
+      +'<button class="nab nab-room" onclick="openRoomModal()">&#43; Room</button>'
       +'</div></div>';
   }
-
   html+='</div>';
   return html;
 }
 
-function renderComponent(c, ri, wi, ti, ci, win, t){
-  var calc = c.product ? calcComponent(win, Object.assign({}, c, {treatmentType:t.type})) : {};
-  c.calc = calc;
-
-  var html='<div class="comp-card">'
-    +'<div class="comp-header">'
-    +'<span class="comp-layer '+c.layer+'">'+c.layer.toUpperCase()+'</span>'
-    +'<button class="comp-del" onclick="deleteComponent('+ri+','+wi+','+ti+','+ci+')">&#128465;</button>'
+function renderComp(c,ri,wi,ti,ci,win,t){
+  var calc=c.product?calcComp(win,Object.assign({},c,{treatmentType:t.type})):{};
+  c.calc=calc;
+  var html='<div class="comp-card"><div class="comp-hdr">'
+    +'<span class="comp-layer-tag '+c.layer+'">'+c.layer.toUpperCase()+'</span>'
+    +'<button class="comp-del" onclick="delComp('+ri+','+wi+','+ti+','+ci+')">&#128465;</button>'
     +'</div>';
 
-  if(c.product){
-    var p = c.product;
-    var catalog  = p.catalog||p.product||p.blind_type||p.model||"";
-    var sno      = p.s_no||p["s.no"]||"";
-    var unitLbl  = t.type==="blinds"?"sqft":"mtr";
-
-    // Product name line: Catalog / S.No format
-    if(catalog && sno){
-      html+='<div class="comp-catalog">'+esc(catalog)+' / '+esc(sno)+'</div>';
-    } else {
-      html+='<div class="comp-catalog">'+esc(catalog||sno||"Product")+'</div>';
-    }
-
-    // Brand + code
-    html+='<div class="comp-brand-row">'+esc(p.brand||"")+(p.code?' &nbsp;·&nbsp; '+esc(p.code):'')+'</div>';
-
-    // Editable MRP
-    html+='<div class="comp-mrp-row">'
-      +'<span class="comp-mrp-lbl">MRP /'+unitLbl+'</span>'
-      +'<input class="comp-mrp-inp" type="number" value="'+esc(String(p.mrp||0))+'" min="0" step="0.5" '
-      +'onchange="updateMrp('+ri+','+wi+','+ti+','+ci+',this.value)" '
-      +'onclick="this.select()">'
-      +'</div>';
-
-    if(calc && calc.total){
-      html+='<div class="comp-calc">';
-      if(t.type==="curtains"||t.type==="roman_blinds"){
-        if(t.type==="roman_blinds"){
-          html+='<div class="comp-calc-row"><span class="lbl">Area</span><span class="val">'+calc.sqft+' sqft</span></div>';
-          html+='<div class="comp-calc-row"><span class="lbl">Material (₹475/sqft)</span><span class="val">'+fmt(calc.matCost)+'</span></div>';
-        }
-        html+='<div class="comp-calc-row"><span class="lbl">Panels × Length</span><span class="val">'+calc.numPanels+' × '+calc.panelLen+'m</span></div>';
-        html+='<div class="comp-calc-row"><span class="lbl">Fabric required</span><span class="val">'+calc.fabricQty+' mtrs</span></div>';
-        if(t.type==="roman_blinds"){
-          html+='<div class="comp-calc-row"><span class="lbl">Fabric cost</span><span class="val">'+fmt(calc.fabCost)+'</span></div>';
-          html+='<div class="comp-calc-row"><span class="lbl">Lining</span><span class="val">'+fmt(calc.lining)+'</span></div>';
-        }
-      } else {
-        html+='<div class="comp-calc-row"><span class="lbl">Area</span><span class="val">'+calc.sqft+' sqft</span></div>';
-      }
-      if(win.qty>1) html+='<div class="comp-calc-row"><span class="lbl">× '+win.qty+' windows</span><span class="val">'+fmt(calc.unitTotal)+'</span></div>';
-      html+='<div class="comp-calc-row" style="border-top:1px solid #222;margin-top:4px;padding-top:6px">'
-        +'<span class="lbl" style="font-weight:800;color:#ccc">TOTAL</span>'
-        +'<span class="val total">'+fmt(calc.total)+'</span></div>';
-      html+='</div>';
-    }
-
-    html+='<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px;font-size:11px" '
-      +'onclick="selectProduct('+ri+','+wi+','+ti+','+ci+')">&#8635; Change Product</button>';
-  } else {
-    // No product — show select button (fallback if somehow landed here without auto-search)
-    html+='<button class="btn btn-sm" style="width:100%;margin-top:6px;background:#1e1e1e;border:1.5px dashed #333;box-shadow:none;color:#888" '
-      +'onclick="selectProduct('+ri+','+wi+','+ti+','+ci+')">&#128269; Select Product</button>';
+  if(!c.product){
+    html+='<button class="btn btn-sm" style="width:100%;background:#141414;border:1.5px dashed var(--border2);color:var(--text4);box-shadow:none" onclick="pickProduct('+ri+','+wi+','+ti+','+ci+')">&#128269; Select Product</button></div>';
+    return html;
   }
 
-  html+='</div>';
+  var p=c.product;
+  var catalog=p.catalog||p.product||p.blind_type||p.model||"";
+  var sno=p.s_no||p["s.no"]||"";
+  var unitLbl=t.type==="blinds"?"sqft":"mtr";
+
+  html+='<div class="comp-product-name">'+(catalog&&sno?esc(catalog)+' / '+esc(sno):esc(catalog||sno||"Product"))+'</div>'
+    +'<div class="comp-brand-row">'+esc(p.brand||"")+(p.code?' &middot; '+esc(p.code):'')+'</div>'
+    +'<div class="comp-mrp-row">'
+    +'<span class="comp-mrp-lbl">MRP /'+unitLbl+'</span>'
+    +'<span style="color:var(--text3);font-weight:600">&#8377;</span>'
+    +'<input class="comp-mrp-inp" type="number" value="'+esc(String(p.mrp||0))+'" min="0" step="0.5" inputmode="decimal" onchange="editMrp('+ri+','+wi+','+ti+','+ci+',this.value)" onclick="this.select()">'
+    +'</div>';
+
+  if(calc&&calc.total){
+    html+='<div class="comp-calc">';
+    if(t.type==="curtains"||t.type==="roman_blinds"){
+      if(t.type==="roman_blinds"){
+        html+='<div class="calc-row"><span class="l">Area</span><span class="v">'+calc.sqft+' sqft</span></div>'
+          +'<div class="calc-row"><span class="l">Material @&#8377;475/sqft</span><span class="v">'+fmt(calc.matCost)+'</span></div>';
+      }
+      html+='<div class="calc-row"><span class="l">Panels &times; Length</span><span class="v">'+calc.numPanels+' &times; '+calc.panelLen+'m</span></div>'
+        +'<div class="calc-row"><span class="l">Fabric required</span><span class="v">'+calc.fabricQty+' mtrs</span></div>';
+      if(t.type==="roman_blinds"){
+        html+='<div class="calc-row"><span class="l">Fabric cost</span><span class="v">'+fmt(calc.fabCost)+'</span></div>'
+          +'<div class="calc-row"><span class="l">Lining @&#8377;200/m</span><span class="v">'+fmt(calc.lining)+'</span></div>';
+      }
+    } else {
+      html+='<div class="calc-row"><span class="l">Area</span><span class="v">'+calc.sqft+' sqft</span></div>';
+    }
+    if(win.qty>1) html+='<div class="calc-row"><span class="l">&times; '+win.qty+' windows</span><span class="v">'+fmt(calc.unitTotal)+'</span></div>';
+    html+='<div class="calc-row total"><span class="l">Total</span><span class="v">'+fmt(calc.total)+'</span></div></div>';
+  }
+
+  html+='<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px;font-size:11px" onclick="pickProduct('+ri+','+wi+','+ti+','+ci+')">&#8635; Change Product</button></div>';
   return html;
 }
 
-function toggleRoom(ri){
-  var el = document.getElementById("room_"+ri);
-  if(el) el.classList.toggle("open");
-}
-function toggleWin(id){
-  var el = document.getElementById(id);
-  if(el) el.classList.toggle("open");
-}
+function toggleRoom(ri){var e=document.getElementById("r_"+ri);if(e)e.classList.toggle("open");}
+function toggleWin(id){var e=document.getElementById(id);if(e)e.classList.toggle("open");}
 
-// ════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // TOTALS
-// ════════════════════════════════════════════
-function getCompTotal(comp, win, tType){
-  if(!comp.product) return 0;
-  var c = calcComponent(win, Object.assign({}, comp, {treatmentType:tType}));
-  return c.total||0;
+// ═══════════════════════════════════════════════════════
+function compTotal(c,win,ttype){
+  if(!c.product)return 0;
+  return calcComp(win,Object.assign({},c,{treatmentType:ttype})).total||0;
 }
-
-function getRoomTotal(room){
+function roomTotal(room){
   var t=0;
-  room.windows.forEach(function(win){
-    win.treatments.forEach(function(tx){
-      tx.components.forEach(function(c){
-        t += getCompTotal(c, win, tx.type);
-      });
-    });
-  });
+  room.windows.forEach(function(win){win.treatments.forEach(function(tx){tx.components.forEach(function(c){t+=compTotal(c,win,tx.type);});});});
   return t;
 }
-
-function getGrandTotal(){
-  var t=0;
-  APP.quote.rooms.forEach(function(r){ t+=getRoomTotal(r); });
-  return t;
+function grandTotal(){
+  var t=0;APP.quote.rooms.forEach(function(r){t+=roomTotal(r);});return t;
 }
 
-// ════════════════════════════════════════════
-// SUMMARY SCREEN
-// ════════════════════════════════════════════
-function renderSummary(){
-  var q = APP.quote;
-  var grandTotal = getGrandTotal();
-  var html = '';
+// ═══════════════════════════════════════════════════════
+// SUMMARY — includes print-ready HTML structure
+// ═══════════════════════════════════════════════════════
+function renderSum(){
+  var q=APP.quote,gt=grandTotal();
+  var h="";
 
-  // Quote ID
-  html+='<div class="quote-id-badge no-print">Quote Reference<span>'+esc(q.id||"—")+'</span></div>';
+  // Screen: quote ID badge
+  h+='<div class="qid-badge no-print">Quote Reference<span>'+esc(q.id||"\u2014")+'</span></div>';
 
-  // Print header — shown only when printing
-  html+='<div class="print-only-hdr" style="text-align:center;padding:16px 0 14px;border-bottom:2px solid #c0392b;margin-bottom:16px">'
-    +'<img src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" style="height:48px;object-fit:contain" alt="Darla">'
-    +'<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#555;margin-top:6px">Product Selection Summary</div>'
+  // Print: branded header
+  h+='<div class="print-only print-hdr">'
+    +'<div class="print-brand"><div class="name">DARLA</div><div class="tag">Sales &amp; Agencies &middot; Mysore</div></div>'
+    +'<div class="print-qinfo"><div class="qid">'+esc(q.id||"\u2014")+'</div><div class="date">'+esc(q.date)+'</div></div>'
     +'</div>';
 
-  // Customer details
-  html+='<div class="summary-customer">'
-    +'<div class="summary-field"><span class="lbl">Customer</span><span class="val">'+esc(q.customer.name)+'</span></div>'
-    +'<div class="summary-field"><span class="lbl">Mobile</span><span class="val">'+esc(q.customer.mobile)+'</span></div>';
-  if(q.customer.arch) html+='<div class="summary-field"><span class="lbl">Designer</span><span class="val">'+esc(q.customer.arch)+'</span></div>';
-  if(q.customer.addr) html+='<div class="summary-field"><span class="lbl">Project</span><span class="val">'+esc(q.customer.addr)+'</span></div>';
-  html+='<div class="summary-field"><span class="lbl">Salesman 1</span><span class="val">'+esc(q.staff||"")+'</span></div>';
-  if(q.staff2) html+='<div class="summary-field"><span class="lbl">Salesman 2</span><span class="val">'+esc(q.staff2)+'</span></div>';
-  html+='<div class="summary-field"><span class="lbl">Date</span><span class="val">'+esc(q.date)+'</span></div>'
-    +'<div class="summary-field"><span class="lbl">Quote ID</span><span class="val">'+esc(q.id||"—")+'</span></div>'
+  // Customer: screen layout (on-screen summary-customer with sum-field)
+  h+='<div class="sum-cust">'
+    // Screen fields (hidden in print via sum-field rule)
+    +'<div class="sum-field"><span class="l">Customer</span><span class="v">'+esc(q.customer.name)+'</span></div>'
+    +'<div class="sum-field"><span class="l">Mobile</span><span class="v">'+esc(q.customer.mobile)+'</span></div>'
+    +(q.customer.arch?'<div class="sum-field"><span class="l">Designer</span><span class="v">'+esc(q.customer.arch)+'</span></div>':"")
+    +(q.customer.addr?'<div class="sum-field"><span class="l">Project</span><span class="v">'+esc(q.customer.addr)+'</span></div>':"")
+    +'<div class="sum-field"><span class="l">Salesman 1</span><span class="v">'+esc(q.staff||"")+'</span></div>'
+    +(q.staff2?'<div class="sum-field"><span class="l">Salesman 2</span><span class="v">'+esc(q.staff2)+'</span></div>':"")
+    +'<div class="sum-field"><span class="l">Date</span><span class="v">'+esc(q.date)+'</span></div>'
+    +'<div class="sum-field"><span class="l">Quote ID</span><span class="v">'+esc(q.id||"\u2014")+'</span></div>'
+    // Print columns (visible in print)
+    +'<div class="cust-print-col print-only">'
+    +'<h4>Customer</h4>'
+    +'<div class="cname">'+esc(q.customer.name)+'</div>'
+    +'<div class="cval">'+esc(q.customer.mobile)+'</div>'
+    +(q.customer.addr?'<div class="cval" style="font-size:8pt;color:#666">'+esc(q.customer.addr)+'</div>':"")
+    +'</div>'
+    +'<div class="cust-print-col cust-print-right print-only">'
+    +'<h4>Staff</h4>'
+    +(q.customer.arch?'<div class="cval"><span class="clabel">Designer</span>'+esc(q.customer.arch)+'</div>':"")
+    +'<div class="cval"><span class="clabel">Salesman</span>'+esc(q.staff||"")+'</div>'
+    +(q.staff2?'<div class="cval"><span class="clabel">Salesman 2</span>'+esc(q.staff2)+'</div>':"")
+    +'</div>'
     +'</div>';
 
-  // Room breakdown
+  // Rooms
   q.rooms.forEach(function(room){
-    var roomTotal = getRoomTotal(room);
-    html+='<div class="summary-room">'
-      +'<div class="summary-room-hdr" style="display:flex;justify-content:space-between;align-items:center">'
-      +'<span style="font-size:16px;font-weight:900">'+esc(room.name)+'</span>'
-      +'<span class="room-total-amt" style="font-size:15px;font-weight:900;color:var(--red)">'+fmt(roomTotal)+'</span>'
-      +'</div>';
+    var rt=roomTotal(room);
+    h+='<div class="sum-room">'
+      +'<div class="sum-room-hdr"><span class="sum-room-name">'+esc(room.name)+'</span><span class="sum-room-total">'+fmt(rt)+'</span></div>';
 
-    room.windows.forEach(function(win, wi){
-      var winTotal=0;
+    room.windows.forEach(function(win,wi){
+      // Calculate window total and gather calc data for print left column
+      var wt=0;
+      var printCalcLines=[];
       win.treatments.forEach(function(tx){
         tx.components.forEach(function(c){
-          if(!c.product) return;
-          winTotal += calcComponent(win,Object.assign({},c,{treatmentType:tx.type})).total||0;
+          if(!c.product)return;
+          var calc=calcComp(win,Object.assign({},c,{treatmentType:tx.type}));
+          wt+=calc.total||0;
+          // Gather calc summary for print left column
+          if(tx.type==="blinds"){
+            printCalcLines.push({k:"Area",v:calc.sqft+" sqft"});
+          } else {
+            printCalcLines.push({k:c.layer.toUpperCase()+" panels",v:calc.numPanels+" \xd7 "+calc.panelLen+"m"});
+            printCalcLines.push({k:"Fabric",v:calc.fabricQty+" mtrs"});
+          }
         });
       });
 
-      html+='<div class="summary-win-block">'
-        // Highlighted window header with number badge
-        +'<div class="win-title-row">'
-        +'<span class="win-num-badge">'+(wi+1)+'</span>'
-        +'<span class="summary-win-title">'+esc(win.name)+'</span>'
-        +'</div>'
-        +'<div class="summary-win-dims">'+win.width+'" W × '+win.height+'" H &nbsp;·&nbsp; Qty: '+win.qty+'</div>';
+      // ── WINDOW BLOCK: uses grid in print (measurements | selections) ──
+      h+='<div class="sum-win-block">';
+
+      // LEFT: measurements (visible in print only as win-print-left, visible on-screen via win-title-row etc.)
+      h+='<div class="win-print-left print-only">'
+        +'<div class="sum-win-title-row" style="display:flex!important;align-items:center;gap:6px">'
+        +'<span class="win-badge">'+(wi+1)+'</span>'
+        +'<span class="sum-win-title">'+esc(win.name)+'</span></div>'
+        +'<div class="sum-win-dims">'+win.width+'" W \xd7 '+win.height+'" H</div>'
+        +'<div class="sum-win-dims" style="margin-bottom:0">Qty: '+win.qty+'</div>'
+        +'<div class="print-meas">';
+      printCalcLines.forEach(function(cl){
+        h+='<div class="print-meas-row"><span class="k">'+cl.k+'</span><span class="mv">'+cl.v+'</span></div>';
+      });
+      h+='</div></div>';
+
+      // RIGHT (and on-screen full-width): title + selections
+      h+='<div class="win-print-right">'
+        // On-screen: show window title+dims here
+        +'<div class="no-print" style="margin-bottom:2px">'
+        +'<div class="sum-win-title-row"><span class="win-badge">'+(wi+1)+'</span><span class="sum-win-title">'+esc(win.name)+'</span></div>'
+        +'<div class="sum-win-dims">'+win.width+'" W \xd7 '+win.height+'" H &nbsp;&middot;&nbsp; Qty: '+win.qty+'</div>'
+        +'</div>';
 
       win.treatments.forEach(function(tx){
-        var typeLabel = tx.type==="curtains"?"Curtains":tx.type==="roman_blinds"?"Roman Blinds":"Blinds";
-        var hasItems  = tx.components.some(function(c){return !!c.product;});
-        if(!hasItems) return;
-        html+='<div style="font-size:10px;font-weight:800;color:#666;letter-spacing:1.5px;text-transform:uppercase;margin:8px 0 5px">'+typeLabel+'</div>';
+        var txLbl=tx.type==="curtains"?"Curtains":tx.type==="roman_blinds"?"Roman Blinds":"Blinds";
+        var hasItems=tx.components.some(function(c){return!!c.product;});
+        if(!hasItems)return;
+        h+='<div class="sum-tx-lbl">'+txLbl+'</div>';
         tx.components.forEach(function(c){
-          if(!c.product) return;
-          var calc = calcComponent(win,Object.assign({},c,{treatmentType:tx.type}));
-          var qtyLabel = tx.type==="blinds"?(calc.sqft||0)+" sqft":(calc.fabricQty||0)+" mtrs";
-          html+='<div class="summary-comp-row">'
-            +'<div class="summary-comp-info">'
-            +'<div class="lbl">'+c.layer.toUpperCase()+'</div>'
-            +'<div class="name">'+esc(c.product.catalog||c.product.product||c.product.blind_type||c.product.model||"")+'</div>'
-            +'<div class="detail">'+esc(c.product.brand||"")+(c.product.code?" &nbsp;·&nbsp; "+esc(c.product.code):"")+'</div>'
-            +'<div class="detail price-col">'+fmt(c.product.mrp||0)+(tx.type==="blinds"?"/sqft":"/mtr")+" &nbsp;·&nbsp; "+qtyLabel+'</div>'
+          if(!c.product)return;
+          var calc=calcComp(win,Object.assign({},c,{treatmentType:tx.type}));
+          var qtyLbl=tx.type==="blinds"?(calc.sqft||0)+" sqft":(calc.fabricQty||0)+" mtrs";
+          var catname=c.product.catalog||c.product.product||c.product.blind_type||c.product.model||"";
+          h+='<div class="sum-comp-row">'
+            +'<div class="sum-comp-info">'
+            +'<span class="tag">'+c.layer.toUpperCase()+'</span>'
+            +'<div class="name">'+esc(catname)+'</div>'
+            +'<div class="detail">'+esc(c.product.brand||"")+(c.product.code?" &middot; "+esc(c.product.code):"")+'</div>'
+            +'<div class="detail price-col">'+fmt(c.product.mrp||0)+(tx.type==="blinds"?"/sqft":"/mtr")+" &middot; "+qtyLbl+'</div>'
             +'</div>'
-            +'<div class="summary-comp-amt price-col">'+fmt(calc.total||0)+'</div>'
+            +'<div class="sum-comp-amt price-col">'+fmt(calc.total||0)+'</div>'
             +'</div>';
         });
       });
 
-      // Window subtotal line
-      if(winTotal>0){
-        html+='<div class="win-subtotal win-total-line">'
-          +'<span class="win-subtotal-lbl">&#128308; Window '+(wi+1)+' Total</span>'
-          +'<span class="win-subtotal-val">'+fmt(winTotal)+'</span>'
+      if(wt>0){
+        h+='<div class="win-sub-line">'
+          +'<span class="win-sub-lbl">Window '+(wi+1)+' Total</span>'
+          +'<span class="win-sub-val price-col">'+fmt(wt)+'</span>'
           +'</div>';
       }
-      html+='</div>';
+      h+='</div>'; // win-print-right
+      h+='</div>'; // sum-win-block
     });
 
-    // Room subtotal footer bar
-    if(roomTotal>0){
-      html+='<div class="room-total-footer room-total-amt" style="background:#1a0a0a;border-top:2px solid #3a1010;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">'
-        +'<span style="font-size:11px;font-weight:800;color:#aaa;letter-spacing:1.5px;text-transform:uppercase">'+esc(room.name)+' Sub-total</span>'
-        +'<span style="font-size:17px;font-weight:900;color:var(--red)">'+fmt(roomTotal)+'</span>'
-        +'</div>';
+    if(rt>0){
+      h+='<div class="room-sub-footer"><span class="l">'+esc(room.name)+' Sub-total</span><span class="v price-col">'+fmt(rt)+'</span></div>';
     }
-    html+='</div>';
+    h+='</div>'; // sum-room
   });
 
-  // Grand total
-  html+='<div class="grand-total-card">'
-    +'<div class="grand-total-lbl">Grand Total (MRP)</div>'
-    +'<div class="grand-total-val">'+Number(Math.round(grandTotal)).toLocaleString("en-IN")+'</div>'
-    +'<div class="grand-total-sub">All prices are MRP inclusive of GST</div>'
-    +'</div>';
+  h+='<div class="grand-card"><div class="grand-lbl">Grand Total (MRP)</div>'
+    +'<div class="grand-val">'+Number(Math.round(gt)).toLocaleString("en-IN")+'</div>'
+    +'<div class="grand-sub">All prices are MRP inclusive of GST</div></div>';
 
-  // Terms
-  html+='<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:60px">'
-    +'<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Terms &amp; Notes</div>'
-    +'<div style="font-size:12px;color:#666;line-height:1.8">'
-    +'• All prices are MRP. Final prices may vary based on order.<br>'
-    +'• Quantities are calculated automatically based on window dimensions.<br>'
-    +'• Fabric availability is subject to stock at time of order.<br>'
-    +'• Delivery time: 3–4 weeks from order confirmation.<br>'
-    +'• This is a selection reference, not a final invoice.'
-    +'</div>'
-    +'</div>';
+  h+='<div class="terms-card"><div class="title">Terms &amp; Notes</div>'
+    +'<div class="body">'
+    +'&bull; All prices are MRP. Final prices subject to confirmation.<br>'
+    +'&bull; Quantities auto-calculated from window dimensions.<br>'
+    +'&bull; Fabric subject to stock availability at time of order.<br>'
+    +'&bull; Delivery: 3&ndash;4 weeks from order confirmation.<br>'
+    +'&bull; This is a selection reference, not a final invoice.'
+    +'</div></div>';
 
-  document.getElementById("summaryContent").innerHTML = html;
+  document.getElementById("sumContent").innerHTML=h;
+  var si=document.getElementById("sumId");
+  if(si) si.textContent=APP.quote.id||"";
 }
 
-// ════════════════════════════════════════════
-// SAVE / LOAD
-// ════════════════════════════════════════════
-function saveDraft(){
-  localStorage.setItem("darla_quote_draft", JSON.stringify(APP.quote));
+// ═══════════════════════════════════════════════════════
+// SAVE / LOAD / CLOUD
+// ═══════════════════════════════════════════════════════
+function saveDraft(){localStorage.setItem("darla_quote_draft",JSON.stringify(APP.quote));}
+
+function saveToList(){
+  var q=APP.quote; if(!q.id)return;
+  var gt=grandTotal();
+  var list=getList().filter(function(e){return e.id!==q.id;});
+  list.unshift({id:q.id,date:q.date,staff:q.staff||"",staff2:q.staff2||"",name:q.customer.name||"",mobile:q.customer.mobile||"",arch:q.customer.arch||"",addr:q.customer.addr||"",total:gt,rooms:q.rooms.length,updated:new Date().toLocaleString("en-IN"),draft:JSON.stringify(q)});
+  if(list.length>200)list=list.slice(0,200);
+  localStorage.setItem("darla_quotes_list",JSON.stringify(list));
 }
 
-function saveToQuoteList(){
-  // Save quote summary to local quotes list for the All Quotes screen
-  var q = APP.quote;
-  if(!q.id) return;
-  var grandTotal = getGrandTotal();
-  var list = getQuoteList();
-  // Remove existing entry with same ID
-  list = list.filter(function(e){ return e.id !== q.id; });
-  // Add updated entry at front
-  list.unshift({
-    id:       q.id,
-    date:     q.date,
-    staff:    q.staff||"",
-    staff2:   q.staff2||"",
-    name:     q.customer.name||"",
-    mobile:   q.customer.mobile||"",
-    arch:     q.customer.arch||"",
-    addr:     q.customer.addr||"",
-    total:    grandTotal,
-    rooms:    q.rooms.length,
-    updated:  new Date().toLocaleString("en-IN"),
-    draft:    JSON.stringify(q)
-  });
-  // Keep last 200 quotes
-  if(list.length > 200) list = list.slice(0, 200);
-  localStorage.setItem("darla_quotes_list", JSON.stringify(list));
-}
-
-function getQuoteList(){
-  try{ return JSON.parse(localStorage.getItem("darla_quotes_list")||"[]"); }
-  catch(e){ return []; }
-}
-
-function isCloudReady(){
-  return APPS_SCRIPT_URL && APPS_SCRIPT_URL.indexOf("YOUR_")!==0;
-}
+function getList(){try{return JSON.parse(localStorage.getItem("darla_quotes_list")||"[]");}catch(e){return[];}}
+function cloudOK(){return ASU&&ASU.indexOf("YOUR_")!==0;}
 
 function saveQuote(){
-  saveDraft();
-  saveToQuoteList(); // always save locally too
-
-  if(!isCloudReady()){
-    showToast("Saved locally ✓  "+APP.quote.id);
-    return;
-  }
-
-  // Show saving indicator
-  var btn = document.querySelector(".bottom-bar .btn:last-child");
-  if(btn){ btn.textContent="Saving..."; btn.disabled=true; }
-
-  fetch(APPS_SCRIPT_URL, {
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({action:"saveQuote", quote:APP.quote})
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    APP.quote.saved = true;
-    saveDraft();
-    saveToQuoteList();
-    showToast("✓ Saved to cloud — "+APP.quote.id);
-    if(btn){ btn.textContent="💾 Save Quote"; btn.disabled=false; }
-  })
-  .catch(function(){
-    showToast("Saved locally (offline)");
-    if(btn){ btn.textContent="💾 Save Quote"; btn.disabled=false; }
-  });
+  saveDraft();saveToList();
+  if(!cloudOK()){showToast("Saved locally \u2713 "+APP.quote.id);return;}
+  fetch(ASU,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"saveQuote",quote:APP.quote})})
+    .then(function(r){return r.json();})
+    .then(function(){APP.quote.saved=true;saveDraft();saveToList();showToast("\u2713 Saved \u2014 "+APP.quote.id);})
+    .catch(function(){showToast("Saved locally (offline)");});
 }
 
-function loadQuote(){
-  var id = document.getElementById("loadQuoteId").value.trim();
-  if(!id){ showToast("Enter a quote ID"); return; }
-  loadQuoteById(id);
+function saveAndList(){
+  saveDraft();saveToList();
+  if(cloudOK())fetch(ASU,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"saveQuote",quote:APP.quote})}).catch(function(){});
+  switchTab("all");
 }
 
-function loadQuoteById(id){
-  // Try local cache first
-  var localList = getQuoteList();
-  var localEntry = localList.find(function(q){ return q.id===id; });
-
-  if(localEntry && localEntry.draft){
-    applyLoadedQuote(JSON.parse(localEntry.draft));
-    showToast("Loaded: "+id);
-    return;
-  }
-
-  if(!isCloudReady()){
-    showToast("Quote not found locally");
-    return;
-  }
-
-  showToast("Loading from cloud...");
-  fetch(APPS_SCRIPT_URL+"?action=loadQuote&id="+encodeURIComponent(id))
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(d.quote){
-        applyLoadedQuote(d.quote);
-        // Also cache it locally
-        saveToQuoteList();
-        showToast("Loaded: "+id);
-      } else {
-        showToast("Quote not found: "+id);
-      }
-    })
-    .catch(function(){ showToast("Error loading quote"); });
+function saveAndExit(){
+  saveDraft();saveToList();
+  if(cloudOK())fetch(ASU,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"saveQuote",quote:APP.quote})}).then(function(){showToast("Saved \u2713");}).catch(function(){showToast("Saved locally");});
+  switchTab("all");
 }
 
-function applyLoadedQuote(q){
-  APP.quote = q;
-  saveDraft();
-  document.getElementById("custName").value   = q.customer.name||"";
-  document.getElementById("custMobile").value = q.customer.mobile||"";
-  document.getElementById("custArch").value   = q.customer.arch||"";
-  document.getElementById("custAddr").value   = q.customer.addr||"";
-  var s1el = document.getElementById("custSales1");
-  var s2el = document.getElementById("custSales2");
-  if(s1el) s1el.value = q.staff||"";
-  if(s2el) s2el.value = q.staff2||"";
-  document.getElementById("builderCustomerName").textContent = q.customer.name;
-  document.getElementById("builderQuoteId").textContent      = q.id;
+function loadById(id){
+  var local=getList().find(function(q){return q.id===id;});
+  if(local&&local.draft){applyQ(JSON.parse(local.draft));showToast("Loaded: "+id);return;}
+  if(!cloudOK()){showToast("Not found locally");return;}
+  showToast("Loading...");
+  fetch(ASU+"?action=loadQuote&id="+encodeURIComponent(id))
+    .then(function(r){return r.json();})
+    .then(function(d){if(d.quote){applyQ(d.quote);saveToList();showToast("Loaded: "+id);}else{showToast("Not found: "+id);}})
+    .catch(function(){showToast("Error loading");});
+}
+
+function applyQ(q){
+  APP.quote=q;saveDraft();
+  document.getElementById("cName").value=q.customer.name||"";
+  document.getElementById("cMobile").value=q.customer.mobile||"";
+  document.getElementById("cArch").value=q.customer.arch||"";
+  document.getElementById("cAddr").value=q.customer.addr||"";
+  var s1=document.getElementById("cSales1"),s2=document.getElementById("cSales2");
+  if(s1)s1.value=q.staff||"";
+  if(s2)s2.value=q.staff2||"";
+  document.getElementById("bldName").textContent=q.customer.name;
+  document.getElementById("bldId").textContent=q.id;
   document.getElementById("tabNew").classList.add("active");
   document.getElementById("tabAll").classList.remove("active");
   goTo("screen-builder");
 }
 
-function saveAndGoList(){
-  saveDraft();
-  saveToQuoteList();
-  if(isCloudReady()){
-    fetch(APPS_SCRIPT_URL, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({action:"saveQuote", quote:APP.quote})
-    }).then(function(r){return r.json();}).catch(function(){});
-  }
-  document.getElementById("tabNew").classList.remove("active");
-  document.getElementById("tabAll").classList.add("active");
-  goTo("screen-quotes");
-}
-
-function saveAndExit(){
-  saveDraft();
-  saveToQuoteList();
-  // Cloud save
-  if(isCloudReady()){
-    fetch(APPS_SCRIPT_URL, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({action:"saveQuote", quote:APP.quote})
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(){ showToast("Saved ✓"); })
-    .catch(function(){ showToast("Saved locally"); });
-  }
-  // Go to All Quotes
-  document.getElementById("tabNew").classList.remove("active");
-  document.getElementById("tabAll").classList.add("active");
-  goTo("screen-quotes");
-}
-
 function shareQuote(){
-  var url = window.location.origin + window.location.pathname + "?load=" + APP.quote.id;
-  if(navigator.share){
-    navigator.share({
-      title:"Darla Quote - "+APP.quote.customer.name,
-      text:"Quote "+APP.quote.id+" for "+APP.quote.customer.name,
-      url:url
-    });
-  } else if(navigator.clipboard){
-    navigator.clipboard.writeText(url).then(function(){ showToast("Link copied ✓"); });
-  } else {
-    showToast(url);
-  }
+  var url=window.location.origin+window.location.pathname+"?load="+APP.quote.id;
+  if(navigator.share){navigator.share({title:"Darla Quote - "+APP.quote.customer.name,text:"Quote "+APP.quote.id,url:url});}
+  else if(navigator.clipboard){navigator.clipboard.writeText(url).then(function(){showToast("Link copied \u2713");});}
+  else{showToast(url);}
 }
 
-// ════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // NAVIGATION
-// ════════════════════════════════════════════
-function goTo(screenId){
+// ═══════════════════════════════════════════════════════
+function goTo(id){
   document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});
-  var s = document.getElementById(screenId);
-  if(s) s.classList.add("active");
+  var s=document.getElementById(id);if(s)s.classList.add("active");
   window.scrollTo(0,0);
-  // Hide bottom bars on login/customer screens, show on builder/summary
-  var showBar = (screenId==="screen-builder"||screenId==="screen-summary");
-  document.querySelectorAll(".bottom-bar").forEach(function(b){
-    b.style.display = showBar ? "flex" : "none";
-  });
-  if(screenId==="screen-summary") renderSummary();
-  if(screenId==="screen-builder") renderBuilder();
-  if(screenId==="screen-quotes")  renderQuotesList();
+  var showBar=id==="screen-builder"||id==="screen-summary";
+  document.getElementById("bldBar").style.display=(id==="screen-builder")?"flex":"none";
+  document.getElementById("sumBar").style.display=(id==="screen-summary")?"flex":"none";
+  if(id==="screen-summary")renderSum();
+  if(id==="screen-builder")renderBld();
+  if(id==="screen-quotes")renderQList();
 }
 
-// ════════════════════════════════════════════
-// TAB SWITCHING (customer screen)
-// ════════════════════════════════════════════
 function switchTab(tab){
   if(tab==="all"){
     document.getElementById("tabNew").classList.remove("active");
     document.getElementById("tabAll").classList.add("active");
     goTo("screen-quotes");
   } else {
-    clearNewQuoteForm();
+    clearForm();
     document.getElementById("tabNew").classList.add("active");
     document.getElementById("tabAll").classList.remove("active");
     goTo("screen-customer");
   }
 }
 
-function newQuoteFromList(){
-  clearNewQuoteForm();
+function newQuoteBtn(){
+  clearForm();
   document.getElementById("tabNew").classList.add("active");
   document.getElementById("tabAll").classList.remove("active");
   goTo("screen-customer");
 }
 
-// ════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // QUOTES LIST
-// ════════════════════════════════════════════
-var _filteredQuotes = [];
+// ═══════════════════════════════════════════════════════
+var qFiltered=[],qCloud=[];
 
-var _cloudQuotes = []; // full list fetched from cloud
-
-function renderQuotesList(){
-  // Show local cache immediately while cloud loads
-  var localList = getQuoteList();
-  // Sort local list by quote number descending
-  localList.sort(function(a,b){
-    var na=parseInt((a.id||"").replace(/[^0-9]/g,""))||0;
-    var nb=parseInt((b.id||"").replace(/[^0-9]/g,""))||0;
-    return nb-na;
-  });
-  _filteredQuotes = localList;
-  renderQuotesListHTML(localList, true); // true = loading
-
-  if(!isCloudReady()){
-    renderQuotesListHTML(localList, false);
-    return;
-  }
-
-  // Fetch from cloud
-  fetch(APPS_SCRIPT_URL+"?action=listQuotes")
-    .then(function(r){ return r.json(); })
+function renderQList(){
+  var local=getList();
+  local.sort(function(a,b){return(parseInt(b.id.replace(/\D/g,""))||0)-(parseInt(a.id.replace(/\D/g,""))||0);});
+  qFiltered=local;
+  drawQList(local,true);
+  if(!cloudOK()){drawQList(local,false);return;}
+  fetch(ASU+"?action=listQuotes")
+    .then(function(r){return r.json();})
     .then(function(d){
-      if(d.quotes && d.quotes.length >= 0){
-        _cloudQuotes = d.quotes;
-        // Merge: cloud summaries + local draft JSON
-        var merged = mergeCloudAndLocal(d.quotes);
-        _filteredQuotes = merged;
-        renderQuotesListHTML(merged, false);
-        var countEl = document.getElementById("quotesCount");
-        if(countEl) countEl.textContent = merged.length+" quote"+(merged.length!==1?"s":"")+" · cloud";
-      } else {
-        renderQuotesListHTML(localList, false);
-      }
-    })
-    .catch(function(){
-      renderQuotesListHTML(localList, false);
-      var countEl = document.getElementById("quotesCount");
-      if(countEl) countEl.textContent = localList.length+" (local only)";
-    });
+      if(d.quotes&&d.quotes.length>=0){
+        qCloud=d.quotes;
+        var merged=mergeQ(d.quotes);
+        qFiltered=merged;
+        drawQList(merged,false);
+        var c=document.getElementById("qCount");if(c)c.textContent=merged.length+" quote"+(merged.length!==1?"s":"")+" \u00b7 cloud";
+      } else drawQList(local,false);
+    }).catch(function(){drawQList(local,false);});
 }
 
-function mergeCloudAndLocal(cloudList){
-  // cloudList has summaries; localList has full draft JSON
-  // Merge so we can open cloud quotes (load on demand) and local ones directly
-  var localMap = {};
-  getQuoteList().forEach(function(q){ localMap[q.id] = q; });
+function mergeQ(cloud){
+  var lm={};getList().forEach(function(q){lm[q.id]=q;});
+  var m=cloud.map(function(c){var l=lm[c.id];return Object.assign({},c,{draft:l?l.draft:null,fromCloud:true});});
+  m.sort(function(a,b){return(parseInt(b.id.replace(/\D/g,""))||0)-(parseInt(a.id.replace(/\D/g,""))||0);});
+  return m;
+}
 
-  var merged = cloudList.map(function(c){
-    var local = localMap[c.id];
-    return {
-      id:       c.id,
-      date:     c.date,
-      staff:    c.staff,
-      staff2:   c.staff2||"",
-      name:     c.name,
-      mobile:   c.mobile,
-      arch:     c.arch||"",
-      addr:     c.addr||"",
-      total:    c.total,
-      rooms:    c.rooms,
-      updated:  c.updated,
-      draft:    local ? local.draft : null,
-      fromCloud:true
-    };
+function filterQ(){
+  var q=(document.getElementById("qSearch").value||"").trim().toLowerCase();
+  if(!cloudOK()||!qCloud.length){
+    var list=getList();
+    list.sort(function(a,b){return(parseInt(b.id.replace(/\D/g,""))||0)-(parseInt(a.id.replace(/\D/g,""))||0);});
+    qFiltered=q?list.filter(function(e){return["name","mobile","id","staff","staff2","arch"].some(function(k){return(e[k]||"").toLowerCase().indexOf(q)!==-1;});}):list;
+    drawQList(qFiltered,false);return;
+  }
+  var sel=document.getElementById("qSearch");if(sel)sel.disabled=true;
+  fetch(ASU+"?action=listQuotes&search="+encodeURIComponent(q))
+    .then(function(r){return r.json();})
+    .then(function(d){if(sel)sel.disabled=false;if(d.quotes){qFiltered=mergeQ(d.quotes);drawQList(qFiltered,false);}})
+    .catch(function(){if(sel)sel.disabled=false;drawQList(getList(),false);});
+}
+
+function drawQList(list,loading){
+  var el=document.getElementById("qList");if(!el)return;
+  var cnt=document.getElementById("qCount");
+  if(loading){el.innerHTML='<div class="q-empty"><div class="spin"></div>Loading quotes...</div>';if(cnt)cnt.textContent="Loading...";return;}
+  if(cnt)cnt.textContent=list.length+" quote"+(list.length!==1?"s":"");
+  if(!list.length){el.innerHTML='<div class="q-empty"><div class="ico">&#128196;</div>No quotes found<br><span style="font-size:13px;display:block;margin-top:6px">'+(!cloudOK()?"Save a quote to see it here.":"No cloud quotes yet.")+'</span></div>';return;}
+  var h="";
+  list.forEach(function(q,i){
+    var total=q.total||0,rooms=q.rooms||0,hasLocal=!!q.draft;
+    h+='<div class="q-card" onclick="openQ('+i+')">'
+      +'<div class="q-top"><div class="q-left">'
+      +'<div class="q-id">'+esc(q.id||"\u2014")
+      +(q.fromCloud?'<span class="q-tag q-tag-cloud" style="margin-left:6px">CLOUD</span>':'')
+      +(!hasLocal&&q.fromCloud?'<span class="q-tag q-tag-load" style="margin-left:4px">TAP TO LOAD</span>':'')
+      +'</div>'
+      +'<div class="q-name">'+esc(q.name||"Unknown")+'</div>'
+      +'<div class="q-meta">'+esc(q.mobile||"")+(q.arch?' &middot; '+esc(q.arch):'')+'</div>'
+      +'<div class="q-meta">'+esc(q.date||"")+'</div>'
+      +'</div><div class="q-right">'
+      +(total?'<div class="q-total">&#8377;'+Number(Math.round(total)).toLocaleString("en-IN")+'</div>':"")
+      +'<button onclick="delQ('+i+',event)" class="q-del">&#128465;</button>'
+      +'</div></div>'
+      +'<div class="q-bottom">'
+      +'<span class="q-tag q-tag-staff">&#128100; '+esc(q.staff||"Staff")+(q.staff2?' &amp; '+esc(q.staff2):'')+'</span>'
+      +(rooms?'<span class="q-tag q-tag-rooms">'+rooms+' room'+(rooms!==1?"s":"")+'</span>':"")
+      +'<span class="q-tag q-tag-rooms" style="margin-left:auto">'+esc(q.updated||q.date||"")+'</span>'
+      +'</div></div>';
   });
-  // Sort: newest quote number first
-  merged.sort(function(a,b){
-    var na = parseInt((a.id||"").replace(/[^0-9]/g,""))||0;
-    var nb = parseInt((b.id||"").replace(/[^0-9]/g,""))||0;
-    return nb - na;
-  });
-  return merged;
+  el.innerHTML=h;
 }
 
-function filterQuotes(){
-  var q = (document.getElementById("quotesSearch").value||"").trim().toLowerCase();
-  var base = _cloudQuotes.length > 0 ? _filteredQuotes : getQuoteList();
-
-  if(!isCloudReady() || _cloudQuotes.length===0){
-    // Offline: filter local only
-    var list = getQuoteList();
-    list.sort(function(a,b){
-      var na=parseInt((a.id||"").replace(/[^0-9]/g,""))||0;
-      var nb=parseInt((b.id||"").replace(/[^0-9]/g,""))||0;
-      return nb-na;
-    });
-    _filteredQuotes = q ? list.filter(function(e){
-      return (e.name||"").toLowerCase().indexOf(q)!==-1
-          || (e.mobile||"").indexOf(q)!==-1
-          || (e.id||"").toLowerCase().indexOf(q)!==-1
-          || (e.staff||"").toLowerCase().indexOf(q)!==-1
-          || (e.staff2||"").toLowerCase().indexOf(q)!==-1
-          || (e.arch||"").toLowerCase().indexOf(q)!==-1;
-    }) : list;
-    renderQuotesListHTML(_filteredQuotes, false);
-    return;
-  }
-
-  // Cloud search
-  var searchEl = document.getElementById("quotesSearch");
-  if(searchEl) searchEl.disabled = true;
-
-  fetch(APPS_SCRIPT_URL+"?action=listQuotes&search="+encodeURIComponent(q))
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(searchEl) searchEl.disabled = false;
-      if(d.quotes){
-        _filteredQuotes = mergeCloudAndLocal(d.quotes);
-        renderQuotesListHTML(_filteredQuotes, false);
-      }
-    })
-    .catch(function(){
-      if(searchEl) searchEl.disabled = false;
-      // Fall back to local filter
-      var list = getQuoteList();
-      _filteredQuotes = q ? list.filter(function(e){
-        return (e.name||"").toLowerCase().indexOf(q)!==-1
-            || (e.mobile||"").indexOf(q)!==-1;
-      }) : list;
-      renderQuotesListHTML(_filteredQuotes, false);
-    });
-}
-
-function renderQuotesListHTML(list, loading){
-  var el = document.getElementById("quotesList");
-  if(!el) return;
-  var countEl = document.getElementById("quotesCount");
-
-  if(loading){
-    el.innerHTML = '<div class="q-list-empty"><div class="spinner-sm"></div>Loading quotes...</div>';
-    if(countEl) countEl.textContent = "Loading...";
-    return;
-  }
-
-  if(countEl) countEl.textContent = list.length+" quote"+(list.length!==1?"s":"");
-
-  if(!list.length){
-    el.innerHTML = '<div class="q-list-empty"><div class="ico">&#128196;</div>No quotes found<br><span style="font-size:13px;margin-top:6px;display:block">' 
-      + (isCloudReady() ? "No quotes in cloud yet. Save a quote to see it here." : "Save a quote to see it here.")
-      + '</span></div>';
-    return;
-  }
-
-  var html = "";
-  list.forEach(function(q, idx){
-    var rooms = q.rooms||0;
-    var total = q.total||0;
-    var hasLocal = !!q.draft;
-    html += '<div class="q-card" onclick="openQuoteFromList('+idx+')">'
-      +'<div class="q-card-row">'
-      +'<div style="flex:1;min-width:0">'
-      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">'
-      +'<div class="q-card-id">'+esc(q.id||"—")+'</div>'
-      +(q.fromCloud ? '<span style="background:#0a2a1a;color:#81c784;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:1px">CLOUD</span>' : '')
-      +(!hasLocal && q.fromCloud ? '<span style="background:#1a1a0a;color:#f39c12;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:1px">TAP TO LOAD</span>' : '')
-      +'</div>'
-      +'<div class="q-card-name">'+esc(q.name||"Unknown")+'</div>'
-      +'<div class="q-card-meta">'+esc(q.mobile||"")+(q.arch?' &nbsp;·&nbsp; '+esc(q.arch):'')+'</div>'
-      +'<div class="q-card-meta">'+esc(q.date||"")+'</div>'
-      +'</div>'
-      +'<div style="text-align:right;flex-shrink:0;margin-left:12px;display:flex;flex-direction:column;align-items:flex-end;gap:6px">'
-      +(total?'<div class="q-card-total">&#8377;'+Number(Math.round(total)).toLocaleString("en-IN")+'</div>':'')
-      +'<button onclick="deleteQuoteFromList('+idx+',event)" style="background:transparent;border:1px solid #2a2a2a;border-radius:6px;color:#444;font-size:13px;cursor:pointer;padding:4px 8px;-webkit-tap-highlight-color:transparent">&#128465;</button>'
-      +'</div>'
-      +'</div>'
-      +'<div style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap">'
-      +'<span class="q-card-staff">&#128100; '+esc(q.staff||"Staff")+(q.staff2?' &amp; '+esc(q.staff2):'')+'</span>'
-      +(rooms?'<span class="q-card-rooms">'+rooms+' room'+(rooms!==1?"s":"")+'</span>':'')
-      +'<span class="q-card-rooms" style="margin-left:auto">&#128337; '+esc(q.updated||q.date||"")+'</span>'
-      +'</div>'
-      +'</div>';
-  });
-  el.innerHTML = html;
-}
-
-function openQuoteFromList(idx){
-  var entry = _filteredQuotes[idx];
-  if(!entry) return;
-
-  if(entry.draft){
-    // Has local copy — open immediately
-    try{
-      applyLoadedQuote(JSON.parse(entry.draft));
-      showToast("Opened: "+entry.id);
-    } catch(e){ showToast("Error opening quote"); }
-    return;
-  }
-
-  // No local copy — fetch full quote from cloud
-  if(!isCloudReady()){
-    showToast("Cannot load — Apps Script not configured");
-    return;
-  }
-
+function openQ(i){
+  var e=qFiltered[i];if(!e)return;
+  if(e.draft){try{applyQ(JSON.parse(e.draft));showToast("Opened: "+e.id);}catch(ex){showToast("Error opening");}return;}
+  if(!cloudOK()){showToast("Cannot load — not configured");return;}
   showToast("Loading from cloud...");
-  fetch(APPS_SCRIPT_URL+"?action=loadQuote&id="+encodeURIComponent(entry.id))
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(d.quote){
-        // Cache it locally for next time
-        entry.draft = JSON.stringify(d.quote);
-        saveToQuoteListEntry(entry);
-        applyLoadedQuote(d.quote);
-        showToast("Loaded: "+entry.id);
-      } else {
-        showToast("Quote not found in cloud");
-      }
-    })
-    .catch(function(){ showToast("Error loading from cloud"); });
+  fetch(ASU+"?action=loadQuote&id="+encodeURIComponent(e.id))
+    .then(function(r){return r.json();})
+    .then(function(d){if(d.quote){e.draft=JSON.stringify(d.quote);saveQEntry(e);applyQ(d.quote);showToast("Loaded: "+e.id);}else{showToast("Not found in cloud");}})
+    .catch(function(){showToast("Error loading");});
 }
 
-function saveToQuoteListEntry(entry){
-  // Update a single entry in local list
-  var list = getQuoteList();
-  var found = false;
-  list = list.map(function(q){
-    if(q.id === entry.id){ found=true; return entry; }
-    return q;
-  });
-  if(!found) list.unshift(entry);
-  localStorage.setItem("darla_quotes_list", JSON.stringify(list));
+function saveQEntry(e){
+  var list=getList(),found=false;
+  list=list.map(function(q){if(q.id===e.id){found=true;return e;}return q;});
+  if(!found)list.unshift(e);
+  localStorage.setItem("darla_quotes_list",JSON.stringify(list));
 }
 
-function deleteQuoteFromList(idx, event){
-  event.stopPropagation();
-  var entry = _filteredQuotes[idx];
-  if(!entry) return;
-  if(!confirm("Delete quote "+entry.id+" for "+entry.name+"?")) return;
-
-  // Remove from local
-  var list = getQuoteList().filter(function(q){ return q.id !== entry.id; });
-  localStorage.setItem("darla_quotes_list", JSON.stringify(list));
-  _filteredQuotes.splice(idx,1);
-  renderQuotesListHTML(_filteredQuotes, false);
-  showToast("Deleted "+entry.id);
-
-  // Also mark deleted in cloud
-  if(isCloudReady()){
-    fetch(APPS_SCRIPT_URL, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({action:"deleteQuote", id:entry.id})
-    }).catch(function(){});
-  }
+function delQ(i,ev){
+  ev.stopPropagation();
+  var e=qFiltered[i];if(!e)return;
+  if(!confirm("Delete "+e.id+" for "+e.name+"?"))return;
+  localStorage.setItem("darla_quotes_list",JSON.stringify(getList().filter(function(q){return q.id!==e.id;})));
+  qFiltered.splice(i,1);drawQList(qFiltered,false);showToast("Deleted "+e.id);
+  if(cloudOK())fetch(ASU,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"deleteQuote",id:e.id})}).catch(function(){});
 }
 
-// ════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // MODALS
-// ════════════════════════════════════════════
-function openModal(id){ document.getElementById(id).classList.add("open"); }
-function closeModal(id){ document.getElementById(id).classList.remove("open"); }
+// ═══════════════════════════════════════════════════════
+function openModal(id){document.getElementById(id).classList.add("open");}
+function closeModal(id){document.getElementById(id).classList.remove("open");}
 
-// ════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // UTILS
-// ════════════════════════════════════════════
-function uid(){ return Math.random().toString(36).substr(2,8); }
+// ═══════════════════════════════════════════════════════
+function uid(){return Math.random().toString(36).substr(2,8);}
+function nextId(){var n=parseInt(localStorage.getItem("darla_qnum")||"99")+1;localStorage.setItem("darla_qnum",String(n));return "DRL-"+n;}
+function esc(t){if(!t)return"";return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 
-function nextQuoteId(){
-  var last = parseInt(localStorage.getItem("darla_last_quote_num")||"99");
-  var next = last + 1;
-  localStorage.setItem("darla_last_quote_num", String(next));
-  return "DRL-" + String(next);
-}
-function esc(t){ if(!t)return""; return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
-var _showPrices = true;
-function togglePriceMode(){
-  _showPrices = !_showPrices;
-  if(_showPrices){
-    document.body.classList.remove("hide-prices");
-    document.getElementById("priceModeLabel").textContent = "Hide Prices";
-  } else {
-    document.body.classList.add("hide-prices");
-    document.getElementById("priceModeLabel").textContent = "Show Prices";
-  }
+var pricesOn=true;
+function togglePrices(){
+  pricesOn=!pricesOn;
+  document.body.classList.toggle("hide-prices",!pricesOn);
+  document.getElementById("priceBtn").textContent=pricesOn?"Hide \u20B9":"Show \u20B9";
 }
 
 function showToast(msg){
   var t=document.getElementById("toast");
-  t.textContent=msg; t.classList.add("show");
+  t.textContent=msg;t.classList.add("show");
   setTimeout(function(){t.classList.remove("show");},2500);
 }
 </script>
