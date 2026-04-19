@@ -344,7 +344,8 @@ transition: background-color 5000s ease-in-out 0s;
 ```
 <div class="staff-select">
   <select class="inp" id="staffSelect" onchange="onStaffSelect()">
-    <option value="">Select Staff Member...</option>
+    <option value="">— Select Staff Member —</option>
+    <option value="Deepesh Darla">Deepesh Darla</option>
   </select>
 </div>
 
@@ -626,12 +627,12 @@ var PRODUCT_SEARCH_URL = "index.html";
 // ════════════════════════════════════════════
 // STAFF DATA — loaded from Apps Script or fallback
 // ════════════════════════════════════════════
-// ── CONFIGURE YOUR STAFF HERE (used when Apps Script is not set up) ──
+// ── STAFF LIST — shown instantly, updated from Google Sheet in background ──
+// Add your staff here as a fallback (used if cloud fetch fails / offline)
+// Your full staff list is managed in the Google Sheet > Staff tab
 var STAFF_LIST = [
-  {name:"Deepesh Darla",   pin:"1516"},
-  {name:"Staff Member 1",  pin:"1234"},
-  {name:"Staff Member 2",  pin:"5678"}
-  // Add more staff: {name:"Name", pin:"1234"}
+  {name:"Deepesh Darla", pin:"1516"}
+  // Cloud will add more staff from your Google Sheet automatically
 ];
 
 // ════════════════════════════════════════════
@@ -737,10 +738,9 @@ function loadStaffList(){
 
 function populateStaffDropdown(){
   var sel = document.getElementById("staffSelect");
-  if(!sel) return;
-  // Clear all options except the first placeholder
-  while(sel.options.length > 1) sel.remove(1);
-  // Add staff options
+  if(!sel || !STAFF_LIST || !STAFF_LIST.length) return;
+  // Replace ALL options with fresh list from STAFF_LIST
+  sel.innerHTML = '<option value="">— Select Staff Member —</option>';
   STAFF_LIST.forEach(function(s){
     var opt = document.createElement("option");
     opt.value = s.name;
