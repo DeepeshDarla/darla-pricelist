@@ -59,7 +59,7 @@ select.inp option{background:#1e1e1e}
 .btn-row .btn{margin-top:0}
 
 /* ── PIN PAD ── */
-.pin-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+.pin-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px 24px 80px}
 .pin-logo{width:180px;height:65px;object-fit:contain;margin-bottom:24px}
 .pin-title{font-size:28px;font-weight:900;margin-bottom:4px}
 .pin-sub{font-size:13px;color:var(–muted);margin-bottom:10px}
@@ -148,6 +148,9 @@ select.inp option{background:#1e1e1e}
 
 /* ── BOTTOM BAR ── */
 .bottom-bar{position:fixed;bottom:0;left:0;right:0;background:#111;border-top:1px solid var(–border);padding:12px 16px;display:flex;gap:8px;z-index:50}
+#screen-login.active ~ * .bottom-bar,
+#screen-login:not(.active) + * .bottom-bar{display:none}
+body:has(#screen-login.active) .bottom-bar{display:none!important}
 
 /* ── QUOTE MODE BANNER ── */
 .quote-mode-banner{background:var(–red);color:#fff;text-align:center;padding:10px;font-size:13px;font-weight:700;letter-spacing:0.5px}
@@ -459,7 +462,7 @@ transition: background-color 5000s ease-in-out 0s;
     <div id="roomsContainer"></div>
     <button class="btn btn-add" onclick="showAddRoomModal()">&#43; Add Room</button>
   </div>
-  <div class="bottom-bar no-print" style="gap:6px">
+  <div class="bottom-bar no-print" style="gap:6px;display:none">
     <button class="btn btn-ghost" style="margin-top:0;flex:1" onclick="saveAndGoList()">&#128196; All Quotes</button>
     <button class="btn btn-ghost" style="margin-top:0;flex:1" onclick="saveQuote()">&#128190; Save</button>
     <button class="btn" style="margin-top:0;flex:2" onclick="goTo('screen-summary')">Summary &#8594;</button>
@@ -487,7 +490,7 @@ transition: background-color 5000s ease-in-out 0s;
     </div>
   </div>
   <div class="summary-wrap" id="summaryContent"></div>
-  <div class="bottom-bar no-print" style="gap:6px">
+  <div class="bottom-bar no-print" style="gap:6px;display:none">
     <button class="btn btn-ghost" style="margin-top:0;flex:1" onclick="shareQuote()">&#128279; Share</button>
     <button class="btn" style="margin-top:0;flex:2" onclick="saveAndExit()">&#128190; Save &amp; Exit</button>
     <button class="btn btn-ghost" style="margin-top:0;flex:1" onclick="window.print()">&#128424;</button>
@@ -724,16 +727,21 @@ function loadStaffList(){
   if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf("YOUR_")===0) return;
 
   // Step 3: Fetch fresh from cloud in background, update cache + dropdown
-  fetch(APPS_SCRIPT_URL+"?action=getStaff")
+  fetch(APPS_SCRIPT_URL+"?action=getStaff&t="+Date.now()) // cache-bust
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(d.staff && d.staff.length){
         STAFF_LIST = d.staff;
         localStorage.setItem("darla_staff_cache", JSON.stringify(d.staff));
-        populateStaffDropdown(); // Refresh dropdown with latest
+        populateStaffDropdown(); // Refresh dropdown with full staff list
+        console.log("Staff loaded from cloud:", d.staff.length, "members");
+      } else {
+        console.log("Cloud returned no staff:", JSON.stringify(d));
       }
     })
-    .catch(function(){}); // Cache or hardcoded list still works offline
+    .catch(function(e){
+      console.log("Staff cloud fetch failed:", e.message);
+    });
 }
 
 function populateStaffDropdown(){
@@ -753,11 +761,18 @@ var loginPin="", selectedStaff=null;
 
 function onStaffSelect(){
   var name = document.getElementById("staffSelect").value;
-  selectedStaff = STAFF_LIST.find(function(s){return s.name===name;})||null;
+  // Match by name (trim whitespace, case-insensitive for safety)
+  selectedStaff = STAFF_LIST.find(function(s){
+    return s.name.trim().toLowerCase() === name.trim().toLowerCase();
+  }) || null;
   loginPin="";
   updateLoginDots();
   document.getElementById("loginError").textContent="";
   document.getElementById("loginSub").textContent = name ? "Enter your PIN" : "Select your name to continue";
+  if(name && !selectedStaff){
+    // Name is in dropdown but not in STAFF_LIST — can happen if cloud added options but not list
+    document.getElementById("loginError").textContent = "Loading staff data... tap your name again";
+  }
 }
 
 function lPk(k){
@@ -1246,59 +1261,51 @@ function renderWindow(win, ri, wi){
 
 function renderTreatment(t, ri, wi, ti, win){
   var typeLabel = t.type==="curtains"?"Curtains":t.type==="roman_blinds"?"Roman Blinds":"Blinds";
+  var C = ri+","+wi+","+ti; // coordinate shorthand
+
   var html='<div class="treatment-card">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
     +'<span class="treatment-type-badge '+t.type+'">'+typeLabel+'</span>'
-    +'<button class="btn btn-ghost btn-sm" style="color:#e57373;border-color:#3a1010;padding:4px 10px;font-size:11px" onclick="deleteTreatment('+ri+','+wi+','+ti+')">✕ Remove</button>'
+    +'<button class="btn btn-ghost btn-sm" style="color:#e57373;border-color:#3a1010;padding:4px 10px;font-size:11px" onclick="deleteTreatment('+C+')">&#10005; Remove</button>'
     +'</div>';
 
-  // Set treatment type on components for calc
   t.components.forEach(function(c){ c.treatmentType = t.type; });
-
   var hasComps = t.components.length > 0;
 
-  // No components yet — show initial selection buttons
   if(!hasComps){
     if(t.type==="curtains"||t.type==="roman_blinds"){
       html+='<div class="next-actions">'
         +'<div class="next-actions-label">Select fabric type to begin</div>'
         +'<div class="next-action-row">'
-        +'<button class="nab nab-main" onclick="addComponent('+ri+','+wi+','+ti+','main')">&#129525; Main Fabric</button>'
-        +'<button class="nab nab-sheer" onclick="addComponent('+ri+','+wi+','+ti+','sheer')">&#129525; Sheer</button>'
-        +'</div>'
-        +'</div>';
+        +'<button class="nab nab-main" onclick="addComponent('+C+',\'main\')">&#129525; Main Fabric</button>'
+        +'<button class="nab nab-sheer" onclick="addComponent('+C+',\'sheer\')">&#129525; Sheer</button>'
+        +'</div></div>';
     } else {
-      html+='<button class="nab nab-blind" style="width:100%;border:none;padding:12px;border-radius:9px;cursor:pointer" onclick="addComponent('+ri+','+wi+','+ti+','blind')">&#43; Select Blind Product</button>';
+      html+='<button class="nab nab-blind" style="width:100%;border:none;padding:12px;border-radius:9px;cursor:pointer" onclick="addComponent('+C+',\'blind\')">&#43; Select Blind Product</button>';
     }
   }
 
-  // Render existing components
   t.components.forEach(function(c, ci){
     html += renderComponent(c, ri, wi, ti, ci, win, t);
   });
 
-  // After components — smart next-action buttons
   if(hasComps){
-    html+='<div class="next-actions">'
-      +'<div class="next-actions-label">What's next?</div>';
-
+    html+='<div class="next-actions"><div class="next-actions-label">What's next?</div>';
     if(t.type==="curtains"||t.type==="roman_blinds"){
       var hasMain  = t.components.some(function(c){return c.layer==="main";});
       var hasSheer = t.components.some(function(c){return c.layer==="sheer";});
       html+='<div class="next-action-row">';
-      if(!hasMain)  html+='<button class="nab nab-main" onclick="addComponent('+ri+','+wi+','+ti+','main')">&#43; Add Main</button>';
-      if(!hasSheer) html+='<button class="nab nab-sheer" onclick="addComponent('+ri+','+wi+','+ti+','sheer')">&#43; Add Sheer</button>';
-      if(hasMain && hasSheer) html+='<span style="font-size:12px;color:#4caf50;padding:6px 0">&#10003; Main &amp; Sheer added</span>';
+      if(!hasMain)  html+='<button class="nab nab-main" onclick="addComponent('+C+',\'main\')">&#43; Add Main</button>';
+      if(!hasSheer) html+='<button class="nab nab-sheer" onclick="addComponent('+C+',\'sheer\')">&#43; Add Sheer</button>';
+      if(hasMain&&hasSheer) html+='<span style="font-size:12px;color:#4caf50;padding:6px 0">&#10003; Main &amp; Sheer added</span>';
       html+='</div>';
     } else {
-      html+='<button class="nab nab-blind" style="width:100%;border:none;padding:10px;border-radius:9px;cursor:pointer;margin-bottom:4px" onclick="addComponent('+ri+','+wi+','+ti+','blind')">&#43; Add Another Blind</button>';
+      html+='<button class="nab nab-blind" style="width:100%;border:none;padding:10px;border-radius:9px;cursor:pointer;margin-bottom:4px" onclick="addComponent('+C+',\'blind\')">&#43; Add Another Blind</button>';
     }
-
     html+='<div class="next-action-row" style="margin-top:6px">'
       +'<button class="nab nab-window" onclick="showAddWindowModal('+ri+')">&#43; Add Window</button>'
       +'<button class="nab nab-room" onclick="showAddRoomModal()">&#43; Add Room</button>'
-      +'</div>'
-      +'</div>';
+      +'</div></div>';
   }
 
   html+='</div>';
@@ -1718,6 +1725,11 @@ function goTo(screenId){
   var s = document.getElementById(screenId);
   if(s) s.classList.add("active");
   window.scrollTo(0,0);
+  // Hide bottom bars on login/customer screens, show on builder/summary
+  var showBar = (screenId==="screen-builder"||screenId==="screen-summary");
+  document.querySelectorAll(".bottom-bar").forEach(function(b){
+    b.style.display = showBar ? "flex" : "none";
+  });
   if(screenId==="screen-summary") renderSummary();
   if(screenId==="screen-builder") renderBuilder();
   if(screenId==="screen-quotes")  renderQuotesList();
