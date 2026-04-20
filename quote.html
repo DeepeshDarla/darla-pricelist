@@ -148,11 +148,20 @@ background:linear-gradient(180deg,#fff 30%,#bbb 100%);
 .pk{
 background:var(–card);border:1px solid var(–border2);border-radius:15px;
 height:70px;font-size:26px;font-weight:600;color:var(–text);
-cursor:pointer;width:100%;-webkit-tap-highlight-color:transparent;
-transition:background 0.1s,transform 0.1s;
-box-shadow:0 2px 8px rgba(0,0,0,0.25)
+cursor:pointer;width:100%;
+-webkit-tap-highlight-color:rgba(192,57,43,0.4);
+transition:background 0.08s,transform 0.08s,color 0.08s;
+box-shadow:0 2px 8px rgba(0,0,0,0.25);
+touch-action:manipulation;
+user-select:none;-webkit-user-select:none;
 }
-.pk:active{background:var(–red);border-color:var(–red);transform:scale(0.93)}
+.pk:active,.pk.pressed{
+background:var(–red)!important;
+border-color:var(–red)!important;
+color:#fff!important;
+transform:scale(0.92)!important;
+box-shadow:0 0 0 3px rgba(192,57,43,0.35)!important;
+}
 .pk.del{font-size:20px;color:var(–text4)}
 .pk.ghost{opacity:0;pointer-events:none}
 .pin-err{color:#ff6b6b;font-size:13px;margin-top:14px;text-align:center;min-height:18px;font-weight:600}
@@ -834,6 +843,19 @@ window.addEventListener("DOMContentLoaded",function(){
 
 function init(){
   buildStaffDrop();
+  // Add touch feedback to PIN buttons — iOS :active is unreliable
+  document.querySelectorAll(".pk").forEach(function(btn){
+    btn.addEventListener("touchstart", function(e){
+      this.classList.add("pressed");
+    }, {passive:true});
+    btn.addEventListener("touchend", function(e){
+      var self = this;
+      setTimeout(function(){ self.classList.remove("pressed"); }, 120);
+    }, {passive:true});
+    btn.addEventListener("touchcancel", function(){
+      this.classList.remove("pressed");
+    }, {passive:true});
+  });
 
   var sel = localStorage.getItem("darla_selected_product");
   var ctx = localStorage.getItem("quote_product_ctx");
