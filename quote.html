@@ -698,6 +698,26 @@ body[data-pmode=“select”] .room-sub-footer,
 body[data-pmode=“select”] .win-sub-line,
 body[data-pmode=“select”] .win-meas-block{display:none!important}
 }
+
+/* ── QUOTE LINE ITEMS IN PRINT ── */
+.sum-comp-lines{display:none}   /* hidden on screen */
+.quote-only{display:none}
+
+/* Print modes control visibility */
+@media print{
+body[data-pmode=“quote”] .sum-comp-lines,
+body[data-pmode=“quote”] .quote-only{display:block!important}
+
+body[data-pmode=“measure”] .sum-comp-lines,
+body[data-pmode=“select”] .sum-comp-lines{display:none!important}
+
+/* Compact print header — no margin before first room */
+.print-hdr{margin-bottom:3mm!important;padding-bottom:3mm!important}
+.sum-cust{margin-bottom:3mm!important;padding-bottom:3mm!important}
+
+/* Stitching style shown in selection/measurement sheets */
+.sum-comp-lines{border-top:0.25pt solid #eee;margin-top:0.5mm;padding-top:0.5mm}
+}
 </style>
 
 </head>
@@ -1185,7 +1205,7 @@ function confirmTx(type){
     if(type==="curtains"&&srcComps.length>0){
       // Copy Main and Sheer components
       srcComps.forEach(function(sc){
-        tx.components.push({id:uid(),layer:sc.layer,product:JSON.parse(JSON.stringify(sc.product)),calc:{}});
+        tx.components.push({id:uid(),layer:sc.layer,product:JSON.parse(JSON.stringify(sc.product)),stitchStyle:sc.stitchStyle||"Pleated",calc:{}});
       });
       showToast("Products copied from previous window \u2713");
     } else if(type==="roman_blinds"&&srcComps.length>0){
@@ -1196,7 +1216,7 @@ function confirmTx(type){
       // Copy based on mode — single=main only, double=main+sheer
       srcComps.forEach(function(sc){
         if(sc.layer==="main"||(sc.layer==="sheer"&&tx.blindMode==="double")){
-          tx.components.push({id:uid(),layer:sc.layer,product:JSON.parse(JSON.stringify(sc.product)),calc:{}});
+          tx.components.push({id:uid(),layer:sc.layer,product:JSON.parse(JSON.stringify(sc.product)),stitchStyle:sc.stitchStyle||"Pleated",calc:{}});
         }
       });
       showToast("Products copied ("+tx.blindMode+") \u2713");
@@ -1272,34 +1292,57 @@ function calcComp(win,comp){
   var w=parseFloat(win.width)||0,h=parseFloat(win.height)||0,q=parseInt(win.qty)||1;
   var tt=comp.treatmentType||"curtains";
   var layer=comp.layer||"main";
-  if(tt==="curtains")     return calcCurtains(w,h,mrp,q,layer);
+  var style=comp.stitchStyle||"Pleated";
+  if(tt==="curtains")     return calcCurtains(w,h,mrp,q,layer,style);
   if(tt==="roman_blinds") return calcRoman(w,h,mrp,q);
   if(tt==="blinds")       return calcBlinds(w,h,mrp,q);
-  return calcCurtains(w,h,mrp,q,layer);
+  return calcCurtains(w,h,mrp,q,layer,style);
 }
 
-function calcCurtains(w,h,mrp,qty,layer){
-  var p=Math.ceil((w+10)/24);
-  var l=r2((h+16)/39,0.05);
-  var f=Math.round(p*l*100)/100;
-  var fabricCost=Math.round(f*mrp);
-  var stitching=Math.round(f*60);
-  var extra,extraLbl;
+// ── Curtain calc — style-aware, all line items explicit ──
+// style: Pleated|Plain|Eliza|Ripple|Eyelet
+// Plain uses /48 panels; all others use /24
+function calcCurtains(w,h,mrp,qty,layer,style){
+  style=style||"Pleated";
+  var divisor=(style==="Plain")?48:24;
+  var p=Math.ceil((w+10)/divisor);
+  var l=r2((h+16)/39,0.05);          // panel length
+  var f=Math.round(p*l*100)/100;     // fabric qty
+
+  var lines=[];  // [{lbl, qty, rate, amt}]
+
+  // 1. Fabric
+  lines.push({lbl:"Fabric",qty:f+" mtrs",rate:mrp,amt:Math.round(f*mrp)});
+
+  // 2. Stitching (all styles, all layers)
+  lines.push({lbl:"Stitching",qty:f+" mtrs",rate:60,amt:Math.round(f*60)});
+
+  // 3. Layer-specific base item
   if(layer==="sheer"){
-    // Bottom weight: numPanels × 1.5m × ₹60 × qty
-    extra=Math.round(p*1.5*60);
-    extraLbl="bottomWeight";
+    var bwAmt=Math.round(p*1.5*60);
+    lines.push({lbl:"Bottom Weight",qty:p+" × 1.5m",rate:60,amt:bwAmt});
   } else {
-    // Belt stitching: 2 pcs × ₹100 (fixed per window)
-    extra=200;
-    extraLbl="beltStitch";
+    lines.push({lbl:"Belt Stitching",qty:"2 pcs",rate:100,amt:200});
   }
-  var unitTotal=fabricCost+stitching+extra;
+
+  // 4. Style extras (both layers share tape/rings)
+  if(style==="Eliza"){
+    var tapeAmt=Math.round(p*1.5*350);
+    lines.push({lbl:"Eliza Tape",qty:p+" × 1.5m",rate:350,amt:tapeAmt});
+  } else if(style==="Ripple"){
+    var tapeAmt=Math.round(p*1.5*150);
+    lines.push({lbl:"Ripple Tape",qty:p+" × 1.5m",rate:150,amt:tapeAmt});
+  } else if(style==="Eyelet"){
+    var tapeAmt=Math.round(p*1.5*350);
+    var ringsAmt=Math.round(p*12*15);
+    lines.push({lbl:"Eyelet Tape",qty:p+" × 1.5m",rate:350,amt:tapeAmt});
+    lines.push({lbl:"Eyelet Rings",qty:p+" × 12 nos",rate:15,amt:ringsAmt});
+  }
+
+  var unitTotal=lines.reduce(function(s,l){return s+l.amt;},0);
   return {
     numPanels:p, panelLen:l, fabricQty:f,
-    fabricCost:fabricCost,
-    stitching:stitching,
-    extra:extra, extraLbl:extraLbl,
+    lines:lines,
     unitTotal:unitTotal,
     total:Math.round(unitTotal*qty)
   };
@@ -1371,7 +1414,6 @@ function renderTx(t,ri,wi,ti,win){
   var C=ri+","+wi+","+ti;
   t.components.forEach(function(c){c.treatmentType=t.type;});
   var hasc=t.components.length>0;
-  var ss=t.stitchStyle||"Pleated";
   var bm=t.blindMode||"single";
 
   var html='<div class="tx-card"><div class="tx-head">'
@@ -1380,17 +1422,8 @@ function renderTx(t,ri,wi,ti,win){
     +'<button class="btn btn-ghost btn-sm" style="padding:4px 10px;font-size:11px;color:#ff6b6b;border-color:#3a1010" onclick="delTx('+C+')">&#10005;</button>'
     +'</div>';
 
-  // Treatment meta controls
-  if(t.type==="curtains"){
-    html+='<div class="tx-meta-row">'
-      +'<span class="tx-meta-lbl">Stitch Style</span>'
-      +'<select class="tx-style-sel" onchange="setTxStyle('+ri+','+wi+','+ti+',this.value)">';
-    ["Pleated","Eliza","Ripple","Eyelet","Plain"].forEach(function(s){
-      html+='<option value="'+s+'"'+(ss===s?' selected':'')+'>'+s+'</option>';
-    });
-    html+='</select></div>';
-  }
-  if(t.type==="roman_blinds"){
+  // Stitching style moved to component level
+    if(t.type==="roman_blinds"){
     html+='<div class="tx-meta-row">'
       +'<span class="tx-meta-lbl">Type</span>'
       +'<div class="blind-mode-toggle">'
@@ -1442,8 +1475,12 @@ function renderTx(t,ri,wi,ti,win){
   return html;
 }
 
-function setTxStyle(ri,wi,ti,v){
+function setTxStyle(ri,wi,ti,v){ // kept for compatibility
   APP.quote.rooms[ri].windows[wi].treatments[ti].stitchStyle=v;
+  saveDraft();renderBld();
+}
+function setCompStyle(ri,wi,ti,ci,v){
+  APP.quote.rooms[ri].windows[wi].treatments[ti].components[ci].stitchStyle=v;
   saveDraft();renderBld();
 }
 
@@ -1460,10 +1497,25 @@ function setBlindMode(ri,wi,ti,mode){
 function renderComp(c,ri,wi,ti,ci,win,t){
   var calc=c.product?calcComp(win,Object.assign({},c,{treatmentType:t.type})):{};
   c.calc=calc;
+  var isSheer=(c.layer==="sheer");
+  var isCurtain=(t.type==="curtains");
+  var cs=c.stitchStyle||"Pleated"; // per-component style
+
   var html='<div class="comp-card"><div class="comp-hdr">'
     +'<span class="comp-layer-tag '+c.layer+'">'+(c.layer==="blind"?"BLIND":c.layer.toUpperCase())+'</span>'
     +'<button class="comp-del" onclick="delComp('+ri+','+wi+','+ti+','+ci+')">&#128465;</button>'
     +'</div>';
+
+  // Stitching style selector — curtains only, on both Main and Sheer
+  if(isCurtain){
+    html+='<div class="tx-meta-row">'
+      +'<span class="tx-meta-lbl">Stitch</span>'
+      +'<select class="tx-style-sel" onchange="setCompStyle('+ri+','+wi+','+ti+','+ci+',this.value)">';
+    ["Pleated","Eliza","Ripple","Eyelet","Plain"].forEach(function(s){
+      html+='<option value="'+s+'"'+(cs===s?' selected':'')+'>'+s+'</option>';
+    });
+    html+='</select></div>';
+  }
 
   if(!c.product){
     html+='<button class="btn btn-sm" style="width:100%;background:#141414;border:1.5px dashed #383838;color:#666666;box-shadow:none" onclick="pickProduct('+ri+','+wi+','+ti+','+ci+')">&#128269; Select Product</button></div>';
@@ -1475,15 +1527,12 @@ function renderComp(c,ri,wi,ti,ci,win,t){
   var catalog=p.catalog||p.product||p.blind_type||p.model||"";
   var sno=p.s_no||p["s.no"]||"";
   var unitLbl=t.type==="blinds"?"sqft":"mtr";
-
-  // Format: Brand / Catalog / S.No — ₹MRP
   var nameParts=[brand,catalog,sno].filter(Boolean);
-  html+='<div class="comp-product-name">'+esc(nameParts.join(" / "))+'</div>'
-    +'<div class="comp-brand-row" style="display:flex;align-items:center;justify-content:space-between">'
-    +'<span style="font-size:12px;font-weight:700;color:#aaa">&#8377;'+Number(p.mrp||0).toLocaleString("en-IN")+'/'+unitLbl+'</span>'
-    +'<span style="font-size:10px;color:#555">tap to edit</span>'
-    +'</div>';
 
+  // Product name: Brand / Catalog / S.No
+  html+='<div class="comp-product-name">'+esc(nameParts.join(" / "))+'</div>';
+
+  // MRP edit row (compact)
   html+='<div class="comp-mrp-row">'
     +'<span class="comp-mrp-lbl">MRP /'+unitLbl+'</span>'
     +'<input class="comp-mrp-inp" type="number" value="'+esc(String(p.mrp||0))+'" min="0" step="0.5" inputmode="decimal" onchange="editMrp('+ri+','+wi+','+ti+','+ci+',this.value)" onclick="this.select()">'
@@ -1491,30 +1540,72 @@ function renderComp(c,ri,wi,ti,ci,win,t){
 
   if(calc&&calc.total){
     html+='<div class="comp-calc">';
+
     if(t.type==="curtains"){
-      html+='<div class="calc-row"><span class="l">Panels &times; Length</span><span class="v">'+calc.numPanels+' &times; '+calc.panelLen+'m</span></div>'
-        +'<div class="calc-row"><span class="l">Fabric qty</span><span class="v">'+calc.fabricQty+' mtrs</span></div>'
-        +'<div class="calc-row calc-sub"><span class="l">Fabric cost</span><span class="v">'+fmt(calc.fabricCost)+'</span></div>'
-        +'<div class="calc-row calc-sub"><span class="l">Stitching @&#8377;60/m</span><span class="v">'+fmt(calc.stitching)+'</span></div>';
-      if(c.layer==="sheer"){
-        html+='<div class="calc-row calc-sub"><span class="l">Bottom weight ('+calc.numPanels+' &times; 1.5m)</span><span class="v">'+fmt(calc.extra)+'</span></div>';
-      } else {
-        html+='<div class="calc-row calc-sub"><span class="l">Belt stitching (2 pcs)</span><span class="v">'+fmt(calc.extra)+'</span></div>';
+      // Qty × Rate = Total for each line
+      html+='<div class="calc-row" style="font-size:11px;color:#555;margin-bottom:4px">'
+        +'<span class="l">'+calc.numPanels+' panels \xd7 '+calc.panelLen+'m = '+calc.fabricQty+' mtrs</span></div>';
+      (calc.lines||[]).forEach(function(ln){
+        html+='<div class="calc-row">'
+          +'<span class="l">'+ln.lbl+'</span>'
+          +'<span class="v" style="display:flex;gap:6px;align-items:baseline">'
+          +'<span style="font-size:10px;color:#666;white-space:nowrap">'+ln.qty+' \xd7 '+fmt(ln.rate)+'</span>'
+          +'<span>=</span>'
+          +'<span>'+fmt(ln.amt)+'</span></span></div>';
+      });
+      if((parseInt(win.qty)||1)>1){
+        html+='<div class="calc-row" style="border-top:1px solid #1e1e1e;margin-top:4px;padding-top:4px">'
+          +'<span class="l">Unit total</span><span class="v">'+fmt(calc.unitTotal)+'</span></div>';
+        html+='<div class="calc-row"><span class="l">\xd7 '+win.qty+' windows</span>'
+          +'<span class="v">'+fmt(calc.total)+'</span></div>';
       }
+
     } else if(t.type==="roman_blinds"){
-      html+='<div class="calc-row"><span class="l">Area</span><span class="v">'+calc.sqft+' sqft</span></div>'
-        +'<div class="calc-row calc-sub"><span class="l">Mechanism @&#8377;475/sqft</span><span class="v">'+fmt(calc.matCost)+'</span></div>'
-        +'<div class="calc-row"><span class="l">Panels &times; Length</span><span class="v">'+calc.panels+' &times; '+calc.panelLen+'m</span></div>'
-        +'<div class="calc-row"><span class="l">Fabric qty</span><span class="v">'+calc.fabricQty+' mtrs</span></div>'
-        +'<div class="calc-row calc-sub"><span class="l">Fabric cost</span><span class="v">'+fmt(calc.fabCost)+'</span></div>'
-        +'<div class="calc-row calc-sub"><span class="l">Lining @&#8377;200/m</span><span class="v">'+fmt(calc.lining)+'</span></div>'
-        +'<div class="calc-row calc-sub"><span class="l">Installation</span><span class="v">'+fmt(calc.installation)+'</span></div>'
-        +'<div class="calc-row calc-sub"><span class="l">Stitching</span><span class="v">'+fmt(calc.stitching)+'</span></div>';
-    } else {
       html+='<div class="calc-row"><span class="l">Area</span><span class="v">'+calc.sqft+' sqft</span></div>';
+      html+='<div class="calc-row"><span class="l">Mechanism</span>'
+        +'<span class="v" style="display:flex;gap:6px;align-items:baseline">'
+        +'<span style="font-size:10px;color:#666">'+calc.sqft+' sqft \xd7 '+fmt(475)+'</span>'
+        +'<span>=</span><span>'+fmt(calc.matCost)+'</span></span></div>';
+      html+='<div class="calc-row" style="font-size:11px;color:#555;margin:3px 0">'
+        +'<span class="l">'+calc.panels+' panels \xd7 '+calc.panelLen+'m = '+calc.fabricQty+' mtrs</span></div>';
+      html+='<div class="calc-row"><span class="l">Fabric</span>'
+        +'<span class="v" style="display:flex;gap:6px;align-items:baseline">'
+        +'<span style="font-size:10px;color:#666">'+calc.fabricQty+'m \xd7 '+fmt(p.mrp)+'</span>'
+        +'<span>=</span><span>'+fmt(calc.fabCost)+'</span></span></div>';
+      html+='<div class="calc-row"><span class="l">Lining</span>'
+        +'<span class="v" style="display:flex;gap:6px;align-items:baseline">'
+        +'<span style="font-size:10px;color:#666">'+calc.fabricQty+'m \xd7 '+fmt(200)+'</span>'
+        +'<span>=</span><span>'+fmt(calc.lining)+'</span></span></div>';
+      html+='<div class="calc-row"><span class="l">Installation</span>'
+        +'<span class="v" style="display:flex;gap:6px;align-items:baseline">'
+        +'<span style="font-size:10px;color:#666">1 window \xd7 '+fmt(350)+'</span>'
+        +'<span>=</span><span>'+fmt(calc.installation)+'</span></span></div>';
+      html+='<div class="calc-row"><span class="l">Stitching</span>'
+        +'<span class="v" style="display:flex;gap:6px;align-items:baseline">'
+        +'<span style="font-size:10px;color:#666">1 window \xd7 '+fmt(350)+'</span>'
+        +'<span>=</span><span>'+fmt(calc.stitching)+'</span></span></div>';
+      if((parseInt(win.qty)||1)>1){
+        html+='<div class="calc-row" style="border-top:1px solid #1e1e1e;margin-top:4px;padding-top:4px">'
+          +'<span class="l">Unit total</span><span class="v">'+fmt(calc.unitTotal)+'</span></div>';
+        html+='<div class="calc-row"><span class="l">\xd7 '+win.qty+' windows</span>'
+          +'<span class="v">'+fmt(calc.total)+'</span></div>';
+      }
+
+    } else {
+      // Blinds
+      html+='<div class="calc-row"><span class="l">Area</span><span class="v">'+calc.sqft+' sqft</span></div>';
+      html+='<div class="calc-row"><span class="l">Blind fabric</span>'
+        +'<span class="v" style="display:flex;gap:6px;align-items:baseline">'
+        +'<span style="font-size:10px;color:#666">'+calc.sqft+' sqft \xd7 '+fmt(p.mrp)+'</span>'
+        +'<span>=</span><span>'+fmt(calc.unitTotal)+'</span></span></div>';
+      if((parseInt(win.qty)||1)>1){
+        html+='<div class="calc-row"><span class="l">\xd7 '+win.qty+' windows</span>'
+          +'<span class="v">'+fmt(calc.total)+'</span></div>';
+      }
     }
-    if(win.qty>1) html+='<div class="calc-row"><span class="l">&times; '+win.qty+' windows</span><span class="v">'+fmt(calc.unitTotal)+'</span></div>';
-    html+='<div class="calc-row total"><span class="l">Total</span><span class="v">'+fmt(calc.total)+'</span></div></div>';
+
+    html+='<div class="calc-row total"><span class="l">TOTAL</span><span class="v">'+fmt(calc.total)+'</span></div>';
+    html+='</div>'; // comp-calc
   }
 
   html+='<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px;font-size:11px" onclick="pickProduct('+ri+','+wi+','+ti+','+ci+')">&#8635; Change Product</button></div>';
@@ -1596,13 +1687,13 @@ function renderSum(){
           var cc=calcComp(win,Object.assign({},c,{treatmentType:tx.type}));
           wt+=cc.total||0;
           if(tx.type==="blinds"){
-            printCalcLines.push({k:"Area",v:(cc.sqft||0)+" sqft"});
+            printCalcLines.push({k:"BLIND Area",v:(cc.sqft||0)+" sqft"});
           } else if(tx.type==="roman_blinds"){
-            printCalcLines.push({k:c.layer.toUpperCase()+" panels",v:(cc.panels||0)+" \xd7 "+(cc.panelLen||0)+"m"});
-            printCalcLines.push({k:"Fabric",v:(cc.fabricQty||0)+" mtrs"});
+            printCalcLines.push({k:c.layer.toUpperCase()+" panels",v:(cc.panels||0)+" \xd7 "+(cc.panelLen||0)+"m = "+(cc.fabricQty||0)+" mtrs"});
           } else {
-            printCalcLines.push({k:c.layer.toUpperCase()+" panels",v:(cc.numPanels||0)+" \xd7 "+(cc.panelLen||0)+"m"});
-            printCalcLines.push({k:"Fabric",v:(cc.fabricQty||0)+" mtrs"});
+            // Curtains — use calc.lines for accurate panel count per style
+            var np=cc.numPanels||0, pl=cc.panelLen||0, fq=cc.fabricQty||0;
+            printCalcLines.push({k:c.layer.toUpperCase()+" panels",v:np+" \xd7 "+pl+"m = "+fq+" mtrs"});
           }
         });
       });
@@ -1649,11 +1740,35 @@ function renderSum(){
           var catalog=p.catalog||p.product||p.blind_type||p.model||"";
           var sno=p.s_no||p["s.no"]||"";
           var nameLine=[brand,catalog,sno].filter(Boolean).join(" / ");
+          var styleNote=(tx.type==="curtains"&&c.stitchStyle)?" ["+c.stitchStyle+"]":"";
           var qtyLbl=tx.type==="blinds"?(cc.sqft||0)+" sqft":(cc.fabricQty||0)+" mtrs";
           h+='<div class="sum-comp-row">'
             +'<div class="sum-comp-info">'
             +'<span class="tag">'+(c.layer==="blind"?"BLIND":c.layer.toUpperCase())+'</span>'
-            +'<div class="name">'+esc(nameLine)+'</div>'
+            +'<div class="name">'+esc(nameLine)+esc(styleNote)+'</div>'
+            // Quote mode: show all line items
+            +'<div class="sum-comp-lines quote-only">';
+          if(tx.type==="curtains"&&cc.lines){
+            cc.lines.forEach(function(ln){
+              h+='<div style="display:flex;justify-content:space-between;font-size:10pt;padding:0.3mm 0">'
+                +'<span style="color:#555">'+ln.lbl+'</span>'
+                +'<span style="color:#555;font-size:9pt">'+ln.qty+' &times; '+fmt(ln.rate)+'</span>'
+                +'<span style="font-weight:700">'+fmt(ln.amt)+'</span></div>';
+            });
+          } else if(tx.type==="roman_blinds"){
+            [{lbl:"Mechanism",qty:cc.sqft+" sqft",rate:475,amt:cc.matCost},
+             {lbl:"Fabric",qty:cc.fabricQty+"m",rate:p.mrp,amt:cc.fabCost},
+             {lbl:"Lining",qty:cc.fabricQty+"m",rate:200,amt:cc.lining},
+             {lbl:"Installation",qty:"1 win",rate:350,amt:cc.installation},
+             {lbl:"Stitching",qty:"1 win",rate:350,amt:cc.stitching}
+            ].forEach(function(ln){
+              h+='<div style="display:flex;justify-content:space-between;font-size:10pt;padding:0.3mm 0">'
+                +'<span style="color:#555">'+ln.lbl+'</span>'
+                +'<span style="color:#555;font-size:9pt">'+ln.qty+' &times; '+fmt(ln.rate)+'</span>'
+                +'<span style="font-weight:700">'+fmt(ln.amt)+'</span></div>';
+            });
+          }
+          h+='</div>'
             +'<div class="detail price-col">'+fmt(p.mrp||0)+(tx.type==="blinds"?"/sqft":"/mtr")+" &middot; "+qtyLbl+'</div>'
             +'</div>'
             +'<div class="sum-comp-amt price-col">'+fmt(cc.total||0)+'</div>'
