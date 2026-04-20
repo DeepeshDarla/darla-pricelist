@@ -718,6 +718,105 @@ body[data-pmode=“select”] .sum-comp-lines{display:none!important}
 /* Stitching style shown in selection/measurement sheets */
 .sum-comp-lines{border-top:0.25pt solid #eee;margin-top:0.5mm;padding-top:0.5mm}
 }
+
+/* ═══ QUOTE PRINT — FULL LINE ITEMS ═══ */
+@media print {
+/* Quote sheet: show the line items div */
+body[data-pmode=“quote”] .sum-comp-lines { display:block !important }
+body[data-pmode=“quote”] .sum-comp-amt   { display:none  !important } /* amt shown inside lines */
+
+/* Quote print: component block structure */
+.print-comp-block {
+margin-bottom: 2mm;
+break-inside: avoid;
+page-break-inside: avoid;
+}
+.print-comp-hdr {
+display: flex;
+align-items: baseline;
+gap: 3mm;
+margin-bottom: 0.5mm;
+}
+.print-comp-layer {
+font-size: 7pt;
+font-weight: 900;
+letter-spacing: 1pt;
+text-transform: uppercase;
+background: #f0f0f0;
+padding: 0.5mm 2mm;
+border-radius: 2pt;
+white-space: nowrap;
+}
+.print-comp-name {
+font-size: 8.5pt;
+font-weight: 800;
+color: #000;
+}
+.print-comp-style {
+font-size: 7pt;
+color: #888;
+font-style: italic;
+}
+.print-panels-line {
+font-size: 7.5pt;
+color: #555;
+margin: 0.5mm 0 1mm 0;
+padding-left: 12mm;
+}
+/* Line items table */
+.print-lines-table {
+width: 100%;
+padding-left: 12mm;
+border-collapse: collapse;
+}
+.print-lines-table td {
+font-size: 8pt;
+padding: 0.4mm 1mm 0.4mm 0;
+vertical-align: baseline;
+}
+.plt-lbl  { color: #333; font-weight: 600; width: 28mm; }
+.plt-qty  { color: #777; font-size: 7pt; width: 34mm; text-align: right; white-space: nowrap; }
+.plt-eq   { color: #999; width: 4mm; text-align: center; }
+.plt-amt  { color: #000; font-weight: 800; text-align: right; white-space: nowrap; }
+.print-comp-total-row td {
+font-size: 8.5pt;
+font-weight: 900;
+border-top: 0.5pt solid #aaa;
+padding-top: 1mm;
+padding-bottom: 1mm;
+}
+.plt-total-lbl { color: #000; }
+.plt-total-amt { color: #c0392b; text-align: right; }
+}
+
+@media print {
+/* Hide on-screen component rows in ALL print modes */
+.sum-comp-row.no-print { display:none !important }
+
+/* Show print blocks only in quote mode */
+.print-comp-block { display:none }
+body[data-pmode=“quote”] .print-comp-block { display:block !important }
+
+/* Measure + Select modes: show only the print-only title rows */
+body[data-pmode=“measure”] .print-comp-block,
+body[data-pmode=“select”]  .print-comp-block { display:none !important }
+
+/* Quote mode: window block is full-width (no 2-column grid) */
+body[data-pmode=“quote”] .sum-win-block {
+display:block !important;
+grid-template-columns: none !important;
+padding: 3mm !important;
+border-bottom: 0.5pt solid #e0e0e0 !important;
+}
+body[data-pmode=“quote”] .win-print-left  { display:none !important }
+body[data-pmode=“quote”] .win-print-right { padding-left:0 !important }
+body[data-pmode=“quote”] .sum-win-title-row { display:flex !important }
+body[data-pmode=“quote”] .sum-win-dims      { display:block !important }
+
+/* Measurement + Selection modes keep 2-column grid */
+body[data-pmode=“measure”] .win-print-left,
+body[data-pmode=“select”]  .win-print-left  { display:block !important }
+}
 </style>
 
 </head>
@@ -1306,8 +1405,8 @@ function calcCurtains(w,h,mrp,qty,layer,style){
   style=style||"Pleated";
   var divisor=(style==="Plain")?48:24;
   var p=Math.ceil((w+10)/divisor);
-  var l=r2((h+16)/39,0.05);          // panel length
-  var f=Math.round(p*l*100)/100;     // fabric qty
+  var l=parseFloat(r2((h+16)/39,0.05).toFixed(2)); // panel length (no trailing zeros)
+  var f=parseFloat((Math.round(p*l*100)/100).toFixed(2)); // fabric qty (no trailing zeros)
 
   var lines=[];  // [{lbl, qty, rate, amt}]
 
@@ -1351,7 +1450,7 @@ function calcCurtains(w,h,mrp,qty,layer,style){
 function calcRoman(w,h,mrp,qty){
   var wf=r2(w/12,0.25),hf=r2(h/12,0.25),sq=wf*hf;
   var mechanism=Math.round(sq*475);
-  var p=Math.ceil(w/48),l=r2((h+20)/39,0.05),f=Math.round(p*l*100)/100;
+  var p=Math.ceil(w/48),l=parseFloat(r2((h+20)/39,0.05).toFixed(2)),f=parseFloat((Math.round(p*l*100)/100).toFixed(2));
   var fabricCost=Math.round(f*mrp);
   var lining=Math.round(f*200);
   var installation=350; // per window
@@ -2051,4 +2150,81 @@ function showToast(msg){
 </script>
 
 </body>
-</html>
+</html>          tx.components.forEach(function(c){
+          if(!c.product)return;
+          var cc=calcComp(win,Object.assign({},c,{treatmentType:tx.type}));
+          var p=c.product;
+          var brand=p.brand||"";
+          var catalog=p.catalog||p.product||p.blind_type||p.model||"";
+          var sno=p.s_no||p["s.no"]||"";
+          var nameLine=[brand,catalog,sno].filter(Boolean).join(" / ");
+          var styleNote=(tx.type==="curtains"&&c.stitchStyle)?" ["+c.stitchStyle+"]":"";
+          var layerLbl=c.layer==="blind"?"BLIND":c.layer.toUpperCase();
+          var qtyLbl=tx.type==="blinds"?(cc.sqft||0)+" sqft":(cc.fabricQty||0)+" mtrs";
+
+```
+      // ── ON-SCREEN ROW (hidden in print by sum-comp-row rule) ──
+      h+='<div class="sum-comp-row no-print">'
+        +'<div class="sum-comp-info">'
+        +'<span class="tag">'+layerLbl+'</span>'
+        +'<div class="name">'+esc(nameLine)+esc(styleNote)+'</div>'
+        +'<div class="detail price-col">'+fmt(p.mrp||0)+(tx.type==="blinds"?"/sqft":"/mtr")+" &middot; "+qtyLbl+'</div>'
+        +'</div>'
+        +'<div class="sum-comp-amt price-col">'+fmt(cc.total||0)+'</div>'
+        +'</div>';
+
+      // ── PRINT BLOCK (visible only when printing) ──
+      h+='<div class="print-comp-block print-only">';
+
+      // Header: LAYER tag + Product name + [Style]
+      h+='<div class="print-comp-hdr">'
+        +'<span class="print-comp-layer">'+layerLbl+'</span>'
+        +'<span class="print-comp-name">'+esc(nameLine)+'</span>';
+      if(styleNote) h+='<span class="print-comp-style">'+esc(styleNote)+'</span>';
+      h+='</div>';
+
+      // Panels line
+      if(tx.type==="curtains"){
+        h+='<div class="print-panels-line">'+( cc.numPanels||0)+" panels &times; "+(cc.panelLen||0)+"m = "+(cc.fabricQty||0)+" mtrs"+'</div>';
+      } else if(tx.type==="roman_blinds"){
+        h+='<div class="print-panels-line">'+( cc.panels||0)+" panels &times; "+(cc.panelLen||0)+"m = "+(cc.fabricQty||0)+" mtrs"+'</div>';
+      }
+
+      // Line items table
+      h+='<table class="print-lines-table"><tbody>';
+
+      if(tx.type==="curtains"&&cc.lines){
+        cc.lines.forEach(function(ln){
+          h+='<tr><td class="plt-lbl">'+ln.lbl+'</td>'
+            +'<td class="plt-qty">'+ln.qty+" &times; "+fmt(ln.rate)+'</td>'
+            +'<td class="plt-eq">=</td>'
+            +'<td class="plt-amt">'+fmt(ln.amt)+'</td></tr>';
+        });
+      } else if(tx.type==="roman_blinds"){
+        [{lbl:"Mechanism",  qty:(cc.sqft||0)+" sqft",  rate:475, amt:cc.matCost},
+         {lbl:"Fabric",     qty:(cc.fabricQty||0)+"m", rate:p.mrp||0, amt:cc.fabCost},
+         {lbl:"Lining",     qty:(cc.fabricQty||0)+"m", rate:200, amt:cc.lining},
+         {lbl:"Installation",qty:"1 window",            rate:350, amt:cc.installation},
+         {lbl:"Stitching",  qty:"1 window",            rate:350, amt:cc.stitching}
+        ].forEach(function(ln){
+          h+='<tr><td class="plt-lbl">'+ln.lbl+'</td>'
+            +'<td class="plt-qty">'+ln.qty+" &times; "+fmt(ln.rate)+'</td>'
+            +'<td class="plt-eq">=</td>'
+            +'<td class="plt-amt">'+fmt(ln.amt)+'</td></tr>';
+        });
+      } else {
+        // Blinds
+        h+='<tr><td class="plt-lbl">Blind fabric</td>'
+          +'<td class="plt-qty">'+( cc.sqft||0)+" sqft &times; "+fmt(p.mrp||0)+'</td>'
+          +'<td class="plt-eq">=</td>'
+          +'<td class="plt-amt">'+fmt(cc.unitTotal||0)+'</td></tr>';
+      }
+
+      // Total row
+      h+='<tr class="print-comp-total-row">'
+        +'<td class="plt-lbl plt-total-lbl" colspan="2">TOTAL</td>'
+        +'<td class="plt-eq"></td>'
+        +'<td class="plt-amt plt-total-amt">'+fmt(cc.total||0)+'</td></tr>';
+
+      h+='</tbody></table></div>'; // print-comp-block
+```
