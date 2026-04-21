@@ -253,81 +253,9 @@ window.addEventListener("DOMContentLoaded",function(){
   }
 });
 
-function showQuoteSearch(startCat, allowHangers){
-  startCat = startCat || "fabric";
 
-  // Banner always shown
-  var banner='<div id="qsBanner" style="background:#1a3a1a;border-bottom:2px solid #2ecc71;padding:10px 16px;display:flex;align-items:center;justify-content:space-between">'
-    +'<div>'
-    +'<div style="font-size:11px;color:#2ecc71;font-weight:800;letter-spacing:1px">SELECT PRODUCT FOR QUOTE</div>'
-    +'<div style="font-size:11px;color:#888;margin-top:1px">Tap any product to add it</div>'
-    +'</div>'
-    +'<button onclick="window.location.href='quote.html'" style="background:none;border:1px solid #555;color:#aaa;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;white-space:nowrap">&#8592; Cancel</button>'
-    +'</div>';
 
-  if(allowHangers){
-    // Jump straight to search with a Fabric|Hangers tab switcher
-    var tabBar='<div style="display:flex;background:#111;border-bottom:2px solid #252525;padding:0 12px">'
-      +'<button id="qsTabFabric" onclick="switchQuoteTab(\'fabric\')" style="flex:1;padding:13px 8px;font-size:13px;font-weight:800;color:#fff;border:none;background:transparent;cursor:pointer;border-bottom:3px solid #c0392b;margin-bottom:-2px;-webkit-tap-highlight-color:transparent">&#129525; Fabric</button>'
-      +'<button id="qsTabHangers" onclick="switchQuoteTab(\'hangers\')" style="flex:1;padding:13px 8px;font-size:13px;font-weight:700;color:#666;border:none;background:transparent;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;-webkit-tap-highlight-color:transparent">&#129693; Hangers</button>'
-      +'</div>'
-      +'<div id="qsSearchBody"></div>';
-    document.getElementById("app").innerHTML = banner + tabBar;
-    switchQuoteTab(startCat);
-  } else {
-    // No hangers — go straight to the category search
-    document.getElementById("app").innerHTML = banner + '<div id="qsSearchBody"></div>';
-    goSearchQuoteInto("qsSearchBody", startCat);
-  }
-}
 
-// Switch between Fabric and Hangers tabs in quote mode
-function switchQuoteTab(cat){
-  // Update tab styles
-  var tFab = document.getElementById("qsTabFabric");
-  var tHan = document.getElementById("qsTabHangers");
-  if(tFab) { tFab.style.color=(cat==="fabric")?"#fff":"#666"; tFab.style.borderBottomColor=(cat==="fabric")?"#c0392b":"transparent"; tFab.style.fontWeight=(cat==="fabric")?"800":"700"; }
-  if(tHan) { tHan.style.color=(cat==="hangers")?"#fff":"#666"; tHan.style.borderBottomColor=(cat==="hangers")?"#c0392b":"transparent"; tHan.style.fontWeight=(cat==="hangers")?"800":"700"; }
-  goSearchQuoteInto("qsSearchBody", cat);
-}
-
-// Load the advanced search for a category into a target element
-function goSearchQuoteInto(targetId, cat){
-  // showAdvancedSearch renders into #app, so we need to capture and move it
-  showAdvancedSearch(cat);
-  // Wrap results to keep banner + tabs intact
-  var searchWrap = document.getElementById("app");
-  // showAdvancedSearch replaces innerHTML of #app, so we just run it
-  // but we need to re-inject the banner + tabs first
-  var banner = document.getElementById("qsBanner");
-  var tabs   = document.getElementById("qsTabFabric") ? document.getElementById("qsTabFabric").parentElement : null;
-  // showAdvancedSearch will have overwritten app — re-add the banner on top
-  setTimeout(function(){
-    var existing = document.getElementById("app");
-    if(!existing) return;
-    var bannerHtml = '<div id="qsBanner" style="background:#1a3a1a;border-bottom:2px solid #2ecc71;padding:10px 16px;display:flex;align-items:center;justify-content:space-between">'
-      +'<div><div style="font-size:11px;color:#2ecc71;font-weight:800;letter-spacing:1px">SELECT PRODUCT FOR QUOTE</div>'
-      +'<div style="font-size:11px;color:#888;margin-top:1px">Tap any product to add it</div></div>'
-      +'<button onclick="window.location.href='quote.html'" style="background:none;border:1px solid #555;color:#aaa;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;white-space:nowrap">&#8592; Cancel</button>'
-      +'</div>';
-    // Only add tabs if we're in allowHangers mode (both tab buttons existed)
-    var hasTabs = document.getElementById("qsTabFabric");
-    if(!hasTabs && getParam("allowHangers")==="1"){
-      var tabHtml='<div style="display:flex;background:#111;border-bottom:2px solid #252525;padding:0 12px">'
-        +'<button id="qsTabFabric" onclick="switchQuoteTab(\'fabric\')" style="flex:1;padding:13px 8px;font-size:13px;font-weight:'+(cat==="fabric"?"800":"700")+';color:'+(cat==="fabric"?"#fff":"#666")+';border:none;background:transparent;cursor:pointer;border-bottom:3px solid '+(cat==="fabric"?"#c0392b":"transparent")+';margin-bottom:-2px;-webkit-tap-highlight-color:transparent">&#129525; Fabric</button>'
-        +'<button id="qsTabHangers" onclick="switchQuoteTab(\'hangers\')" style="flex:1;padding:13px 8px;font-size:13px;font-weight:'+(cat==="hangers"?"800":"700")+';color:'+(cat==="hangers"?"#fff":"#666")+';border:none;background:transparent;cursor:pointer;border-bottom:3px solid '+(cat==="hangers"?"#c0392b":"transparent")+';margin-bottom:-2px;-webkit-tap-highlight-color:transparent">&#129693; Hangers</button>'
-        +'</div>';
-      existing.innerHTML = bannerHtml + tabHtml + existing.innerHTML;
-    } else {
-      existing.innerHTML = bannerHtml + existing.innerHTML;
-    }
-  }, 50);
-}
-
-function goSearchQuote(cat){
-  // Used from the category grid in non-hangers quote mode
-  goSearchQuoteInto("app", cat);
-}
 
 // ── HEADER ──
 function hdr(title,code,badge){
@@ -857,6 +785,125 @@ function quoteSelectProduct(product){
   }));
   window.location.href = "quote.html";
 }
+
+// ═══════════════════════════════════════════════════════════════
+// QUOTE MODE — globals + clean implementation
+// ═══════════════════════════════════════════════════════════════
+var QUOTE_MODE      = false;  // true when opened from quote builder
+var QUOTE_HANGERS   = false;  // true when curtain component (show Fabric+Hangers tabs)
+var QUOTE_RETURN    = "";     // URL to return to after selection
+
+function showQuoteSearch(startCat, allowHangers) {
+  QUOTE_MODE    = true;
+  QUOTE_HANGERS = !!allowHangers;
+  startCat      = startCat || "fabric";
+
+  if (allowHangers) {
+    // Show Fabric|Hangers tab bar, then load fabric search below it
+    _renderQuoteTabs(startCat);
+    showAdvancedSearch(startCat);
+  } else {
+    // Go straight to the category search (no tabs needed)
+    showAdvancedSearch(startCat);
+  }
+}
+
+// Render the persistent banner + tab bar above the search
+function _renderQuoteTabs(activeCat) {
+  var bannerHtml =
+    '<div id="qBanner" style="background:#0d2a1a;border-bottom:2px solid #27ae60;'
+    + 'padding:10px 16px;display:flex;align-items:center;justify-content:space-between;'
+    + 'position:sticky;top:0;z-index:60">'
+    + '<div>'
+    + '<div style="font-size:11px;color:#27ae60;font-weight:800;letter-spacing:1px">SELECT PRODUCT FOR QUOTE</div>'
+    + '<div style="font-size:11px;color:#666;margin-top:1px">Tap any product to add it</div>'
+    + '</div>'
+    + '<button onclick="window.location.href='quote.html'" '
+    + 'style="background:none;border:1px solid #444;color:#aaa;border-radius:8px;'
+    + 'padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation">'
+    + '&#8592; Cancel</button>'
+    + '</div>'
+    + '<div id="qTabBar" style="display:flex;background:#111;border-bottom:1px solid #252525;padding:0 12px">'
+    + '<button id="qTabFabric" onclick="switchQuoteTab('fabric')" '
+    + 'style="flex:1;padding:13px 8px;font-size:13px;border:none;background:transparent;'
+    + 'cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;'
+    + '-webkit-tap-highlight-color:transparent;touch-action:manipulation;'
+    + 'font-weight:' + (activeCat === "fabric" ? "800" : "700") + ';'
+    + 'color:' + (activeCat === "fabric" ? "#fff" : "#666") + ';'
+    + 'border-bottom-color:' + (activeCat === "fabric" ? "#c0392b" : "transparent") + '">'
+    + '&#129525; Fabric</button>'
+    + '<button id="qTabHangers" onclick="switchQuoteTab('hangers')" '
+    + 'style="flex:1;padding:13px 8px;font-size:13px;border:none;background:transparent;'
+    + 'cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;'
+    + '-webkit-tap-highlight-color:transparent;touch-action:manipulation;'
+    + 'font-weight:' + (activeCat === "hangers" ? "800" : "700") + ';'
+    + 'color:' + (activeCat === "hangers" ? "#fff" : "#666") + ';'
+    + 'border-bottom-color:' + (activeCat === "hangers" ? "#c0392b" : "transparent") + '">'
+    + '&#129693; Hangers</button>'
+    + '</div>'
+    + '<div id="qSearchBody"></div>';
+
+  document.getElementById("app").innerHTML = bannerHtml;
+}
+
+// Switch tab — re-render tabs with new active state, load new category
+function switchQuoteTab(cat) {
+  _renderQuoteTabs(cat);
+  showAdvancedSearch(cat);
+}
+
+// Called by showAdvancedSearch — if in quote mode with hangers, 
+// inject the search UI into qSearchBody (not replacing the whole #app)
+var _origShowAdvanced = null;
+
+// Wrap showAdvancedSearch to keep banner+tabs intact in quote+hangers mode
+(function() {
+  var _orig = showAdvancedSearch;
+  showAdvancedSearch = function(cat) {
+    if (QUOTE_MODE && QUOTE_HANGERS) {
+      // Let showAdvancedSearch render into #app first
+      _orig(cat);
+      // Then move its content into qSearchBody, restoring banner+tabs
+      var app = document.getElementById("app");
+      var body = document.getElementById("qSearchBody");
+      if (!body) {
+        // qSearchBody was wiped — re-render tabs then move content
+        var content = app.innerHTML;
+        _renderQuoteTabs(cat);
+        var qs = document.getElementById("qSearchBody");
+        if (qs) qs.innerHTML = content;
+      }
+      // Add cancel button to header if not already there
+      injectCancelToHeader();
+    } else if (QUOTE_MODE) {
+      // Non-hangers quote mode — just add the cancel button
+      _orig(cat);
+      injectCancelToHeader();
+    } else {
+      _orig(cat);
+    }
+  };
+})();
+
+function injectCancelToHeader() {
+  if (document.getElementById("qCancelBtn")) return; // already added
+  var hdrEl = document.querySelector(".hdr");
+  if (!hdrEl) return;
+  var btn = document.createElement("button");
+  btn.id = "qCancelBtn";
+  btn.innerHTML = "&#8592; Cancel";
+  btn.style.cssText = "background:none;border:1px solid #444;color:#aaa;border-radius:8px;"
+    + "padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;"
+    + "touch-action:manipulation;margin-left:8px;white-space:nowrap";
+  btn.onclick = function() { window.location.href = "quote.html"; };
+  hdrEl.appendChild(btn);
+}
+
+function goSearchQuote(cat) {
+  showAdvancedSearch(cat);
+  injectCancelToHeader();
+}
+
 
 function sChk(){
   if(staffEn===PIN){
