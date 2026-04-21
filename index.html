@@ -240,16 +240,94 @@ function hasSearchAccess(){return localStorage.getItem(SAK)==="1";}
 
 // ── INIT ──
 window.addEventListener("DOMContentLoaded",function(){
-  var code    =getParam("code").trim().toUpperCase();
-  var category=getParam("category").trim().toLowerCase()||"fabric";
-  if(code) showProductPage(code,category);
-  else if(isQuoteMode()){
-    // In quote mode: skip PIN, go directly to search for the given category
-    localStorage.setItem(SAK,"1"); // grant search access
-    showAdvancedSearch(category);
+  var code        =getParam("code").trim().toUpperCase();
+  var category    =getParam("category").trim().toLowerCase()||"fabric";
+  var mode        =getParam("mode");
+  var allowHangers=getParam("allowHangers")==="1";
+  if(mode==="quote"){
+    showQuoteSearch(category, allowHangers);
+  } else if(code){
+    showProductPage(code,category);
+  } else {
+    showHome();
   }
-  else showHome();
 });
+
+function showQuoteSearch(startCat, allowHangers){
+  startCat = startCat || "fabric";
+
+  // Banner always shown
+  var banner='<div id="qsBanner" style="background:#1a3a1a;border-bottom:2px solid #2ecc71;padding:10px 16px;display:flex;align-items:center;justify-content:space-between">'
+    +'<div>'
+    +'<div style="font-size:11px;color:#2ecc71;font-weight:800;letter-spacing:1px">SELECT PRODUCT FOR QUOTE</div>'
+    +'<div style="font-size:11px;color:#888;margin-top:1px">Tap any product to add it</div>'
+    +'</div>'
+    +'<button onclick="window.location.href='quote.html'" style="background:none;border:1px solid #555;color:#aaa;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;white-space:nowrap">&#8592; Cancel</button>'
+    +'</div>';
+
+  if(allowHangers){
+    // Jump straight to search with a Fabric|Hangers tab switcher
+    var tabBar='<div style="display:flex;background:#111;border-bottom:2px solid #252525;padding:0 12px">'
+      +'<button id="qsTabFabric" onclick="switchQuoteTab(\'fabric\')" style="flex:1;padding:13px 8px;font-size:13px;font-weight:800;color:#fff;border:none;background:transparent;cursor:pointer;border-bottom:3px solid #c0392b;margin-bottom:-2px;-webkit-tap-highlight-color:transparent">&#129525; Fabric</button>'
+      +'<button id="qsTabHangers" onclick="switchQuoteTab(\'hangers\')" style="flex:1;padding:13px 8px;font-size:13px;font-weight:700;color:#666;border:none;background:transparent;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;-webkit-tap-highlight-color:transparent">&#129693; Hangers</button>'
+      +'</div>'
+      +'<div id="qsSearchBody"></div>';
+    document.getElementById("app").innerHTML = banner + tabBar;
+    switchQuoteTab(startCat);
+  } else {
+    // No hangers — go straight to the category search
+    document.getElementById("app").innerHTML = banner + '<div id="qsSearchBody"></div>';
+    goSearchQuoteInto("qsSearchBody", startCat);
+  }
+}
+
+// Switch between Fabric and Hangers tabs in quote mode
+function switchQuoteTab(cat){
+  // Update tab styles
+  var tFab = document.getElementById("qsTabFabric");
+  var tHan = document.getElementById("qsTabHangers");
+  if(tFab) { tFab.style.color=(cat==="fabric")?"#fff":"#666"; tFab.style.borderBottomColor=(cat==="fabric")?"#c0392b":"transparent"; tFab.style.fontWeight=(cat==="fabric")?"800":"700"; }
+  if(tHan) { tHan.style.color=(cat==="hangers")?"#fff":"#666"; tHan.style.borderBottomColor=(cat==="hangers")?"#c0392b":"transparent"; tHan.style.fontWeight=(cat==="hangers")?"800":"700"; }
+  goSearchQuoteInto("qsSearchBody", cat);
+}
+
+// Load the advanced search for a category into a target element
+function goSearchQuoteInto(targetId, cat){
+  // showAdvancedSearch renders into #app, so we need to capture and move it
+  showAdvancedSearch(cat);
+  // Wrap results to keep banner + tabs intact
+  var searchWrap = document.getElementById("app");
+  // showAdvancedSearch replaces innerHTML of #app, so we just run it
+  // but we need to re-inject the banner + tabs first
+  var banner = document.getElementById("qsBanner");
+  var tabs   = document.getElementById("qsTabFabric") ? document.getElementById("qsTabFabric").parentElement : null;
+  // showAdvancedSearch will have overwritten app — re-add the banner on top
+  setTimeout(function(){
+    var existing = document.getElementById("app");
+    if(!existing) return;
+    var bannerHtml = '<div id="qsBanner" style="background:#1a3a1a;border-bottom:2px solid #2ecc71;padding:10px 16px;display:flex;align-items:center;justify-content:space-between">'
+      +'<div><div style="font-size:11px;color:#2ecc71;font-weight:800;letter-spacing:1px">SELECT PRODUCT FOR QUOTE</div>'
+      +'<div style="font-size:11px;color:#888;margin-top:1px">Tap any product to add it</div></div>'
+      +'<button onclick="window.location.href='quote.html'" style="background:none;border:1px solid #555;color:#aaa;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;white-space:nowrap">&#8592; Cancel</button>'
+      +'</div>';
+    // Only add tabs if we're in allowHangers mode (both tab buttons existed)
+    var hasTabs = document.getElementById("qsTabFabric");
+    if(!hasTabs && getParam("allowHangers")==="1"){
+      var tabHtml='<div style="display:flex;background:#111;border-bottom:2px solid #252525;padding:0 12px">'
+        +'<button id="qsTabFabric" onclick="switchQuoteTab(\'fabric\')" style="flex:1;padding:13px 8px;font-size:13px;font-weight:'+(cat==="fabric"?"800":"700")+';color:'+(cat==="fabric"?"#fff":"#666")+';border:none;background:transparent;cursor:pointer;border-bottom:3px solid '+(cat==="fabric"?"#c0392b":"transparent")+';margin-bottom:-2px;-webkit-tap-highlight-color:transparent">&#129525; Fabric</button>'
+        +'<button id="qsTabHangers" onclick="switchQuoteTab(\'hangers\')" style="flex:1;padding:13px 8px;font-size:13px;font-weight:'+(cat==="hangers"?"800":"700")+';color:'+(cat==="hangers"?"#fff":"#666")+';border:none;background:transparent;cursor:pointer;border-bottom:3px solid '+(cat==="hangers"?"#c0392b":"transparent")+';margin-bottom:-2px;-webkit-tap-highlight-color:transparent">&#129693; Hangers</button>'
+        +'</div>';
+      existing.innerHTML = bannerHtml + tabHtml + existing.innerHTML;
+    } else {
+      existing.innerHTML = bannerHtml + existing.innerHTML;
+    }
+  }, 50);
+}
+
+function goSearchQuote(cat){
+  // Used from the category grid in non-hangers quote mode
+  goSearchQuoteInto("app", cat);
+}
 
 // ── HEADER ──
 function hdr(title,code,badge){
@@ -372,19 +450,6 @@ function showAdvancedSearch(cat){
 
   window._metaLoading=false;
   setTimeout(function(){loadMeta(1);},150);
-  // Quote mode banner
-  if(isQuoteMode()){
-    setTimeout(function(){
-      var app=document.getElementById("app");
-      if(app&&!app.querySelector(".quote-banner")){
-        var b=document.createElement("div");
-        b.className="quote-banner";
-        b.style.cssText="background:#c0392b;color:#fff;text-align:center;padding:10px 16px;font-size:13px;font-weight:700;letter-spacing:0.5px;position:sticky;top:0;z-index:99";
-        b.innerHTML="&#128722; Selecting product for Quote — tap a result to add it";
-        app.insertBefore(b,app.firstChild);
-      }
-    },20);
-  }
 }
 
 function toFid(label){ return label.toLowerCase().replace(/[^a-z0-9]/g,"_"); }
@@ -582,7 +647,6 @@ function showProductPage(code,cat){
 
 // ── RENDER ──
 function renderRows(rows,cat){
-  if(isQuoteMode()){ renderQuoteSelect(rows,cat); return; }
   var el=document.getElementById("results");if(!el)return;
   if(!rows||!rows.length){
     el.innerHTML='<div class="nf"><div class="nf-ico">&#128269;</div><h3>Not Found</h3><p>No matching products</p><a class="back-link" href="'+BASE+'">&#8592; Home</a></div>';
@@ -778,6 +842,22 @@ function sDots(err){
     if(err)d.classList.add("err");else if(i<staffEn.length)d.classList.add("on");
   }
 }
+function quoteSelectProduct(product){
+  // Save selected product and return to quote
+  localStorage.setItem("darla_selected_product", JSON.stringify({
+    code:         product.code||"",
+    brand:        product.brand||"",
+    catalog:      product.catalog||product.model||product.product||product.category||"",
+    s_no:         product.s_no||product["s.no"]||gv(product,"s_no")||"",
+    mrp:          parseFloat(product.mrp)||0,
+    width:        product.width||"",
+    item_details: product.item_details||"",
+    size:         product.size||"",
+    thickness:    product.thickness||""
+  }));
+  window.location.href = "quote.html";
+}
+
 function sChk(){
   if(staffEn===PIN){
     localStorage.setItem(SK,"1");localStorage.setItem(SAK,"1");
@@ -785,65 +865,6 @@ function sChk(){
     if(window._rows)renderRows(window._rows,window._cat||"fabric");
   } else {sDots(true);setTimeout(function(){staffEn="";sDots();},800);}
 }
-
-// ── QUOTE MODE SUPPORT ──
-var _qProds = {}; // stores products by index to avoid JSON-in-HTML issues
-
-function isQuoteMode(){
-  return getParam("mode")==="quote";
-}
-
-function renderQuoteSelect(rows, cat){
-  var el=document.getElementById("results");
-  if(!el)return;
-  if(!rows||!rows.length){
-    el.innerHTML='<div class="nf"><div class="nf-ico">&#128269;</div><h3>Not Found</h3><p>No matching products</p></div>';
-    return;
-  }
-  _qProds={};
-  var unit=cat==="blinds"?"/sqft":cat==="beds"||cat==="sleepwell"?"":"/mtr";
-  var html='<div class="count-badge"><span class="count-txt">'+rows.length+' items — tap to select</span><span class="count-num">&#128722;</span></div>';
-  rows.forEach(function(r,idx){
-    // Store product object by index
-    _qProds[idx]={
-      code:      r.code||"",
-      brand:     r.brand||"",
-      catalog:   r.catalog||r.product||gv(r,"blind_type")||gv(r,"blind type")||r.model||"",
-      mrp:       r.mrp||"",
-      width:     r.width||"",
-      category:  cat,
-      s_no:      gv(r,"s_no")||gv(r,"s.no")||"",
-      item_details: gv(r,"item_details")||gv(r,"item details")||"",
-      blind_type:gv(r,"blind_type")||gv(r,"blind type")||"",
-      mechanism: r.mechanism||"",
-      model:     r.model||"",
-      size:      r.size||"",
-      thickness: r.thickness||""
-    };
-    var name=_qProds[idx].catalog||r.code||"Product";
-    var sub =r.brand||"";
-    var mrp =r.mrp||"";
-    html+='<div onclick="quoteSelectProduct('+idx+')" style="background:#161616;border:1px solid #252525;border-radius:14px;padding:14px 16px;margin-bottom:8px;cursor:pointer;-webkit-tap-highlight-color:transparent">'
-      +'<div style="font-size:16px;font-weight:800;color:#fff">'+esc(name)+'</div>'
-      +'<div style="font-size:12px;color:#888;margin-top:2px">'+esc(sub)+(mrp?' &nbsp;·&nbsp; &#8377;'+esc(mrp)+unit:'')+'</div>'
-      +'<div style="margin-top:10px;background:#c0392b;color:#fff;border-radius:8px;padding:9px;text-align:center;font-size:13px;font-weight:800;letter-spacing:0.5px">&#10003; Select This Product</div>'
-      +'</div>';
-  });
-  el.innerHTML=html;
-}
-
-function quoteSelectProduct(idx){
-  var prod=_qProds[idx];
-  if(!prod){return;}
-  try{
-    localStorage.setItem("darla_selected_product", JSON.stringify(prod));
-    var returnUrl=getParam("return")||"quote.html";
-    window.location.href=returnUrl;
-  }catch(e){
-    alert("Error selecting product: "+e.message);
-  }
-}
-
 </script>
 </body>
 </html>
