@@ -230,6 +230,13 @@ function gv(r,key){
   return r[s]||r[key]||"";
 }
 function getParam(n){return new URLSearchParams(window.location.search).get(n)||"";}
+// ── QUOTE MODE GLOBALS ──
+var QUOTE_MODE     = false;  // true when opened from quote builder
+var ALLOW_HANGERS  = false;
+var QUOTE_HANGERS  = false;  // alias for ALLOW_HANGERS  // true when curtain component (show Fabric+Hangers tabs)
+var ACTIVE_QUOTE_CAT = "fabric";
+
+
 function esc(t){
   if(!t)return"";
   return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
@@ -247,6 +254,7 @@ window.addEventListener("DOMContentLoaded",function(){
   if(mode==="quote"){
     QUOTE_MODE    = true;
     ALLOW_HANGERS = allowHangers;
+    QUOTE_HANGERS = allowHangers;
     ACTIVE_QUOTE_CAT = category;
     showAdvancedSearch(category);
   } else if(code){
