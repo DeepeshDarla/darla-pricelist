@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -25,23 +24,23 @@ html{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Ro
 body{min-height:100vh}
 
 /* ══════════════════════════════════════════════
-SCREENS
+   SCREENS
 ══════════════════════════════════════════════ */
 .screen{display:none;min-height:100vh;padding-bottom:100px}
 .screen.active{display:block}
 
 /* ══════════════════════════════════════════════
-HEADER
+   HEADER
 ══════════════════════════════════════════════ */
 .hdr{
-background:rgba(17,17,17,0.96);
-border-bottom:1px solid #2a2a2a;
-padding:14px 18px 10px;
-text-align:center;
-position:sticky;top:0;z-index:50;
-backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  background:rgba(17,17,17,0.96);
+  border-bottom:1px solid #2a2a2a;
+  padding:14px 18px 10px;
+  text-align:center;
+  position:sticky;top:0;z-index:50;
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
 }
-.hdr::after{content:””;position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);width:48px;height:2px;background:#c0392b;border-radius:2px}
+.hdr::after{content:"";position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);width:48px;height:2px;background:#c0392b;border-radius:2px}
 .hdr-logo{width:130px;height:44px;display:block;margin:0 auto 6px;object-fit:contain}
 .hdr-title{font-size:18px;font-weight:800;letter-spacing:-0.3px}
 .hdr-sub{font-size:10px;color:#666666;letter-spacing:2px;text-transform:uppercase;margin-top:2px;font-weight:600}
@@ -54,18 +53,18 @@ backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
 .hdr-act.ghost{background:transparent;border:1px solid #444;color:#bbb}
 
 /* ══════════════════════════════════════════════
-LAYOUT
+   LAYOUT
 ══════════════════════════════════════════════ */
 .wrap{padding:14px;padding-bottom:120px}
 .sec-title{
-font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
-color:#666;margin:20px 0 10px;padding:0 2px;
-display:flex;align-items:center;gap:8px
+  font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+  color:#666;margin:20px 0 10px;padding:0 2px;
+  display:flex;align-items:center;gap:8px
 }
-.sec-title::before{content:””;width:3px;height:11px;background:#c0392b;border-radius:2px;flex-shrink:0}
+.sec-title::before{content:"";width:3px;height:11px;background:#c0392b;border-radius:2px;flex-shrink:0}
 
 /* ══════════════════════════════════════════════
-CARDS
+   CARDS
 ══════════════════════════════════════════════ */
 .card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:14px;padding:16px;margin-bottom:10px}
 .card-red{border-top:3px solid #c0392b}
@@ -73,46 +72,46 @@ CARDS
 .card-green{border-top:3px solid #27ae60}
 
 /* ══════════════════════════════════════════════
-INPUTS
+   INPUTS
 ══════════════════════════════════════════════ */
 .field{margin-bottom:13px}
 .field-label{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#666666;margin-bottom:7px;display:block}
 .inp{
-width:100%;background:#1c1c1c!important;
-border:1.5px solid #2a2a2a;border-radius:10px;
-color:#fff!important;-webkit-text-fill-color:#fff!important;
-caret-color:#fff!important;font-size:16px;font-weight:600;
-padding:12px 14px;outline:none;-webkit-appearance:none;
-transition:border-color 0.15s
+  width:100%;background:#1c1c1c!important;
+  border:1.5px solid #2a2a2a;border-radius:10px;
+  color:#fff!important;-webkit-text-fill-color:#fff!important;
+  caret-color:#fff!important;font-size:16px;font-weight:600;
+  padding:12px 14px;outline:none;-webkit-appearance:none;
+  transition:border-color 0.15s
 }
 .inp:focus{border-color:#c0392b}
 .inp::placeholder{color:#3a3a3a!important;-webkit-text-fill-color:#3a3a3a!important;font-weight:400}
 .inp:disabled{opacity:0.45;cursor:not-allowed}
 .inp-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 select.inp{
-appearance:none;color:#fff!important;
-background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘14’ height=‘9’ viewBox=‘0 0 14 9’%3E%3Cpath d=‘M1 1l6 6 6-6’ stroke=’%23666’ stroke-width=‘1.8’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”);
-background-repeat:no-repeat;background-position:right 15px center;padding-right:40px
+  appearance:none;color:#fff!important;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%23666' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 15px center;padding-right:40px
 }
 select.inp option{background:#1c1c1c;color:#fff}
 input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus{
--webkit-text-fill-color:#fff!important;
--webkit-box-shadow:0 0 0 1000px #1c1c1c inset!important;
-transition:background-color 5000s
+  -webkit-text-fill-color:#fff!important;
+  -webkit-box-shadow:0 0 0 1000px #1c1c1c inset!important;
+  transition:background-color 5000s
 }
 
 /* ══════════════════════════════════════════════
-BUTTONS
+   BUTTONS
 ══════════════════════════════════════════════ */
 .btn{
-width:100%;background:#c0392b;color:#fff;border:none;
-border-radius:12px;padding:15px;font-size:15px;font-weight:800;
-letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;
-display:block;margin-top:12px;
-box-shadow:0 4px 20px rgba(192,57,43,0.35);
--webkit-tap-highlight-color:rgba(192,57,43,0.4);
-transition:transform 0.12s,opacity 0.12s;
-touch-action:manipulation;
+  width:100%;background:#c0392b;color:#fff;border:none;
+  border-radius:12px;padding:15px;font-size:15px;font-weight:800;
+  letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;
+  display:block;margin-top:12px;
+  box-shadow:0 4px 20px rgba(192,57,43,0.35);
+  -webkit-tap-highlight-color:rgba(192,57,43,0.4);
+  transition:transform 0.12s,opacity 0.12s;
+  touch-action:manipulation;
 }
 .btn:active{transform:scale(0.97);opacity:0.88;background:#a93226}
 .btn-ghost{background:transparent!important;border:1.5px solid #444;color:#ccc!important;box-shadow:none;font-weight:600}
@@ -121,26 +120,26 @@ touch-action:manipulation;
 .btn-green{background:#27ae60!important;box-shadow:0 4px 20px rgba(39,174,96,0.25)}
 .btn-sm{padding:9px 15px;font-size:12px;border-radius:8px;width:auto;display:inline-block;margin-top:0}
 .btn-add{
-background:#1a1a1a;border:1.5px dashed #383838;color:#888;
-font-size:13px;font-weight:700;letter-spacing:0.5px;
-text-transform:uppercase;box-shadow:none;padding:13px
+  background:#1a1a1a;border:1.5px dashed #383838;color:#888;
+  font-size:13px;font-weight:700;letter-spacing:0.5px;
+  text-transform:uppercase;box-shadow:none;padding:13px
 }
 .btn-row{display:flex;gap:8px;margin-top:10px}
 .btn-row .btn{margin-top:0}
 
 /* ══════════════════════════════════════════════
-PIN PAD
+   PIN PAD
 ══════════════════════════════════════════════ */
 .pin-wrap{
-display:flex;flex-direction:column;align-items:center;justify-content:center;
-min-height:100vh;padding:30px 24px 50px;
-background:radial-gradient(ellipse at 50% 20%, #1a0808 0%, #0a0a0a 65%)
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;padding:30px 24px 50px;
+  background:radial-gradient(ellipse at 50% 20%, #1a0808 0%, #0a0a0a 65%)
 }
 .pin-logo{width:170px;height:60px;object-fit:contain;margin-bottom:26px}
 .pin-title{
-font-size:28px;font-weight:900;margin-bottom:5px;letter-spacing:-0.5px;
-background:linear-gradient(180deg,#fff 30%,#bbb 100%);
--webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent
+  font-size:28px;font-weight:900;margin-bottom:5px;letter-spacing:-0.5px;
+  background:linear-gradient(180deg,#fff 30%,#bbb 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent
 }
 .pin-sub{font-size:13px;color:#666666;margin-bottom:24px}
 .staff-pick{width:100%;max-width:320px;margin-bottom:26px}
@@ -150,64 +149,64 @@ background:linear-gradient(180deg,#fff 30%,#bbb 100%);
 .dot.err{background:#e53935;border-color:#e53935}
 .pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;width:100%;max-width:320px}
 .pk{
-background:#1a1a1a;border:1px solid #383838;border-radius:15px;
-height:70px;font-size:26px;font-weight:600;color:#ffffff;
-cursor:pointer;width:100%;
--webkit-tap-highlight-color:rgba(192,57,43,0.4);
-transition:background 0.08s,transform 0.08s,color 0.08s;
-box-shadow:0 2px 8px rgba(0,0,0,0.25);
-touch-action:manipulation;
-user-select:none;-webkit-user-select:none;
+  background:#1a1a1a;border:1px solid #383838;border-radius:15px;
+  height:70px;font-size:26px;font-weight:600;color:#ffffff;
+  cursor:pointer;width:100%;
+  -webkit-tap-highlight-color:rgba(192,57,43,0.4);
+  transition:background 0.08s,transform 0.08s,color 0.08s;
+  box-shadow:0 2px 8px rgba(0,0,0,0.25);
+  touch-action:manipulation;
+  user-select:none;-webkit-user-select:none;
 }
 .pk:active,.pk.pressed{
-background:#c0392b!important;
-border-color:#c0392b!important;
-color:#fff!important;
-transform:scale(0.92)!important;
-box-shadow:0 0 0 3px rgba(192,57,43,0.35)!important;
+  background:#c0392b!important;
+  border-color:#c0392b!important;
+  color:#fff!important;
+  transform:scale(0.92)!important;
+  box-shadow:0 0 0 3px rgba(192,57,43,0.35)!important;
 }
 .pk.del{font-size:20px;color:#666666}
 .pk.ghost{opacity:0;pointer-events:none}
 .pin-err{color:#ff6b6b;font-size:13px;margin-top:14px;text-align:center;min-height:18px;font-weight:600}
 .pin-skip{
-margin-top:22px;max-width:320px;width:100%;
-background:transparent;border:1px solid #3a3a3a;
-border-radius:11px;color:#666;
-padding:12px;font-size:12px;font-weight:700;
-letter-spacing:1px;text-transform:uppercase;cursor:pointer;
--webkit-tap-highlight-color:rgba(255,255,255,0.1);
-touch-action:manipulation;
+  margin-top:22px;max-width:320px;width:100%;
+  background:transparent;border:1px solid #3a3a3a;
+  border-radius:11px;color:#666;
+  padding:12px;font-size:12px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;cursor:pointer;
+  -webkit-tap-highlight-color:rgba(255,255,255,0.1);
+  touch-action:manipulation;
 }
 
 /* ══════════════════════════════════════════════
-TAB BAR
+   TAB BAR
 ══════════════════════════════════════════════ */
 .tab-bar{display:flex;background:#0e0e0e;border-bottom:1px solid #2a2a2a;padding:0 12px}
 .tab-btn{
-flex:1;padding:13px 8px;font-size:13px;font-weight:700;color:#777;
-border:none;background:transparent;cursor:pointer;
-border-bottom:3px solid transparent;margin-bottom:-1px;letter-spacing:0.3px;
--webkit-tap-highlight-color:rgba(192,57,43,0.3);
-transition:color 0.15s;
-touch-action:manipulation;
+  flex:1;padding:13px 8px;font-size:13px;font-weight:700;color:#777;
+  border:none;background:transparent;cursor:pointer;
+  border-bottom:3px solid transparent;margin-bottom:-1px;letter-spacing:0.3px;
+  -webkit-tap-highlight-color:rgba(192,57,43,0.3);
+  transition:color 0.15s;
+  touch-action:manipulation;
 }
 .tab-btn.active{color:#ffffff;border-bottom-color:#c0392b;font-weight:800}
 
 /* ══════════════════════════════════════════════
-ROOM CARDS (builder)
+   ROOM CARDS (builder)
 ══════════════════════════════════════════════ */
 .room-card{
-background:#1a1a1a;border:1px solid #2a2a2a;
-border-radius:14px;margin-bottom:12px;overflow:hidden;
-position:relative;box-shadow:0 2px 12px rgba(0,0,0,0.2)
+  background:#1a1a1a;border:1px solid #2a2a2a;
+  border-radius:14px;margin-bottom:12px;overflow:hidden;
+  position:relative;box-shadow:0 2px 12px rgba(0,0,0,0.2)
 }
 .room-card::before{
-content:””;position:absolute;top:0;left:0;bottom:0;width:4px;
-background:linear-gradient(180deg,#c0392b,#8b2a1f)
+  content:"";position:absolute;top:0;left:0;bottom:0;width:4px;
+  background:linear-gradient(180deg,#c0392b,#8b2a1f)
 }
 .room-hdr{
-display:flex;align-items:center;justify-content:space-between;
-padding:15px 16px 15px 20px;cursor:pointer;-webkit-tap-highlight-color:transparent
+  display:flex;align-items:center;justify-content:space-between;
+  padding:15px 16px 15px 20px;cursor:pointer;-webkit-tap-highlight-color:transparent
 }
 .room-name{font-size:17px;font-weight:800;letter-spacing:-0.3px}
 .room-meta{font-size:11px;color:#666666;margin-top:3px;font-weight:500}
@@ -219,22 +218,22 @@ padding:15px 16px 15px 20px;cursor:pointer;-webkit-tap-highlight-color:transpare
 .room-actions{display:flex;gap:8px;padding:10px 16px 14px;border-top:1px solid #2a2a2a}
 
 /* ══════════════════════════════════════════════
-WINDOW CARDS
+   WINDOW CARDS
 ══════════════════════════════════════════════ */
 .win-card{
-background:#111;border:1px solid #2a2a2a;
-border-radius:12px;margin-bottom:8px;overflow:hidden
+  background:#111;border:1px solid #2a2a2a;
+  border-radius:12px;margin-bottom:8px;overflow:hidden
 }
 .win-hdr{
-display:flex;align-items:center;gap:10px;
-padding:12px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent
+  display:flex;align-items:center;gap:10px;
+  padding:12px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent
 }
 .win-num{
-width:26px;height:26px;border-radius:50%;
-background:#c0392b;color:#fff;
-display:flex;align-items:center;justify-content:center;
-font-size:12px;font-weight:800;flex-shrink:0;
-box-shadow:0 2px 8px rgba(192,57,43,0.3)
+  width:26px;height:26px;border-radius:50%;
+  background:#c0392b;color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:800;flex-shrink:0;
+  box-shadow:0 2px 8px rgba(192,57,43,0.3)
 }
 .win-info{flex:1;min-width:0}
 .win-title{font-size:14px;font-weight:700;letter-spacing:-0.2px}
@@ -245,21 +244,21 @@ box-shadow:0 2px 8px rgba(192,57,43,0.3)
 .win-card.open .win-body{display:block}
 
 /* ══════════════════════════════════════════════
-TREATMENT CARD
+   TREATMENT CARD
 ══════════════════════════════════════════════ */
 .tx-card{background:#161616;border:1px solid #2a2a2a;border-radius:11px;margin:10px 0;padding:13px}
 .tx-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
 .tx-badge{
-display:inline-flex;align-items:center;gap:5px;
-border-radius:7px;padding:5px 11px;
-font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase
+  display:inline-flex;align-items:center;gap:5px;
+  border-radius:7px;padding:5px 11px;
+  font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase
 }
 .tx-badge.curtains{background:#0d1e2f;color:#64b5f6;border:1px solid #1a3a5c}
 .tx-badge.roman_blinds{background:#0d1f10;color:#81c784;border:1px solid #1a3d27}
 .tx-badge.blinds{background:#251b07;color:#ffb74d;border:1px solid #5a4010}
 
 /* ══════════════════════════════════════════════
-COMPONENT CARD
+   COMPONENT CARD
 ══════════════════════════════════════════════ */
 .comp-card{background:#0d0d0d;border:1px solid #2a2a2a;border-radius:10px;padding:12px;margin-bottom:7px}
 .comp-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
@@ -272,18 +271,18 @@ COMPONENT CARD
 .comp-product-name{font-size:15px;font-weight:800;color:#ffffff;margin-bottom:3px;letter-spacing:-0.2px}
 .comp-brand-row{font-size:11px;color:#666666;margin-bottom:2px;font-weight:500}
 .comp-mrp-row{
-display:flex;align-items:center;gap:8px;margin-top:9px;
-background:#0a0a0a;border:1px solid #2a2a2a;
-border-radius:8px;padding:8px 12px
+  display:flex;align-items:center;gap:8px;margin-top:9px;
+  background:#0a0a0a;border:1px solid #2a2a2a;
+  border-radius:8px;padding:8px 12px
 }
 .comp-mrp-lbl{font-size:10px;font-weight:800;color:#666666;letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap}
 .comp-mrp-inp{
-background:transparent!important;border:none;
-color:#fff!important;-webkit-text-fill-color:#fff!important;
-font-size:15px;font-weight:800;padding:2px 6px;
-flex:1;min-width:60px;max-width:110px;outline:none;
--webkit-appearance:none;text-align:right;
-border-bottom:1.5px solid #2a2a2a
+  background:transparent!important;border:none;
+  color:#fff!important;-webkit-text-fill-color:#fff!important;
+  font-size:15px;font-weight:800;padding:2px 6px;
+  flex:1;min-width:60px;max-width:110px;outline:none;
+  -webkit-appearance:none;text-align:right;
+  border-bottom:1.5px solid #2a2a2a
 }
 .comp-mrp-inp:focus{border-bottom-color:#c0392b}
 .comp-mrp-unit{font-size:10px;color:#666666;font-weight:600;white-space:nowrap}
@@ -296,17 +295,17 @@ border-bottom:1.5px solid #2a2a2a
 .calc-row.total .v{color:#c0392b;font-size:15px;font-weight:900}
 
 /* ══════════════════════════════════════════════
-NEXT-ACTION FLOW
+   NEXT-ACTION FLOW
 ══════════════════════════════════════════════ */
 .next-wrap{margin-top:10px;padding:11px;background:#0c0c0c;border-radius:10px;border:1px dashed #383838}
 .next-lbl{font-size:9px;font-weight:800;letter-spacing:1.5px;color:#666666;text-transform:uppercase;margin-bottom:8px}
 .next-row{display:flex;gap:7px;margin-top:6px}
 .next-row:first-of-type{margin-top:0}
 .nab{
-flex:1;padding:11px 8px;font-size:13px;font-weight:700;
-border-radius:9px;border:none;cursor:pointer;
--webkit-tap-highlight-color:transparent;text-align:center;
-transition:transform 0.1s;letter-spacing:0.3px
+  flex:1;padding:11px 8px;font-size:13px;font-weight:700;
+  border-radius:9px;border:none;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;text-align:center;
+  transition:transform 0.1s;letter-spacing:0.3px
 }
 .nab:active{transform:scale(0.95)}
 .nab-main{background:#1a4a80;color:#ffffff;border:1px solid #2a6abf;font-weight:800}
@@ -317,26 +316,26 @@ transition:transform 0.1s;letter-spacing:0.3px
 .nab-done{display:flex;align-items:center;justify-content:center;gap:5px;padding:8px;color:#27ae60;font-size:12px;font-weight:800;width:100%;background:#0d2a1a;border-radius:8px;border:1px solid #27ae60}
 
 /* ══════════════════════════════════════════════
-BOTTOM BAR
+   BOTTOM BAR
 ══════════════════════════════════════════════ */
 .btm-bar{
-position:fixed;bottom:0;left:0;right:0;
-background:rgba(14,14,14,0.97);
-border-top:1px solid #2a2a2a;
-padding:12px 14px;padding-bottom:calc(12px + env(safe-area-inset-bottom));
-display:none;gap:8px;z-index:50;
-backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)
+  position:fixed;bottom:0;left:0;right:0;
+  background:rgba(14,14,14,0.97);
+  border-top:1px solid #2a2a2a;
+  padding:12px 14px;padding-bottom:calc(12px + env(safe-area-inset-bottom));
+  display:none;gap:8px;z-index:50;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)
 }
 
 /* ══════════════════════════════════════════════
-SUMMARY — ON SCREEN
+   SUMMARY — ON SCREEN
 ══════════════════════════════════════════════ */
 .sum-wrap{padding:14px;padding-bottom:120px}
 .qid-badge{
-background:#1a1a1a;border:1px solid #2a2a2a;border-radius:9px;
-padding:10px 16px;font-size:10px;color:#666666;
-text-align:center;margin-bottom:14px;
-letter-spacing:1px;text-transform:uppercase;font-weight:700
+  background:#1a1a1a;border:1px solid #2a2a2a;border-radius:9px;
+  padding:10px 16px;font-size:10px;color:#666666;
+  text-align:center;margin-bottom:14px;
+  letter-spacing:1px;text-transform:uppercase;font-weight:700
 }
 .qid-badge span{color:#ffffff;font-weight:900;font-size:16px;display:block;margin-top:3px;letter-spacing:2px}
 .sum-cust{background:#1a1a1a;border:1px solid #2a2a2a;border-top:3px solid #1a6bbf;border-radius:14px;padding:15px 17px;margin-bottom:12px}
@@ -346,9 +345,9 @@ letter-spacing:1px;text-transform:uppercase;font-weight:700
 .sum-field .v{font-weight:700;color:#ffffff;text-align:right;word-break:break-word}
 .sum-room{background:#1a1a1a;border:1px solid #2a2a2a;border-top:3px solid #c0392b;border-radius:14px;margin-bottom:12px;overflow:hidden}
 .sum-room-hdr{
-background:#222222;padding:13px 17px;
-display:flex;justify-content:space-between;align-items:center;
-border-bottom:1px solid #2a2a2a
+  background:#222222;padding:13px 17px;
+  display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid #2a2a2a
 }
 .sum-room-name{font-size:16px;font-weight:900;letter-spacing:-0.3px}
 .sum-room-total{font-size:15px;font-weight:900;color:#c0392b}
@@ -356,10 +355,10 @@ border-bottom:1px solid #2a2a2a
 .sum-win-block:last-of-type{border-bottom:none}
 .sum-win-title-row{display:flex;align-items:center;gap:9px;margin-bottom:4px}
 .win-badge{
-display:inline-flex;align-items:center;justify-content:center;
-width:24px;height:24px;background:#c0392b;color:#fff;
-border-radius:50%;font-size:11px;font-weight:800;flex-shrink:0;
-box-shadow:0 2px 8px rgba(192,57,43,0.3)
+  display:inline-flex;align-items:center;justify-content:center;
+  width:24px;height:24px;background:#c0392b;color:#fff;
+  border-radius:50%;font-size:11px;font-weight:800;flex-shrink:0;
+  box-shadow:0 2px 8px rgba(192,57,43,0.3)
 }
 .sum-win-title{font-size:14px;font-weight:800;letter-spacing:-0.2px}
 .sum-win-dims{font-size:12px;color:#999999;margin-bottom:10px;font-weight:600;margin-top:2px}
@@ -372,22 +371,22 @@ box-shadow:0 2px 8px rgba(192,57,43,0.3)
 .sum-comp-info .detail{font-size:12px;color:#999999;margin-top:2px;font-weight:500}
 .sum-comp-amt{font-size:16px;font-weight:900;color:#ffffff;white-space:nowrap;padding-top:4px}
 .win-sub-line{
-display:flex;justify-content:space-between;align-items:center;
-padding:9px 0 4px;border-top:1px solid #2a2a2a;margin-top:9px
+  display:flex;justify-content:space-between;align-items:center;
+  padding:9px 0 4px;border-top:1px solid #2a2a2a;margin-top:9px
 }
 .win-sub-lbl{font-size:10px;font-weight:800;color:#666666;letter-spacing:1.5px;text-transform:uppercase}
 .win-sub-val{font-size:14px;font-weight:900;color:#c0392b}
 .room-sub-footer{
-background:#150808;border-top:2px solid #2a1010;
-padding:12px 17px;
-display:flex;justify-content:space-between;align-items:center
+  background:#150808;border-top:2px solid #2a1010;
+  padding:12px 17px;
+  display:flex;justify-content:space-between;align-items:center
 }
 .room-sub-footer .l{font-size:10px;font-weight:800;color:#cccccc;letter-spacing:1.5px;text-transform:uppercase}
 .room-sub-footer .v{font-size:17px;font-weight:900;color:#c0392b}
 .grand-card{
-background:linear-gradient(135deg,#fff 0%,#f2f2f2 100%);
-border-radius:14px;padding:22px 20px;text-align:center;margin:14px 0;
-box-shadow:0 10px 40px rgba(192,57,43,0.12)
+  background:linear-gradient(135deg,#fff 0%,#f2f2f2 100%);
+  border-radius:14px;padding:22px 20px;text-align:center;margin:14px 0;
+  box-shadow:0 10px 40px rgba(192,57,43,0.12)
 }
 .grand-lbl{font-size:10px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:#666;margin-bottom:6px}
 .grand-val{font-size:50px;font-weight:900;color:#000;letter-spacing:-2.5px;line-height:1}
@@ -397,19 +396,19 @@ box-shadow:0 10px 40px rgba(192,57,43,0.12)
 .terms-card .body{font-size:12px;color:#777;line-height:1.9;font-weight:500}
 
 /* ══════════════════════════════════════════════
-QUOTES LIST
+   QUOTES LIST
 ══════════════════════════════════════════════ */
 .search-row{display:flex;gap:8px;padding:13px 14px;background:#0e0e0e;border-bottom:1px solid #2a2a2a;position:sticky;top:0;z-index:40}
 .search-row .inp{margin-top:0;flex:1;padding:11px 14px;font-size:15px}
 .q-empty{text-align:center;padding:70px 20px;color:#666666;font-size:14px}
 .q-empty .ico{font-size:48px;opacity:0.4;margin-bottom:14px}
 .q-card{
-background:#1a1a1a;border:1px solid #2a2a2a;border-radius:14px;
-padding:15px 16px;margin-bottom:10px;cursor:pointer;
--webkit-tap-highlight-color:transparent;
-position:relative;overflow:hidden;transition:border-color 0.15s
+  background:#1a1a1a;border:1px solid #2a2a2a;border-radius:14px;
+  padding:15px 16px;margin-bottom:10px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  position:relative;overflow:hidden;transition:border-color 0.15s
 }
-.q-card::before{content:””;position:absolute;top:0;left:0;bottom:0;width:4px;background:#c0392b}
+.q-card::before{content:"";position:absolute;top:0;left:0;bottom:0;width:4px;background:#c0392b}
 .q-card:active{border-color:#8b2a1f}
 .q-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .q-left{flex:1;min-width:0}
@@ -428,7 +427,7 @@ position:relative;overflow:hidden;transition:border-color 0.15s
 .q-tag-load{background:#251b07;color:#ffb74d;letter-spacing:1px;text-transform:uppercase}
 
 /* ══════════════════════════════════════════════
-PRICE HIDE MODE
+   PRICE HIDE MODE
 ══════════════════════════════════════════════ */
 body.hide-prices .price-col,
 body.hide-prices .sum-comp-amt,
@@ -437,224 +436,224 @@ body.hide-prices .room-sub-footer,
 body.hide-prices .win-sub-line{display:none!important}
 
 /* ══════════════════════════════════════════════
-MODAL
+   MODAL
 ══════════════════════════════════════════════ */
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:200;align-items:flex-end;justify-content:center;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .modal.open{display:flex}
 .modal-sheet{
-background:#1a1a1a;border:1px solid #383838;
-border-top:3px solid #c0392b;border-radius:22px 22px 0 0;
-padding:20px 20px calc(40px + env(safe-area-inset-bottom));
-width:100%;max-width:480px
+  background:#1a1a1a;border:1px solid #383838;
+  border-top:3px solid #c0392b;border-radius:22px 22px 0 0;
+  padding:20px 20px calc(40px + env(safe-area-inset-bottom));
+  width:100%;max-width:480px
 }
 .modal-handle{width:40px;height:4px;background:#3a3a3a;border-radius:2px;margin:0 auto 18px}
 .modal-title{font-size:18px;font-weight:900;margin-bottom:16px;letter-spacing:-0.3px}
 .pill-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
 .pill{
-background:#222222;border:1.5px solid #383838;border-radius:20px;
-padding:7px 14px;font-size:13px;font-weight:600;color:#999999;
-cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 0.15s
+  background:#222222;border:1.5px solid #383838;border-radius:20px;
+  padding:7px 14px;font-size:13px;font-weight:600;color:#999999;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 0.15s
 }
 .pill.on{background:#2a0a0a;border-color:#c0392b;color:#fff}
 .copy-hint{
-background:#0a2418;border:1px solid #1a4a2a;border-radius:9px;
-padding:9px 13px;font-size:12px;color:#81c784;
-margin-bottom:12px;text-align:center;font-weight:600
+  background:#0a2418;border:1px solid #1a4a2a;border-radius:9px;
+  padding:9px 13px;font-size:12px;color:#81c784;
+  margin-bottom:12px;text-align:center;font-weight:600
 }
 
 /* ══════════════════════════════════════════════
-TOAST + SPINNER
+   TOAST + SPINNER
 ══════════════════════════════════════════════ */
 .toast{
-position:fixed;bottom:calc(88px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
-background:#ffffff;color:#0a0a0a;border-radius:10px;
-padding:11px 22px;font-size:14px;font-weight:700;
-z-index:999;opacity:0;transition:opacity 0.25s;pointer-events:none;white-space:nowrap;
-box-shadow:0 6px 24px rgba(0,0,0,0.4)
+  position:fixed;bottom:calc(88px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+  background:#ffffff;color:#0a0a0a;border-radius:10px;
+  padding:11px 22px;font-size:14px;font-weight:700;
+  z-index:999;opacity:0;transition:opacity 0.25s;pointer-events:none;white-space:nowrap;
+  box-shadow:0 6px 24px rgba(0,0,0,0.4)
 }
 .toast.show{opacity:1}
 .spin{width:18px;height:18px;border:2px solid #2a2a2a;border-top-color:#c0392b;border-radius:50%;animation:sp 0.7s linear infinite;display:inline-block;margin-right:8px;vertical-align:middle}
 @keyframes sp{to{transform:rotate(360deg)}}
 
 /* ══════════════════════════════════════════════
-A5 PRINT — 148mm × 210mm
+   A5 PRINT — 148mm × 210mm
 ══════════════════════════════════════════════ */
 .print-only{display:none}
 @page{size:A5 portrait;margin:9mm 11mm}
 
 @media print{
-/* ── SHOW/HIDE ── */
-.no-print,.hdr,.tab-bar,.btm-bar,.qid-badge,
-.sum-tx-lbl ~ .sum-tx-lbl,
-.next-wrap,.comp-del,.comp-mrp-row,.comp-calc,
-.nab,button,
-#screen-login,#screen-customer,#screen-builder,#screen-quotes,
-.pin-wrap{display:none!important}
-#screen-summary{display:block!important}
-.screen{padding-bottom:0!important}
-.print-only{display:block}
+  /* ── SHOW/HIDE ── */
+  .no-print,.hdr,.tab-bar,.btm-bar,.qid-badge,
+  .sum-tx-lbl ~ .sum-tx-lbl,
+  .next-wrap,.comp-del,.comp-mrp-row,.comp-calc,
+  .nab,button,
+  #screen-login,#screen-customer,#screen-builder,#screen-quotes,
+  .pin-wrap{display:none!important}
+  #screen-summary{display:block!important}
+  .screen{padding-bottom:0!important}
+  .print-only{display:block}
 
-/* ── BASE ── */
-*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
-html,body{background:#fff!important;color:#000!important;font-size:9pt;line-height:1.3}
-.sum-wrap{padding:0!important;max-width:100%!important}
+  /* ── BASE ── */
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
+  html,body{background:#fff!important;color:#000!important;font-size:9pt;line-height:1.3}
+  .sum-wrap{padding:0!important;max-width:100%!important}
 
-/* ── PRINT HEADER ── */
-.print-hdr{
-display:flex;justify-content:space-between;align-items:flex-start;
-padding-bottom:5mm;margin-bottom:4mm;
-border-bottom:1.5pt solid #000
-}
-.print-brand .name{font-size:20pt;font-weight:900;color:#c0392b;letter-spacing:-0.5pt;line-height:1}
-.print-brand .tag{font-size:7pt;letter-spacing:2pt;text-transform:uppercase;color:#888;margin-top:1mm;font-weight:600}
-.print-qinfo{text-align:right}
-.print-qinfo .qid{font-size:13pt;font-weight:900;color:#000;letter-spacing:0.5pt}
-.print-qinfo .date{font-size:8pt;color:#777;margin-top:1mm}
+  /* ── PRINT HEADER ── */
+  .print-hdr{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    padding-bottom:5mm;margin-bottom:4mm;
+    border-bottom:1.5pt solid #000
+  }
+  .print-brand .name{font-size:20pt;font-weight:900;color:#c0392b;letter-spacing:-0.5pt;line-height:1}
+  .print-brand .tag{font-size:7pt;letter-spacing:2pt;text-transform:uppercase;color:#888;margin-top:1mm;font-weight:600}
+  .print-qinfo{text-align:right}
+  .print-qinfo .qid{font-size:13pt;font-weight:900;color:#000;letter-spacing:0.5pt}
+  .print-qinfo .date{font-size:8pt;color:#777;margin-top:1mm}
 
-/* ── CUSTOMER BLOCK — 2 COLUMN ── */
-.sum-cust{
-display:grid!important;grid-template-columns:1fr 1fr;
-gap:5mm;padding:4mm 0!important;margin-bottom:4mm!important;
-background:transparent!important;border:none!important;
-border-bottom:0.75pt solid #ddd!important;
-border-top:none!important;border-radius:0!important
-}
-.cust-print-col h4{font-size:7pt;font-weight:800;letter-spacing:1.5pt;text-transform:uppercase;color:#aaa;margin-bottom:1.5mm}
-.cust-print-col .cname{font-size:14pt;font-weight:900;color:#000;letter-spacing:-0.3pt;margin-bottom:1mm}
-.cust-print-col .cval{font-size:9pt;color:#333;font-weight:500;margin-bottom:0.5mm}
-.cust-print-col .clabel{font-size:7pt;color:#888;font-weight:700;letter-spacing:0.5pt;text-transform:uppercase;margin-right:1.5mm}
-.cust-print-right{text-align:right}
-/* hide the on-screen sum-field layout */
-.sum-field{display:none!important}
+  /* ── CUSTOMER BLOCK — 2 COLUMN ── */
+  .sum-cust{
+    display:grid!important;grid-template-columns:1fr 1fr;
+    gap:5mm;padding:4mm 0!important;margin-bottom:4mm!important;
+    background:transparent!important;border:none!important;
+    border-bottom:0.75pt solid #ddd!important;
+    border-top:none!important;border-radius:0!important
+  }
+  .cust-print-col h4{font-size:7pt;font-weight:800;letter-spacing:1.5pt;text-transform:uppercase;color:#aaa;margin-bottom:1.5mm}
+  .cust-print-col .cname{font-size:14pt;font-weight:900;color:#000;letter-spacing:-0.3pt;margin-bottom:1mm}
+  .cust-print-col .cval{font-size:9pt;color:#333;font-weight:500;margin-bottom:0.5mm}
+  .cust-print-col .clabel{font-size:7pt;color:#888;font-weight:700;letter-spacing:0.5pt;text-transform:uppercase;margin-right:1.5mm}
+  .cust-print-right{text-align:right}
+  /* hide the on-screen sum-field layout */
+  .sum-field{display:none!important}
 
-/* ── ROOM ── */
-.sum-room{background:#fff!important;border:none!important;border-radius:0!important;margin-bottom:4mm!important;break-inside:avoid!important;page-break-inside:avoid!important}
-.sum-room-hdr{background:#000!important;padding:2.5mm 3mm!important;border-bottom:none!important}
-.sum-room-name{font-size:11pt!important;color:#fff!important;font-weight:900!important}
-.sum-room-total{font-size:11pt!important;color:#ddd!important;font-weight:900!important}
+  /* ── ROOM ── */
+  .sum-room{background:#fff!important;border:none!important;border-radius:0!important;margin-bottom:4mm!important;break-inside:avoid!important;page-break-inside:avoid!important}
+  .sum-room-hdr{background:#000!important;padding:2.5mm 3mm!important;border-bottom:none!important}
+  .sum-room-name{font-size:11pt!important;color:#fff!important;font-weight:900!important}
+  .sum-room-total{font-size:11pt!important;color:#ddd!important;font-weight:900!important}
 
-/* ── WINDOW BLOCK — 2 COLUMN: measurements | selections ── */
-.sum-win-block{
-display:grid!important;
-grid-template-columns:38mm 1fr!important;
-gap:3mm!important;
-padding:2.5mm 3mm!important;
-border-bottom:0.5pt solid #e8e8e8!important;
-break-inside:avoid!important;
-align-items:start!important;
-page-break-inside:avoid!important
-}
-.sum-win-block:last-of-type{border-bottom:none!important}
+  /* ── WINDOW BLOCK — 2 COLUMN: measurements | selections ── */
+  .sum-win-block{
+    display:grid!important;
+    grid-template-columns:38mm 1fr!important;
+    gap:3mm!important;
+    padding:2.5mm 3mm!important;
+    border-bottom:0.5pt solid #e8e8e8!important;
+    break-inside:avoid!important;
+    align-items:start!important;
+    page-break-inside:avoid!important
+  }
+  .sum-win-block:last-of-type{border-bottom:none!important}
 
-/* left = measurements column */
-.win-print-left{
-border-right:0.5pt dashed #ccc;padding-right:2.5mm;
-min-width:0
-}
-.win-print-left .win-badge{
-width:5mm!important;height:5mm!important;font-size:7pt!important;
-background:#c0392b!important;box-shadow:none!important;
-display:inline-flex!important;align-items:center!important;justify-content:center!important;
-border-radius:50%!important;color:#fff!important;font-weight:800!important;flex-shrink:0!important
-}
-.win-print-left .sum-win-title{font-size:9pt!important;color:#000!important;font-weight:800!important;vertical-align:middle}
-.win-print-left .sum-win-dims{font-size:9pt!important;color:#000!important;margin:1mm 0 1.5mm!important;font-weight:700!important}
-.print-meas{margin-top:0}
-.print-meas-row{
-display:flex;justify-content:space-between;
-padding:0.5mm 0;font-size:7pt;
-border-bottom:0.25pt dotted #eee
-}
-.print-meas-row:last-child{border-bottom:none}
-.print-meas-row .k{color:#888;font-weight:700;text-transform:uppercase;letter-spacing:0.3pt;font-size:6.5pt}
-.print-meas-row .mv{color:#000;font-weight:800;text-align:right}
+  /* left = measurements column */
+  .win-print-left{
+    border-right:0.5pt dashed #ccc;padding-right:2.5mm;
+    min-width:0
+  }
+  .win-print-left .win-badge{
+    width:5mm!important;height:5mm!important;font-size:7pt!important;
+    background:#c0392b!important;box-shadow:none!important;
+    display:inline-flex!important;align-items:center!important;justify-content:center!important;
+    border-radius:50%!important;color:#fff!important;font-weight:800!important;flex-shrink:0!important
+  }
+  .win-print-left .sum-win-title{font-size:9pt!important;color:#000!important;font-weight:800!important;vertical-align:middle}
+  .win-print-left .sum-win-dims{font-size:9pt!important;color:#000!important;margin:1mm 0 1.5mm!important;font-weight:700!important}
+  .print-meas{margin-top:0}
+  .print-meas-row{
+    display:flex;justify-content:space-between;
+    padding:0.5mm 0;font-size:7pt;
+    border-bottom:0.25pt dotted #eee
+  }
+  .print-meas-row:last-child{border-bottom:none}
+  .print-meas-row .k{color:#888;font-weight:700;text-transform:uppercase;letter-spacing:0.3pt;font-size:6.5pt}
+  .print-meas-row .mv{color:#000;font-weight:800;text-align:right}
 
-/* right = selections column */
-.win-print-right{min-width:0;padding-left:1mm}
-.sum-win-title-row{display:none!important}
-.sum-win-dims{display:none!important}
-/* Treatment label — tight */
-.sum-tx-lbl{
-font-size:6.5pt!important;color:#aaa!important;font-weight:900!important;
-letter-spacing:1.2pt!important;margin:2mm 0 0.8mm!important
-}
-.sum-tx-lbl:first-child{margin-top:0!important}
-/* Component row — single tight line */
-.sum-comp-row{
-display:grid!important;
-grid-template-columns:1fr auto!important;
-align-items:baseline!important;
-padding:0.6mm 0!important;
-border-bottom:0.25pt dashed #eee!important;
-gap:2mm!important
-}
-.sum-comp-row:last-child{border-bottom:none!important}
-.sum-comp-info{min-width:0}
-.sum-comp-info .tag{
-background:#f5f5f5!important;color:#555!important;border:none!important;
-font-size:5.5pt!important;padding:0.3mm 1.5mm!important;margin-bottom:0.3mm!important;
-font-weight:800!important;letter-spacing:0.8pt!important;text-transform:uppercase!important;
-border-radius:2pt!important;display:inline-block!important
-}
-.sum-comp-info .name{
-font-size:8.5pt!important;color:#000!important;font-weight:800!important;
-letter-spacing:-0.2pt!important;line-height:1.2!important;
-white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important
-}
-.sum-comp-info .detail{
-font-size:6.5pt!important;color:#666!important;margin-top:0!important;
-white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important
-}
-.sum-comp-amt{
-font-size:9pt!important;color:#000!important;font-weight:900!important;
-padding-top:0!important;white-space:nowrap!important;text-align:right!important
-}
-.win-sub-line{
-padding:1.5mm 0 0.5mm!important;border-top:0.75pt solid #999!important;
-margin-top:1.5mm!important
-}
-.win-sub-lbl{font-size:6.5pt!important;color:#555!important;font-weight:800!important;letter-spacing:0.5pt}
-.win-sub-val{font-size:9pt!important;color:#c0392b!important;font-weight:900!important}
+  /* right = selections column */
+  .win-print-right{min-width:0;padding-left:1mm}
+  .sum-win-title-row{display:none!important}
+  .sum-win-dims{display:none!important}
+  /* Treatment label — tight */
+  .sum-tx-lbl{
+    font-size:6.5pt!important;color:#aaa!important;font-weight:900!important;
+    letter-spacing:1.2pt!important;margin:2mm 0 0.8mm!important
+  }
+  .sum-tx-lbl:first-child{margin-top:0!important}
+  /* Component row — single tight line */
+  .sum-comp-row{
+    display:grid!important;
+    grid-template-columns:1fr auto!important;
+    align-items:baseline!important;
+    padding:0.6mm 0!important;
+    border-bottom:0.25pt dashed #eee!important;
+    gap:2mm!important
+  }
+  .sum-comp-row:last-child{border-bottom:none!important}
+  .sum-comp-info{min-width:0}
+  .sum-comp-info .tag{
+    background:#f5f5f5!important;color:#555!important;border:none!important;
+    font-size:5.5pt!important;padding:0.3mm 1.5mm!important;margin-bottom:0.3mm!important;
+    font-weight:800!important;letter-spacing:0.8pt!important;text-transform:uppercase!important;
+    border-radius:2pt!important;display:inline-block!important
+  }
+  .sum-comp-info .name{
+    font-size:8.5pt!important;color:#000!important;font-weight:800!important;
+    letter-spacing:-0.2pt!important;line-height:1.2!important;
+    white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important
+  }
+  .sum-comp-info .detail{
+    font-size:6.5pt!important;color:#666!important;margin-top:0!important;
+    white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important
+  }
+  .sum-comp-amt{
+    font-size:9pt!important;color:#000!important;font-weight:900!important;
+    padding-top:0!important;white-space:nowrap!important;text-align:right!important
+  }
+  .win-sub-line{
+    padding:1.5mm 0 0.5mm!important;border-top:0.75pt solid #999!important;
+    margin-top:1.5mm!important
+  }
+  .win-sub-lbl{font-size:6.5pt!important;color:#555!important;font-weight:800!important;letter-spacing:0.5pt}
+  .win-sub-val{font-size:9pt!important;color:#c0392b!important;font-weight:900!important}
 
-/* room subtotal footer */
-.room-sub-footer{background:#f0f0f0!important;border-top:1pt solid #000!important;padding:2mm 3mm!important}
-.room-sub-footer .l{font-size:7pt!important;color:#000!important;font-weight:800!important}
-.room-sub-footer .v{font-size:10pt!important;color:#000!important;font-weight:900!important}
+  /* room subtotal footer */
+  .room-sub-footer{background:#f0f0f0!important;border-top:1pt solid #000!important;padding:2mm 3mm!important}
+  .room-sub-footer .l{font-size:7pt!important;color:#000!important;font-weight:800!important}
+  .room-sub-footer .v{font-size:10pt!important;color:#000!important;font-weight:900!important}
 
-/* grand total */
-.grand-card{background:#000!important;border-radius:2mm!important;padding:3.5mm!important;margin:3mm 0!important;box-shadow:none!important;break-inside:avoid!important}
-.grand-lbl{font-size:7pt!important;color:#bbb!important;letter-spacing:2pt!important;margin-bottom:1mm!important}
-.grand-val{font-size:22pt!important;color:#fff!important;letter-spacing:-1pt!important}
-.grand-sub{font-size:6.5pt!important;color:#999!important;margin-top:1mm!important}
+  /* grand total */
+  .grand-card{background:#000!important;border-radius:2mm!important;padding:3.5mm!important;margin:3mm 0!important;box-shadow:none!important;break-inside:avoid!important}
+  .grand-lbl{font-size:7pt!important;color:#bbb!important;letter-spacing:2pt!important;margin-bottom:1mm!important}
+  .grand-val{font-size:22pt!important;color:#fff!important;letter-spacing:-1pt!important}
+  .grand-sub{font-size:6.5pt!important;color:#999!important;margin-top:1mm!important}
 
-/* terms */
-.terms-card{background:#fff!important;border:0.5pt solid #ddd!important;border-radius:1mm!important;padding:2.5mm!important;margin-bottom:0!important}
-.terms-card .title{font-size:6.5pt!important;color:#555!important;margin-bottom:1mm!important}
-.terms-card .body{font-size:6.5pt!important;color:#666!important;line-height:1.55!important}
+  /* terms */
+  .terms-card{background:#fff!important;border:0.5pt solid #ddd!important;border-radius:1mm!important;padding:2.5mm!important;margin-bottom:0!important}
+  .terms-card .title{font-size:6.5pt!important;color:#555!important;margin-bottom:1mm!important}
+  .terms-card .body{font-size:6.5pt!important;color:#666!important;line-height:1.55!important}
 
-/* hide price elements if hide-prices active */
-body.hide-prices .price-col,
-body.hide-prices .sum-comp-amt,
-body.hide-prices .grand-card,
-body.hide-prices .room-sub-footer,
-body.hide-prices .win-sub-line{display:none!important}
+  /* hide price elements if hide-prices active */
+  body.hide-prices .price-col,
+  body.hide-prices .sum-comp-amt,
+  body.hide-prices .grand-card,
+  body.hide-prices .room-sub-footer,
+  body.hide-prices .win-sub-line{display:none!important}
 }
 
 /* ── STITCHING STYLE & BLIND MODE ── */
 .tx-meta-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 .tx-meta-lbl{font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#666;white-space:nowrap}
 .tx-style-sel{
-background:#1a1a1a;border:1px solid #383838;border-radius:7px;
-color:#fff;font-size:12px;font-weight:700;padding:6px 28px 6px 10px;
-outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;
-background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘10’ height=‘7’ viewBox=‘0 0 10 7’%3E%3Cpath d=‘M1 1l4 4 4-4’ stroke=’%23666’ stroke-width=‘1.5’ fill=‘none’/%3E%3C/svg%3E”);
-background-repeat:no-repeat;background-position:right 8px center;
+  background:#1a1a1a;border:1px solid #383838;border-radius:7px;
+  color:#fff;font-size:12px;font-weight:700;padding:6px 28px 6px 10px;
+  outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23666' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;
 }
 .blind-mode-toggle{display:flex;gap:0;border-radius:7px;overflow:hidden;border:1px solid #383838}
 .bmt-btn{
-flex:1;padding:6px 14px;font-size:12px;font-weight:700;
-background:#1a1a1a;color:#666;border:none;cursor:pointer;
--webkit-tap-highlight-color:transparent;transition:all 0.12s;touch-action:manipulation;
+  flex:1;padding:6px 14px;font-size:12px;font-weight:700;
+  background:#1a1a1a;color:#666;border:none;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:all 0.12s;touch-action:manipulation;
 }
 .bmt-btn.active{background:#c0392b;color:#fff}
 
@@ -667,36 +666,36 @@ background:#1a1a1a;color:#666;border:none;cursor:pointer;
 /* mode-select:  show selections only, no measurements, no prices */
 /* mode-quote:   show full quote with prices (default) */
 
-body[data-pmode=“measure”] .price-col,
-body[data-pmode=“measure”] .sum-comp-amt,
-body[data-pmode=“measure”] .grand-card,
-body[data-pmode=“measure”] .room-sub-footer,
-body[data-pmode=“measure”] .win-sub-line,
-body[data-pmode=“measure”] .comp-mrp-row,
-body[data-pmode=“measure”] .comp-calc{display:none!important}
+body[data-pmode="measure"] .price-col,
+body[data-pmode="measure"] .sum-comp-amt,
+body[data-pmode="measure"] .grand-card,
+body[data-pmode="measure"] .room-sub-footer,
+body[data-pmode="measure"] .win-sub-line,
+body[data-pmode="measure"] .comp-mrp-row,
+body[data-pmode="measure"] .comp-calc{display:none!important}
 
-body[data-pmode=“select”] .price-col,
-body[data-pmode=“select”] .sum-comp-amt,
-body[data-pmode=“select”] .grand-card,
-body[data-pmode=“select”] .room-sub-footer,
-body[data-pmode=“select”] .win-sub-line,
-body[data-pmode=“select”] .comp-mrp-row,
-body[data-pmode=“select”] .comp-calc{display:none!important}
-body[data-pmode=“select”] .win-meas-block{display:none!important}
+body[data-pmode="select"] .price-col,
+body[data-pmode="select"] .sum-comp-amt,
+body[data-pmode="select"] .grand-card,
+body[data-pmode="select"] .room-sub-footer,
+body[data-pmode="select"] .win-sub-line,
+body[data-pmode="select"] .comp-mrp-row,
+body[data-pmode="select"] .comp-calc{display:none!important}
+body[data-pmode="select"] .win-meas-block{display:none!important}
 
 @media print{
-body[data-pmode=“measure”] .price-col,
-body[data-pmode=“measure”] .sum-comp-amt,
-body[data-pmode=“measure”] .grand-card,
-body[data-pmode=“measure”] .room-sub-footer,
-body[data-pmode=“measure”] .win-sub-line{display:none!important}
+  body[data-pmode="measure"] .price-col,
+  body[data-pmode="measure"] .sum-comp-amt,
+  body[data-pmode="measure"] .grand-card,
+  body[data-pmode="measure"] .room-sub-footer,
+  body[data-pmode="measure"] .win-sub-line{display:none!important}
 
-body[data-pmode=“select”] .price-col,
-body[data-pmode=“select”] .sum-comp-amt,
-body[data-pmode=“select”] .grand-card,
-body[data-pmode=“select”] .room-sub-footer,
-body[data-pmode=“select”] .win-sub-line,
-body[data-pmode=“select”] .win-meas-block{display:none!important}
+  body[data-pmode="select"] .price-col,
+  body[data-pmode="select"] .sum-comp-amt,
+  body[data-pmode="select"] .grand-card,
+  body[data-pmode="select"] .room-sub-footer,
+  body[data-pmode="select"] .win-sub-line,
+  body[data-pmode="select"] .win-meas-block{display:none!important}
 }
 
 /* ── QUOTE LINE ITEMS IN PRINT ── */
@@ -705,125 +704,129 @@ body[data-pmode=“select”] .win-meas-block{display:none!important}
 
 /* Print modes control visibility */
 @media print{
-body[data-pmode=“quote”] .sum-comp-lines,
-body[data-pmode=“quote”] .quote-only{display:block!important}
+  body[data-pmode="quote"] .sum-comp-lines,
+  body[data-pmode="quote"] .quote-only{display:block!important}
 
-body[data-pmode=“measure”] .sum-comp-lines,
-body[data-pmode=“select”] .sum-comp-lines{display:none!important}
+  body[data-pmode="measure"] .sum-comp-lines,
+  body[data-pmode="select"] .sum-comp-lines{display:none!important}
 
-/* Compact print header — no margin before first room */
-.print-hdr{margin-bottom:3mm!important;padding-bottom:3mm!important}
-.sum-cust{margin-bottom:3mm!important;padding-bottom:3mm!important}
+  /* Compact print header — no margin before first room */
+  .print-hdr{margin-bottom:3mm!important;padding-bottom:3mm!important}
+  .sum-cust{margin-bottom:3mm!important;padding-bottom:3mm!important}
 
-/* Stitching style shown in selection/measurement sheets */
-.sum-comp-lines{border-top:0.25pt solid #eee;margin-top:0.5mm;padding-top:0.5mm}
+  /* Stitching style shown in selection/measurement sheets */
+  .sum-comp-lines{border-top:0.25pt solid #eee;margin-top:0.5mm;padding-top:0.5mm}
 }
 
 /* ═══ QUOTE PRINT — FULL LINE ITEMS ═══ */
 @media print {
-/* Quote sheet: show the line items div */
-body[data-pmode=“quote”] .sum-comp-lines { display:block !important }
-body[data-pmode=“quote”] .sum-comp-amt   { display:none  !important } /* amt shown inside lines */
+  /* Quote sheet: show the line items div */
+  body[data-pmode="quote"] .sum-comp-lines { display:block !important }
+  body[data-pmode="quote"] .sum-comp-amt   { display:none  !important } /* amt shown inside lines */
 
-/* Quote print: component block structure */
-.print-comp-block {
-margin-bottom: 2mm;
-break-inside: avoid;
-page-break-inside: avoid;
-}
-.print-comp-hdr {
-display: flex;
-align-items: baseline;
-gap: 3mm;
-margin-bottom: 0.5mm;
-}
-.print-comp-layer {
-font-size: 7pt;
-font-weight: 900;
-letter-spacing: 1pt;
-text-transform: uppercase;
-background: #f0f0f0;
-padding: 0.5mm 2mm;
-border-radius: 2pt;
-white-space: nowrap;
-}
-.print-comp-name {
-font-size: 8.5pt;
-font-weight: 800;
-color: #000;
-}
-.print-comp-style {
-font-size: 7pt;
-color: #888;
-font-style: italic;
-}
-.print-panels-line {
-font-size: 7.5pt;
-color: #555;
-margin: 0.5mm 0 1mm 0;
-padding-left: 12mm;
-}
-/* Line items table */
-.print-lines-table {
-width: 100%;
-padding-left: 12mm;
-border-collapse: collapse;
-}
-.print-lines-table td {
-font-size: 8pt;
-padding: 0.4mm 1mm 0.4mm 0;
-vertical-align: baseline;
-}
-.plt-lbl  { color: #333; font-weight: 600; width: 28mm; }
-.plt-qty  { color: #777; font-size: 7pt; width: 34mm; text-align: right; white-space: nowrap; }
-.plt-eq   { color: #999; width: 4mm; text-align: center; }
-.plt-amt  { color: #000; font-weight: 800; text-align: right; white-space: nowrap; }
-.print-comp-total-row td {
-font-size: 8.5pt;
-font-weight: 900;
-border-top: 0.5pt solid #aaa;
-padding-top: 1mm;
-padding-bottom: 1mm;
-}
-.plt-total-lbl { color: #000; }
-.plt-total-amt { color: #c0392b; text-align: right; }
+  /* Quote print: component block structure */
+  .print-comp-block {
+    margin-bottom: 2mm;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .print-comp-hdr {
+    display: flex;
+    align-items: baseline;
+    gap: 3mm;
+    margin-bottom: 0.5mm;
+  }
+  .print-comp-layer {
+    font-size: 7pt;
+    font-weight: 900;
+    letter-spacing: 1pt;
+    text-transform: uppercase;
+    background: #f0f0f0;
+    padding: 0.5mm 2mm;
+    border-radius: 2pt;
+    white-space: nowrap;
+  }
+  .print-comp-name {
+    font-size: 8.5pt;
+    font-weight: 800;
+    color: #000;
+  }
+  .print-comp-style {
+    font-size: 7pt;
+    color: #888;
+    font-style: italic;
+  }
+  .print-panels-line {
+    font-size: 7.5pt;
+    color: #555;
+    margin: 0.5mm 0 1mm 0;
+    padding-left: 12mm;
+  }
+  /* Line items table */
+  .print-lines-table {
+    width: 100%;
+    padding-left: 12mm;
+    border-collapse: collapse;
+  }
+  .print-lines-table td {
+    font-size: 8pt;
+    padding: 0.4mm 1mm 0.4mm 0;
+    vertical-align: baseline;
+  }
+  .plt-lbl  { color: #333; font-weight: 600; width: 28mm; }
+  .plt-qty  { color: #777; font-size: 7pt; width: 34mm; text-align: right; white-space: nowrap; }
+  .plt-eq   { color: #999; width: 4mm; text-align: center; }
+  .plt-amt  { color: #000; font-weight: 800; text-align: right; white-space: nowrap; }
+  .print-comp-total-row td {
+    font-size: 8.5pt;
+    font-weight: 900;
+    border-top: 0.5pt solid #aaa;
+    padding-top: 1mm;
+    padding-bottom: 1mm;
+  }
+  .plt-total-lbl { color: #000; }
+  .plt-total-amt { color: #c0392b; text-align: right; }
 }
 
 @media print {
-/* Hide on-screen component rows in ALL print modes */
-.sum-comp-row.no-print { display:none !important }
+  /* Hide on-screen component rows in ALL print modes */
+  .sum-comp-row.no-print { display:none !important }
 
-/* Show print blocks only in quote mode */
-.print-comp-block { display:none }
-body[data-pmode=“quote”] .print-comp-block { display:block !important }
+  /* Show print blocks only in quote mode */
+  .print-comp-block { display:none }
+  body[data-pmode="quote"] .print-comp-block { display:block !important }
 
-/* Measure + Select modes: show only the print-only title rows */
-body[data-pmode=“measure”] .print-comp-block,
-body[data-pmode=“select”]  .print-comp-block { display:none !important }
+  /* Measure + Select modes: show only the print-only title rows */
+  body[data-pmode="measure"] .print-comp-block,
+  body[data-pmode="select"]  .print-comp-block { display:none !important }
 
-/* Quote mode: window block is full-width (no 2-column grid) */
-body[data-pmode=“quote”] .sum-win-block {
-display:block !important;
-grid-template-columns: none !important;
-padding: 3mm !important;
-border-bottom: 0.5pt solid #e0e0e0 !important;
+  /* Quote mode: window block is full-width (no 2-column grid) */
+  body[data-pmode="quote"] .sum-win-block {
+    display:block !important;
+    grid-template-columns: none !important;
+    padding: 3mm !important;
+    border-bottom: 0.5pt solid #e0e0e0 !important;
+  }
+  body[data-pmode="quote"] .win-print-left  { display:none !important }
+  body[data-pmode="quote"] .win-print-right { padding-left:0 !important }
+  body[data-pmode="quote"] .sum-win-title-row { display:flex !important }
+  body[data-pmode="quote"] .sum-win-dims      { display:block !important }
+
+  /* Measurement + Selection modes keep 2-column grid */
+  body[data-pmode="measure"] .win-print-left,
+  body[data-pmode="select"]  .win-print-left  { display:block !important }
 }
-body[data-pmode=“quote”] .win-print-left  { display:none !important }
-body[data-pmode=“quote”] .win-print-right { padding-left:0 !important }
-body[data-pmode=“quote”] .sum-win-title-row { display:flex !important }
-body[data-pmode=“quote”] .sum-win-dims      { display:block !important }
 
-/* Measurement + Selection modes keep 2-column grid */
-body[data-pmode=“measure”] .win-print-left,
-body[data-pmode=“select”]  .win-print-left  { display:block !important }
+/* ── MANUAL ENTRY FORM ── */
+.manual-entry-form{
+  background:#0d0d0d;border:1.5px solid #383838;border-radius:10px;
+  padding:12px;margin-top:6px;
 }
 </style>
-
 </head>
 <body>
 
 <!-- SCREEN 1: LOGIN -->
-
 <div id="screen-login" class="screen active">
   <div class="pin-wrap">
     <img class="pin-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display='none'" alt="Darla">
@@ -851,7 +854,6 @@ body[data-pmode=“select”]  .win-print-left  { display:block !important }
 </div>
 
 <!-- SCREEN 2: CUSTOMER -->
-
 <div id="screen-customer" class="screen">
   <div class="hdr">
     <img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display='none'" alt="Darla">
@@ -880,7 +882,6 @@ body[data-pmode=“select”]  .win-print-left  { display:block !important }
 </div>
 
 <!-- SCREEN 3: BUILDER -->
-
 <div id="screen-builder" class="screen">
   <div class="hdr">
     <img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display='none'" alt="Darla">
@@ -905,7 +906,6 @@ body[data-pmode=“select”]  .win-print-left  { display:block !important }
 </div>
 
 <!-- SCREEN 4: SUMMARY -->
-
 <div id="screen-summary" class="screen">
   <div class="hdr no-print">
     <img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display='none'" alt="Darla">
@@ -930,7 +930,6 @@ body[data-pmode=“select”]  .win-print-left  { display:block !important }
 </div>
 
 <!-- SCREEN 5: ALL QUOTES -->
-
 <div id="screen-quotes" class="screen">
   <div class="hdr">
     <img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display='none'" alt="Darla">
@@ -951,7 +950,6 @@ body[data-pmode=“select”]  .win-print-left  { display:block !important }
 </div>
 
 <!-- MODAL: ROOM -->
-
 <div class="modal" id="mRoom">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
@@ -966,7 +964,6 @@ body[data-pmode=“select”]  .win-print-left  { display:block !important }
 </div>
 
 <!-- MODAL: WINDOW -->
-
 <div class="modal" id="mWin">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
@@ -990,7 +987,6 @@ body[data-pmode=“select”]  .win-print-left  { display:block !important }
 </div>
 
 <!-- MODAL: TREATMENT -->
-
 <div class="modal" id="mTx">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
@@ -1007,1224 +1003,7 @@ body[data-pmode=“select”]  .win-print-left  { display:block !important }
 
 <div class="toast" id="toast"></div>
 
-<script>
-// ═══════════════════════════════════════════════════════
-// CONFIG
-// ═══════════════════════════════════════════════════════
-var ASU = "https://script.google.com/macros/s/AKfycbx9A43LVU7Ikyxj5MNgRAnCvf9PSR5GisthNyC9oc_ye56OkTag32IUXstlDXtoWJ6v/exec";
-
-var STAFF = [{name:"Deepesh Darla",pin:"1516"}];
-var APP   = {staff:null, quote:blankQ()};
-
-function blankQ(){
-  return {id:null,date:new Date().toLocaleDateString("en-IN"),staff:"",staff2:"",customer:{name:"",mobile:"",arch:"",addr:""},rooms:[],saved:false};
-}
-
-// ═══════════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════════
-window.addEventListener("DOMContentLoaded",function(){
-  try{ init(); }catch(e){ console.error(e); }
-});
-
-function init(){
-  buildStaffDrop();
-  // Add touch feedback to PIN buttons — iOS :active is unreliable
-  document.querySelectorAll(".pk").forEach(function(btn){
-    btn.addEventListener("touchstart", function(e){
-      this.classList.add("pressed");
-    }, {passive:true});
-    btn.addEventListener("touchend", function(e){
-      var self = this;
-      setTimeout(function(){ self.classList.remove("pressed"); }, 120);
-    }, {passive:true});
-    btn.addEventListener("touchcancel", function(){
-      this.classList.remove("pressed");
-    }, {passive:true});
-  });
-
-  var sel = localStorage.getItem("darla_selected_product");
-  var ctx = localStorage.getItem("quote_product_ctx");
-  if(sel && ctx){
-    try{
-      var draft = localStorage.getItem("darla_quote_draft");
-      if(draft) APP.quote = JSON.parse(draft);
-      attachProd(JSON.parse(ctx), JSON.parse(sel));
-      localStorage.removeItem("darla_selected_product");
-      localStorage.removeItem("quote_product_ctx");
-      var sf = localStorage.getItem("darla_quote_staff");
-      if(sf){ APP.staff=JSON.parse(sf); setStaffLabel(); }
-      goTo("screen-builder");
-      // Restore scroll position
-      var sp = parseInt(localStorage.getItem("darla_scroll_pos")||"0");
-      localStorage.removeItem("darla_scroll_pos");
-      if(sp > 0) setTimeout(function(){ window.scrollTo(0, sp); }, 100);
-      showToast("Product added \u2713");
-    }catch(e){ goTo("screen-login"); }
-    return;
-  }
-
-  var lid = qp("load");
-  if(lid){ loadById(lid); return; }
-
-  loadStaff();
-}
-
-function qp(n){ return new URLSearchParams(window.location.search).get(n)||""; }
-
-// ═══════════════════════════════════════════════════════
-// STAFF
-// ═══════════════════════════════════════════════════════
-function buildStaffDrop(){
-  var el = document.getElementById("staffSel");
-  if(!el || !STAFF.length) return;
-  el.innerHTML = '<option value="">— Select Staff Member —</option>';
-  STAFF.forEach(function(s){
-    var o=document.createElement("option"); o.value=s.name; o.textContent=s.name; el.appendChild(o);
-  });
-}
-
-function loadStaff(){
-  // cache first
-  try{
-    var c=localStorage.getItem("darla_staff_cache");
-    if(c){var l=JSON.parse(c);if(l&&l.length){STAFF=l;buildStaffDrop();}}
-  }catch(e){}
-  if(!ASU||ASU.indexOf("YOUR_")===0) return;
-  fetch(ASU+"?action=getStaff&t="+Date.now())
-    .then(function(r){return r.json();})
-    .then(function(d){
-      if(d.staff&&d.staff.length){
-        STAFF=d.staff;
-        localStorage.setItem("darla_staff_cache",JSON.stringify(d.staff));
-        buildStaffDrop();
-      }
-    }).catch(function(){});
-}
-
-// ═══════════════════════════════════════════════════════
-// LOGIN / PIN
-// ═══════════════════════════════════════════════════════
-var pinBuf="", pickedStaff=null;
-
-function onStaffPick(){
-  var n=document.getElementById("staffSel").value;
-  pickedStaff=STAFF.find(function(s){return s.name.trim().toLowerCase()===n.trim().toLowerCase()})||null;
-  pinBuf=""; dotUpdate();
-  document.getElementById("pinErr").textContent="";
-  document.getElementById("loginSub").textContent=n?"Enter your PIN":"Select your name to continue";
-}
-
-function pk(k){
-  if(!pickedStaff){document.getElementById("pinErr").textContent="Select your name first";return;}
-  if(pinBuf.length>=4) return;
-  pinBuf+=k; dotUpdate();
-  if(pinBuf.length===4) setTimeout(checkPin,100);
-}
-function pd(){pinBuf=pinBuf.slice(0,-1);dotUpdate();}
-
-function dotUpdate(err){
-  for(var i=0;i<4;i++){
-    var d=document.getElementById("pd"+i);if(!d)continue;
-    d.className="dot";
-    if(err)d.classList.add("err");
-    else if(i<pinBuf.length)d.classList.add("on");
-  }
-}
-
-function checkPin(){
-  if(!pickedStaff)return;
-  if(pinBuf===pickedStaff.pin){
-    APP.staff=pickedStaff;
-    localStorage.setItem("darla_quote_staff",JSON.stringify(APP.staff));
-    setStaffLabel();
-    clearForm();
-    goTo("screen-customer");
-  } else {
-    dotUpdate(true);
-    document.getElementById("pinErr").textContent="Incorrect PIN — try again";
-    setTimeout(function(){pinBuf="";dotUpdate();document.getElementById("pinErr").textContent="";},1200);
-  }
-}
-
-function skipLogin(){
-  APP.staff={name:"Staff",pin:""};
-  setStaffLabel();
-  clearForm();
-  goTo("screen-customer");
-}
-
-function setStaffLabel(){
-  var el=document.getElementById("staffLabel");
-  if(el&&APP.staff) el.textContent=APP.staff.name;
-}
-
-function clearForm(){
-  APP.quote=blankQ();
-  localStorage.removeItem("darla_quote_draft");
-  ["cName","cMobile","cArch","cAddr","cSales1","cSales2"].forEach(function(id){var e=document.getElementById(id);if(e)e.value="";});
-  var s1=document.getElementById("cSales1");
-  if(s1&&APP.staff&&APP.staff.name) s1.value=APP.staff.name;
-}
-
-// ═══════════════════════════════════════════════════════
-// START QUOTE
-// ═══════════════════════════════════════════════════════
-function startQuote(){
-  var name=document.getElementById("cName").value.trim();
-  var mob=document.getElementById("cMobile").value.trim();
-  if(!name){showToast("Enter customer name");return;}
-  if(!mob||mob.length<10){showToast("Enter valid mobile number");return;}
-  APP.quote.customer={name:name,mobile:mob,arch:document.getElementById("cArch").value.trim(),addr:document.getElementById("cAddr").value.trim()};
-  APP.quote.staff=document.getElementById("cSales1").value.trim()||(APP.staff?APP.staff.name:"Staff");
-  APP.quote.staff2=document.getElementById("cSales2").value.trim();
-  if(!APP.quote.id){APP.quote.id=nextId();APP.quote.date=new Date().toLocaleDateString("en-IN");}
-  document.getElementById("bldName").textContent=name;
-  document.getElementById("bldId").textContent=APP.quote.id;
-  saveDraft();
-  goTo("screen-builder");
-}
-
-// ═══════════════════════════════════════════════════════
-// ROOMS
-// ═══════════════════════════════════════════════════════
-var PRESETS=["Living Room","Master Bedroom","Kids Room","Guest Room","Sons Room","Daughters Room","Parents Room","Home Theatre","Study","Kitchen","Dining Room","Pooja Room"];
-var roomPreset="";
-
-function openRoomModal(){
-  roomPreset="";
-  document.getElementById("mRoomName").value="";
-  document.getElementById("roomPills").innerHTML=PRESETS.map(function(n){
-    return '<div class="pill" onclick="pickPreset(this,&quot;'+n+'&quot;)">'+n+'</div>';
-  }).join("");
-  openModal("mRoom");
-}
-
-function pickPreset(el,n){
-  document.querySelectorAll(".pill").forEach(function(p){p.classList.remove("on");});
-  el.classList.add("on");
-  roomPreset=n;
-  document.getElementById("mRoomName").value="";
-}
-
-function confirmRoom(){
-  var name=document.getElementById("mRoomName").value.trim()||roomPreset;
-  if(!name){showToast("Select or enter a room name");return;}
-  APP.quote.rooms.push({id:uid(),name:name,windows:[]});
-  closeModal("mRoom");
-  saveDraft();
-  renderBld();
-  var ri=APP.quote.rooms.length-1;
-  setTimeout(function(){openWinModal(ri);},300);
-}
-
-function delRoom(ri){
-  if(!confirm("Delete this room?"))return;
-  APP.quote.rooms.splice(ri,1);
-  saveDraft();renderBld();
-}
-
-// ═══════════════════════════════════════════════════════
-// WINDOWS
-// ═══════════════════════════════════════════════════════
-function openWinModal(ri){
-  var room=APP.quote.rooms[ri];
-  var num=room.windows.length+1;
-  var prev=room.windows.length>0?room.windows[room.windows.length-1]:null;
-  document.getElementById("mWinRi").value=ri;
-  document.getElementById("mWinName").value="Window "+num;
-  document.getElementById("mWinW").value="";
-  document.getElementById("mWinH").value="";
-  document.getElementById("mWinQ").value="1";
-  document.getElementById("mWinR").value="";
-  var hint=document.getElementById("mWinHint");
-  var hasProd=prev&&prev.treatments&&prev.treatments.some(function(t){return t.components.some(function(c){return!!c.product;});});
-  if(hint){hint.style.display=hasProd?"block":"none";if(hasProd)hint.textContent="\u2713 Products from Window "+(num-1)+" will be copied";}
-  openModal("mWin");
-}
-
-function confirmWin(){
-  var ri=parseInt(document.getElementById("mWinRi").value);
-  var name=document.getElementById("mWinName").value.trim()||"Window "+(APP.quote.rooms[ri].windows.length+1);
-  var w=parseFloat(document.getElementById("mWinW").value)||0;
-  var h=parseFloat(document.getElementById("mWinH").value)||0;
-  var q=parseInt(document.getElementById("mWinQ").value)||1;
-  var rem=document.getElementById("mWinR").value.trim();
-  if(!w||!h){showToast("Enter width and height");return;}
-  APP.quote.rooms[ri].windows.push({id:uid(),name:name,width:w,height:h,qty:q,remarks:rem,treatments:[]});
-  closeModal("mWin");
-  saveDraft();renderBld();
-  var wi=APP.quote.rooms[ri].windows.length-1;
-  setTimeout(function(){openTxModal(ri,wi);},300);
-}
-
-function delWin(ri,wi){
-  if(!confirm("Remove this window?"))return;
-  APP.quote.rooms[ri].windows.splice(wi,1);
-  saveDraft();renderBld();
-}
-
-// ═══════════════════════════════════════════════════════
-// TREATMENTS
-// ═══════════════════════════════════════════════════════
-function openTxModal(ri,wi){
-  document.getElementById("mTxRi").value=ri;
-  document.getElementById("mTxWi").value=wi;
-  openModal("mTx");
-}
-
-function confirmTx(type){
-  var ri=parseInt(document.getElementById("mTxRi").value);
-  var wi=parseInt(document.getElementById("mTxWi").value);
-  var room=APP.quote.rooms[ri];
-
-  // Build treatment object with defaults
-  var tx={id:uid(),type:type,components:[],stitchStyle:"Pleated",blindMode:"single"};
-
-  // Auto-copy products from the most recent previous window with products
-  if(wi>0){
-    var srcComps=[];
-    // Search previous windows in reverse for products to copy
-    for(var pw=wi-1; pw>=0; pw--){
-      var prevWin=room.windows[pw];
-      if(!prevWin||!prevWin.treatments)continue;
-      // Gather all Main+Sheer components with products from that window
-      prevWin.treatments.forEach(function(pt){
-        if(pt.type==="curtains"||pt.type==="roman_blinds"){
-          pt.components.forEach(function(c){
-            if(c.product&&(c.layer==="main"||c.layer==="sheer")){
-              srcComps.push({layer:c.layer,product:c.product});
-            }
-          });
-        }
-      });
-      if(srcComps.length>0)break; // Found products, stop
-    }
-
-    if(type==="curtains"&&srcComps.length>0){
-      // Copy Main and Sheer components
-      srcComps.forEach(function(sc){
-        tx.components.push({id:uid(),layer:sc.layer,product:JSON.parse(JSON.stringify(sc.product)),stitchStyle:sc.stitchStyle||"Pleated",calc:{}});
-      });
-      showToast("Products copied from previous window \u2713");
-    } else if(type==="roman_blinds"&&srcComps.length>0){
-      // Default to double if prev window had both main+sheer, else single
-      var hasMain=srcComps.some(function(c){return c.layer==="main";});
-      var hasSheer=srcComps.some(function(c){return c.layer==="sheer";});
-      tx.blindMode=hasSheer?"double":"single";
-      // Copy based on mode — single=main only, double=main+sheer
-      srcComps.forEach(function(sc){
-        if(sc.layer==="main"||(sc.layer==="sheer"&&tx.blindMode==="double")){
-          tx.components.push({id:uid(),layer:sc.layer,product:JSON.parse(JSON.stringify(sc.product)),stitchStyle:sc.stitchStyle||"Pleated",calc:{}});
-        }
-      });
-      showToast("Products copied ("+tx.blindMode+") \u2713");
-    }
-    // blinds: no copy
-  }
-
-  room.windows[wi].treatments.push(tx);
-  closeModal("mTx");
-  saveDraft();renderBld();
-}
-
-function delTx(ri,wi,ti){
-  APP.quote.rooms[ri].windows[wi].treatments.splice(ti,1);
-  saveDraft();renderBld();
-}
-
-// ═══════════════════════════════════════════════════════
-// COMPONENTS — addComp goes straight to product search
-// ═══════════════════════════════════════════════════════
-function addComp(ri,wi,ti,layer){
-  APP.quote.rooms[ri].windows[wi].treatments[ti].components.push({id:uid(),layer:layer,product:null,calc:{}});
-  var ci=APP.quote.rooms[ri].windows[wi].treatments[ti].components.length-1;
-  saveDraft();
-  pickProduct(ri,wi,ti,ci);
-}
-
-function delComp(ri,wi,ti,ci){
-  APP.quote.rooms[ri].windows[wi].treatments[ti].components.splice(ci,1);
-  saveDraft();renderBld();
-}
-
-function editMrp(ri,wi,ti,ci,v){
-  var c=APP.quote.rooms[ri].windows[wi].treatments[ti].components[ci];
-  if(!c||!c.product)return;
-  var n=parseFloat(v);
-  if(isNaN(n)||n<0)return;
-  c.product.mrp=n;
-  saveDraft();renderBld();
-}
-
-// ═══════════════════════════════════════════════════════
-// PRODUCT SELECTION
-// ═══════════════════════════════════════════════════════
-function pickProduct(ri,wi,ti,ci){
-  saveDraft();
-  localStorage.setItem("darla_quote_staff",JSON.stringify(APP.staff));
-  localStorage.setItem("quote_product_ctx",JSON.stringify({ri:ri,wi:wi,ti:ti,ci:ci}));
-  // Save scroll position so we return to same spot
-  localStorage.setItem("darla_scroll_pos", String(window.scrollY||0));
-  var ttype=APP.quote.rooms[ri].windows[wi].treatments[ti].type;
-  var cat=ttype==="blinds"?"blinds":"fabric";
-  var base=window.location.href.split("?")[0];
-  window.location.href=base.replace("quote.html","index.html")+"?mode=quote&category="+cat+"&return="+encodeURIComponent(base);
-}
-
-function attachProd(ctx,prod){
-  var c=APP.quote.rooms[ctx.ri].windows[ctx.wi].treatments[ctx.ti].components[ctx.ci];
-  if(!c)return;
-  c.product=prod;
-  c.calc=calcComp(APP.quote.rooms[ctx.ri].windows[ctx.wi],c);
-}
-
-// ═══════════════════════════════════════════════════════
-// CALCULATIONS — FIXED: consistent field names
-// calcCurtains returns panelLen (was panelLength — renamed for consistency)
-// ═══════════════════════════════════════════════════════
-function r2(v,s){return Math.round(v/s)*s;}
-
-function calcComp(win,comp){
-  if(!comp.product||!win)return{};
-  var mrp=parseFloat(comp.product.mrp)||0;
-  var w=parseFloat(win.width)||0,h=parseFloat(win.height)||0,q=parseInt(win.qty)||1;
-  var tt=comp.treatmentType||"curtains";
-  var layer=comp.layer||"main";
-  var style=comp.stitchStyle||"Pleated";
-  if(tt==="curtains")     return calcCurtains(w,h,mrp,q,layer,style);
-  if(tt==="roman_blinds") return calcRoman(w,h,mrp,q);
-  if(tt==="blinds")       return calcBlinds(w,h,mrp,q);
-  return calcCurtains(w,h,mrp,q,layer,style);
-}
-
-// ── Curtain calc — style-aware, all line items explicit ──
-// style: Pleated|Plain|Eliza|Ripple|Eyelet
-// Plain uses /48 panels; all others use /24
-function calcCurtains(w,h,mrp,qty,layer,style){
-  style=style||"Pleated";
-  var divisor=(style==="Plain")?48:24;
-  var p=Math.ceil((w+10)/divisor);
-  var l=parseFloat(r2((h+16)/39,0.05).toFixed(2)); // panel length (no trailing zeros)
-  var f=parseFloat((Math.round(p*l*100)/100).toFixed(2)); // fabric qty (no trailing zeros)
-
-  var lines=[];  // [{lbl, qty, rate, amt}]
-
-  // 1. Fabric
-  lines.push({lbl:"Fabric",qty:f+" mtrs",rate:mrp,amt:Math.round(f*mrp)});
-
-  // 2. Stitching (all styles, all layers)
-  lines.push({lbl:"Stitching",qty:f+" mtrs",rate:60,amt:Math.round(f*60)});
-
-  // 3. Layer-specific base item
-  if(layer==="sheer"){
-    var bwAmt=Math.round(p*1.5*60);
-    lines.push({lbl:"Bottom Weight",qty:p+" × 1.5m",rate:60,amt:bwAmt});
-  } else {
-    lines.push({lbl:"Belt Stitching",qty:"2 pcs",rate:100,amt:200});
-  }
-
-  // 4. Style extras (both layers share tape/rings)
-  if(style==="Eliza"){
-    var tapeAmt=Math.round(p*1.5*350);
-    lines.push({lbl:"Eliza Tape",qty:p+" × 1.5m",rate:350,amt:tapeAmt});
-  } else if(style==="Ripple"){
-    var tapeAmt=Math.round(p*1.5*150);
-    lines.push({lbl:"Ripple Tape",qty:p+" × 1.5m",rate:150,amt:tapeAmt});
-  } else if(style==="Eyelet"){
-    var tapeAmt=Math.round(p*1.5*350);
-    var ringsAmt=Math.round(p*12*15);
-    lines.push({lbl:"Eyelet Tape",qty:p+" × 1.5m",rate:350,amt:tapeAmt});
-    lines.push({lbl:"Eyelet Rings",qty:p+" × 12 nos",rate:15,amt:ringsAmt});
-  }
-
-  var unitTotal=lines.reduce(function(s,l){return s+l.amt;},0);
-  return {
-    numPanels:p, panelLen:l, fabricQty:f,
-    lines:lines,
-    unitTotal:unitTotal,
-    total:Math.round(unitTotal*qty)
-  };
-}
-
-function calcRoman(w,h,mrp,qty){
-  var wf=r2(w/12,0.25),hf=r2(h/12,0.25),sq=wf*hf;
-  var mechanism=Math.round(sq*475);
-  var p=Math.ceil(w/48),l=parseFloat(r2((h+20)/39,0.05).toFixed(2)),f=parseFloat((Math.round(p*l*100)/100).toFixed(2));
-  var fabricCost=Math.round(f*mrp);
-  var lining=Math.round(f*200);
-  var installation=350; // per window
-  var stitching=350;    // per window
-  var unitTotal=mechanism+fabricCost+lining+installation+stitching;
-  return {
-    sqft:Math.round(sq*100)/100, matCost:mechanism,
-    panels:p, panelLen:l, fabricQty:f,
-    fabCost:fabricCost, lining:lining,
-    installation:installation, stitching:stitching,
-    unitTotal:unitTotal,
-    total:Math.round(unitTotal*qty)
-  };
-}
-
-function calcBlinds(w,h,mrp,qty){
-  var sq=r2(w/12,0.25)*r2(h/12,0.25);
-  return {sqft:Math.round(sq*100)/100,unitTotal:Math.round(sq*mrp),total:Math.round(sq*mrp*qty)};
-}
-
-function fmt(n){return "\u20B9"+Number(Math.round(n||0)).toLocaleString("en-IN");}
-
-// ═══════════════════════════════════════════════════════
-// BUILDER RENDER
-// ═══════════════════════════════════════════════════════
-function renderBld(){
-  var html="";
-  APP.quote.rooms.forEach(function(room,ri){
-    var wc=room.windows.length,rt=roomTotal(room);
-    html+='<div class="room-card open" id="r_'+ri+'">'
-      +'<div class="room-hdr" onclick="toggleRoom('+ri+')">'
-      +'<div><div class="room-name">'+esc(room.name)+'</div>'
-      +'<div class="room-meta">'+wc+' window'+(wc!==1?"s":"")+(rt?' &middot; <span class="room-total-inline">'+fmt(rt)+'</span>':'')+'</div></div>'
-      +'<div class="room-toggle">&#8250;</div></div>'
-      +'<div class="room-body">';
-    room.windows.forEach(function(win,wi){html+=renderWin(win,ri,wi);});
-    html+='<button class="btn btn-add" onclick="openWinModal('+ri+')" style="margin-top:8px">&#43; Add Window</button></div>'
-      +'<div class="room-actions"><button class="btn btn-ghost btn-sm" onclick="delRoom('+ri+')" style="color:#ff6b6b;border-color:#3a1010">&#128465; Delete Room</button></div></div>';
-  });
-  document.getElementById("roomsWrap").innerHTML=html;
-}
-
-function renderWin(win,ri,wi){
-  var html='<div class="win-card open" id="w_'+ri+'_'+wi+'">'
-    +'<div class="win-hdr" onclick="toggleWin(&quot;w_'+ri+'_'+wi+'&quot;)">'
-    +'<div class="win-num">'+(wi+1)+'</div>'
-    +'<div class="win-info"><div class="win-title">'+esc(win.name)+'</div>'
-    +'<div class="win-dims">'+win.width+'" W \xd7 '+win.height+'" H &nbsp;&middot;&nbsp; Qty: '+win.qty+(win.remarks?' &middot; '+esc(win.remarks):'')+'</div></div>'
-    +'<div class="win-toggle">&#8250;</div></div>'
-    +'<div class="win-body">';
-  win.treatments.forEach(function(t,ti){html+=renderTx(t,ri,wi,ti,win);});
-  html+='<button class="btn btn-add" onclick="openTxModal('+ri+','+wi+')" style="margin:8px 0 4px">&#43; Add Treatment</button>'
-    +'<button class="btn btn-ghost btn-sm" onclick="delWin('+ri+','+wi+')" style="width:100%;color:#ff6b6b;border-color:#3a1010">Remove Window</button>'
-    +'</div></div>';
-  return html;
-}
-
-function renderTx(t,ri,wi,ti,win){
-  var lbl=t.type==="curtains"?"Curtains":t.type==="roman_blinds"?"Roman Blinds":"Blinds";
-  var C=ri+","+wi+","+ti;
-  t.components.forEach(function(c){c.treatmentType=t.type;});
-  var hasc=t.components.length>0;
-  var bm=t.blindMode||"single";
-
-  var html='<div class="tx-card"><div class="tx-head">'
-    +'<span class="tx-badge '+t.type+'">'
-    +lbl+'</span>'
-    +'<button class="btn btn-ghost btn-sm" style="padding:4px 10px;font-size:11px;color:#ff6b6b;border-color:#3a1010" onclick="delTx('+C+')">&#10005;</button>'
-    +'</div>';
-
-  // Stitching style moved to component level
-    if(t.type==="roman_blinds"){
-    html+='<div class="tx-meta-row">'
-      +'<span class="tx-meta-lbl">Type</span>'
-      +'<div class="blind-mode-toggle">'
-      +'<button class="bmt-btn'+(bm==="single"?" active":"")+'" onclick="setBlindMode('+ri+','+wi+','+ti+',&quot;single&quot;)">Single</button>'
-      +'<button class="bmt-btn'+(bm==="double"?" active":"")+'" onclick="setBlindMode('+ri+','+wi+','+ti+',&quot;double&quot;)">Double</button>'
-      +'</div></div>';
-  }
-
-  if(!hasc){
-    if(t.type==="curtains"){
-      html+='<div class="next-wrap"><div class="next-lbl">Select fabric type</div>'
-        +'<div class="next-row">'
-        +'<button class="nab nab-main" onclick="addComp('+C+',&quot;main&quot;)">&#43; Main Fabric</button>'
-        +'<button class="nab nab-sheer" onclick="addComp('+C+',&quot;sheer&quot;)">&#43; Sheer</button>'
-        +'</div></div>';
-    } else if(t.type==="roman_blinds"){
-      html+='<div class="next-wrap"><div class="next-lbl">Select fabric</div>'
-        +'<div class="next-row">'
-        +'<button class="nab nab-main" onclick="addComp('+C+',&quot;main&quot;)">&#43; Main Fabric</button>'
-        +(bm==="double"?'<button class="nab nab-sheer" onclick="addComp('+C+',&quot;sheer&quot;)">&#43; Sheer</button>':''  )
-        +'</div></div>';
-    } else {
-      html+='<button class="nab nab-blind" style="width:100%" onclick="addComp('+C+',&quot;blind&quot;)">&#43; Select Blind Product</button>';
-    }
-  }
-
-  t.components.forEach(function(c,ci){html+=renderComp(c,ri,wi,ti,ci,win,t);});
-
-  if(hasc){
-    html+='<div class="next-wrap">';
-    if(t.type==="curtains"||t.type==="roman_blinds"){
-      var hm=t.components.some(function(c){return c.layer==="main";});
-      var hs=t.components.some(function(c){return c.layer==="sheer";});
-      var allowSheer=(t.type==="curtains")||(t.type==="roman_blinds"&&bm==="double");
-      html+='<div class="next-lbl">What\'s next?</div><div class="next-row">';
-      if(!hm) html+='<button class="nab nab-main" onclick="addComp('+C+',&quot;main&quot;)">&#43; Add Main</button>';
-      if(!hs&&allowSheer) html+='<button class="nab nab-sheer" onclick="addComp('+C+',&quot;sheer&quot;)">&#43; Add Sheer</button>';
-      if(hm&&(hs||!allowSheer)) html+='<div class="nab-done">&#10003; '+( allowSheer&&hs?"Main &amp; Sheer added":"Main added")+"</div>";
-      html+='</div>';
-    } else {
-      html+='<button class="nab nab-blind" style="width:100%" onclick="addComp('+C+',&quot;blind&quot;)">&#43; Add Another Blind</button>';
-    }
-    html+='<div class="next-row" style="margin-top:7px">'
-      +'<button class="nab nab-window" onclick="openWinModal('+ri+')">&#43; Window</button>'
-      +'<button class="nab nab-room" onclick="openRoomModal()">&#43; Room</button>'
-      +'</div></div>';
-  }
-  html+='</div>';
-  return html;
-}
-
-function setTxStyle(ri,wi,ti,v){ // kept for compatibility
-  APP.quote.rooms[ri].windows[wi].treatments[ti].stitchStyle=v;
-  saveDraft();renderBld();
-}
-function setCompStyle(ri,wi,ti,ci,v){
-  APP.quote.rooms[ri].windows[wi].treatments[ti].components[ci].stitchStyle=v;
-  saveDraft();renderBld();
-}
-
-function setBlindMode(ri,wi,ti,mode){
-  var tx=APP.quote.rooms[ri].windows[wi].treatments[ti];
-  tx.blindMode=mode;
-  // If switching to single, remove sheer components
-  if(mode==="single"){
-    tx.components=tx.components.filter(function(c){return c.layer!=="sheer";});
-  }
-  saveDraft();renderBld();
-}
-
-function renderComp(c,ri,wi,ti,ci,win,t){
-  var calc=c.product?calcComp(win,Object.assign({},c,{treatmentType:t.type})):{};
-  c.calc=calc;
-  var isSheer=(c.layer==="sheer");
-  var isCurtain=(t.type==="curtains");
-  var cs=c.stitchStyle||"Pleated"; // per-component style
-
-  var html='<div class="comp-card"><div class="comp-hdr">'
-    +'<span class="comp-layer-tag '+c.layer+'">'+(c.layer==="blind"?"BLIND":c.layer.toUpperCase())+'</span>'
-    +'<button class="comp-del" onclick="delComp('+ri+','+wi+','+ti+','+ci+')">&#128465;</button>'
-    +'</div>';
-
-  // Stitching style selector — curtains only, on both Main and Sheer
-  if(isCurtain){
-    html+='<div class="tx-meta-row">'
-      +'<span class="tx-meta-lbl">Stitch</span>'
-      +'<select class="tx-style-sel" onchange="setCompStyle('+ri+','+wi+','+ti+','+ci+',this.value)">';
-    ["Pleated","Eliza","Ripple","Eyelet","Plain"].forEach(function(s){
-      html+='<option value="'+s+'"'+(cs===s?' selected':'')+'>'+s+'</option>';
-    });
-    html+='</select></div>';
-  }
-
-  if(!c.product){
-    html+='<button class="btn btn-sm" style="width:100%;background:#141414;border:1.5px dashed #383838;color:#666666;box-shadow:none" onclick="pickProduct('+ri+','+wi+','+ti+','+ci+')">&#128269; Select Product</button></div>';
-    return html;
-  }
-
-  var p=c.product;
-  var brand=p.brand||"";
-  var catalog=p.catalog||p.product||p.blind_type||p.model||"";
-  var sno=p.s_no||p["s.no"]||"";
-  var unitLbl=t.type==="blinds"?"sqft":"mtr";
-  var nameParts=[brand,catalog,sno].filter(Boolean);
-
-  // Product name: Brand / Catalog / S.No
-  html+='<div class="comp-product-name">'+esc(nameParts.join(" / "))+'</div>';
-
-  // MRP edit row (compact)
-  html+='<div class="comp-mrp-row">'
-    +'<span class="comp-mrp-lbl">MRP /'+unitLbl+'</span>'
-    +'<input class="comp-mrp-inp" type="number" value="'+esc(String(p.mrp||0))+'" min="0" step="0.5" inputmode="decimal" onchange="editMrp('+ri+','+wi+','+ti+','+ci+',this.value)" onclick="this.select()">'
-    +'</div>';
-
-  if(calc&&calc.total){
-    html+='<div class="comp-calc">';
-
-    if(t.type==="curtains"){
-      // Qty × Rate = Total for each line
-      html+='<div class="calc-row" style="font-size:11px;color:#555;margin-bottom:4px">'
-        +'<span class="l">'+calc.numPanels+' panels \xd7 '+calc.panelLen+'m = '+calc.fabricQty+' mtrs</span></div>';
-      (calc.lines||[]).forEach(function(ln){
-        html+='<div class="calc-row">'
-          +'<span class="l">'+ln.lbl+'</span>'
-          +'<span class="v" style="display:flex;gap:6px;align-items:baseline">'
-          +'<span style="font-size:10px;color:#666;white-space:nowrap">'+ln.qty+' \xd7 '+fmt(ln.rate)+'</span>'
-          +'<span>=</span>'
-          +'<span>'+fmt(ln.amt)+'</span></span></div>';
-      });
-      if((parseInt(win.qty)||1)>1){
-        html+='<div class="calc-row" style="border-top:1px solid #1e1e1e;margin-top:4px;padding-top:4px">'
-          +'<span class="l">Unit total</span><span class="v">'+fmt(calc.unitTotal)+'</span></div>';
-        html+='<div class="calc-row"><span class="l">\xd7 '+win.qty+' windows</span>'
-          +'<span class="v">'+fmt(calc.total)+'</span></div>';
-      }
-
-    } else if(t.type==="roman_blinds"){
-      html+='<div class="calc-row"><span class="l">Area</span><span class="v">'+calc.sqft+' sqft</span></div>';
-      html+='<div class="calc-row"><span class="l">Mechanism</span>'
-        +'<span class="v" style="display:flex;gap:6px;align-items:baseline">'
-        +'<span style="font-size:10px;color:#666">'+calc.sqft+' sqft \xd7 '+fmt(475)+'</span>'
-        +'<span>=</span><span>'+fmt(calc.matCost)+'</span></span></div>';
-      html+='<div class="calc-row" style="font-size:11px;color:#555;margin:3px 0">'
-        +'<span class="l">'+calc.panels+' panels \xd7 '+calc.panelLen+'m = '+calc.fabricQty+' mtrs</span></div>';
-      html+='<div class="calc-row"><span class="l">Fabric</span>'
-        +'<span class="v" style="display:flex;gap:6px;align-items:baseline">'
-        +'<span style="font-size:10px;color:#666">'+calc.fabricQty+'m \xd7 '+fmt(p.mrp)+'</span>'
-        +'<span>=</span><span>'+fmt(calc.fabCost)+'</span></span></div>';
-      html+='<div class="calc-row"><span class="l">Lining</span>'
-        +'<span class="v" style="display:flex;gap:6px;align-items:baseline">'
-        +'<span style="font-size:10px;color:#666">'+calc.fabricQty+'m \xd7 '+fmt(200)+'</span>'
-        +'<span>=</span><span>'+fmt(calc.lining)+'</span></span></div>';
-      html+='<div class="calc-row"><span class="l">Installation</span>'
-        +'<span class="v" style="display:flex;gap:6px;align-items:baseline">'
-        +'<span style="font-size:10px;color:#666">1 window \xd7 '+fmt(350)+'</span>'
-        +'<span>=</span><span>'+fmt(calc.installation)+'</span></span></div>';
-      html+='<div class="calc-row"><span class="l">Stitching</span>'
-        +'<span class="v" style="display:flex;gap:6px;align-items:baseline">'
-        +'<span style="font-size:10px;color:#666">1 window \xd7 '+fmt(350)+'</span>'
-        +'<span>=</span><span>'+fmt(calc.stitching)+'</span></span></div>';
-      if((parseInt(win.qty)||1)>1){
-        html+='<div class="calc-row" style="border-top:1px solid #1e1e1e;margin-top:4px;padding-top:4px">'
-          +'<span class="l">Unit total</span><span class="v">'+fmt(calc.unitTotal)+'</span></div>';
-        html+='<div class="calc-row"><span class="l">\xd7 '+win.qty+' windows</span>'
-          +'<span class="v">'+fmt(calc.total)+'</span></div>';
-      }
-
-    } else {
-      // Blinds
-      html+='<div class="calc-row"><span class="l">Area</span><span class="v">'+calc.sqft+' sqft</span></div>';
-      html+='<div class="calc-row"><span class="l">Blind fabric</span>'
-        +'<span class="v" style="display:flex;gap:6px;align-items:baseline">'
-        +'<span style="font-size:10px;color:#666">'+calc.sqft+' sqft \xd7 '+fmt(p.mrp)+'</span>'
-        +'<span>=</span><span>'+fmt(calc.unitTotal)+'</span></span></div>';
-      if((parseInt(win.qty)||1)>1){
-        html+='<div class="calc-row"><span class="l">\xd7 '+win.qty+' windows</span>'
-          +'<span class="v">'+fmt(calc.total)+'</span></div>';
-      }
-    }
-
-    html+='<div class="calc-row total"><span class="l">TOTAL</span><span class="v">'+fmt(calc.total)+'</span></div>';
-    html+='</div>'; // comp-calc
-  }
-
-  html+='<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px;font-size:11px" onclick="pickProduct('+ri+','+wi+','+ti+','+ci+')">&#8635; Change Product</button></div>';
-  return html;
-}
-
-function toggleRoom(ri){var e=document.getElementById("r_"+ri);if(e)e.classList.toggle("open");}
-function toggleWin(id){var e=document.getElementById(id);if(e)e.classList.toggle("open");}
-
-// ═══════════════════════════════════════════════════════
-// TOTALS
-// ═══════════════════════════════════════════════════════
-function compTotal(c,win,ttype){
-  if(!c.product)return 0;
-  return calcComp(win,Object.assign({},c,{treatmentType:ttype})).total||0;
-}
-function roomTotal(room){
-  var t=0;
-  room.windows.forEach(function(win){win.treatments.forEach(function(tx){tx.components.forEach(function(c){t+=compTotal(c,win,tx.type);});});});
-  return t;
-}
-function grandTotal(){
-  var t=0;APP.quote.rooms.forEach(function(r){t+=roomTotal(r);});return t;
-}
-
-// ═══════════════════════════════════════════════════════
-// SUMMARY — includes print-ready HTML structure
-// ═══════════════════════════════════════════════════════
-function renderSum(){
-  var q=APP.quote,gt=grandTotal();
-  var h="";
-
-  // ── SCREEN: quote badge ──
-  h+='<div class="qid-badge no-print">Quote Reference<span>'+esc(q.id||"\u2014")+'</span></div>';
-
-  // ── PRINT HEADER (all modes) ──
-  h+='<div class="print-only print-hdr">'
-    +'<div class="print-brand"><div class="name">DARLA</div><div class="tag">Sales &amp; Agencies &middot; Mysore</div></div>'
-    +'<div class="print-qinfo"><div class="qid">'+esc(q.id||"\u2014")+'</div><div class="date">'+esc(q.date)+'</div></div>'
-    +'</div>';
-
-  // ── CUSTOMER BLOCK ──
-  h+='<div class="sum-cust">'
-    +'<div class="sum-field"><span class="l">Customer</span><span class="v">'+esc(q.customer.name)+'</span></div>'
-    +'<div class="sum-field"><span class="l">Mobile</span><span class="v">'+esc(q.customer.mobile)+'</span></div>'
-    +(q.customer.arch?'<div class="sum-field"><span class="l">Designer</span><span class="v">'+esc(q.customer.arch)+'</span></div>':""  )
-    +(q.customer.addr?'<div class="sum-field"><span class="l">Project</span><span class="v">'+esc(q.customer.addr)+'</span></div>':""  )
-    +'<div class="sum-field"><span class="l">Salesman 1</span><span class="v">'+esc(q.staff||"")+'</span></div>'
-    +(q.staff2?'<div class="sum-field"><span class="l">Salesman 2</span><span class="v">'+esc(q.staff2)+'</span></div>':""  )
-    +'<div class="sum-field"><span class="l">Date</span><span class="v">'+esc(q.date)+'</span></div>'
-    // Print columns
-    +'<div class="cust-print-col print-only">'
-    +'<h4>Customer</h4>'
-    +'<div class="cname">'+esc(q.customer.name)+'</div>'
-    +'<div class="cval">'+esc(q.customer.mobile)+'</div>'
-    +(q.customer.addr?'<div class="cval" style="font-size:8pt;color:#666">'+esc(q.customer.addr)+'</div>':""  )
-    +'</div>'
-    +'<div class="cust-print-col cust-print-right print-only">'
-    +'<h4>Staff</h4>'
-    +(q.customer.arch?'<div class="cval"><span class="clabel">Designer</span>'+esc(q.customer.arch)+'</div>':""  )
-    +'<div class="cval"><span class="clabel">Salesman</span>'+esc(q.staff||"")+'</div>'
-    +(q.staff2?'<div class="cval"><span class="clabel">Salesman 2</span>'+esc(q.staff2)+'</div>':""  )
-    +'</div>'
-    +'</div>';
-
-  // ── ROOMS ──
-  q.rooms.forEach(function(room){
-    var rt=roomTotal(room);
-    h+='<div class="sum-room">'
-      +'<div class="sum-room-hdr"><span class="sum-room-name">'+esc(room.name)+'</span><span class="sum-room-total price-col">'+fmt(rt)+'</span></div>';
-
-    room.windows.forEach(function(win,wi){
-      var wt=0;
-      // Build print left column calc lines
-      var printCalcLines=[];
-      win.treatments.forEach(function(tx){
-        tx.components.forEach(function(c){
-          if(!c.product)return;
-          var cc=calcComp(win,Object.assign({},c,{treatmentType:tx.type}));
-          wt+=cc.total||0;
-          if(tx.type==="blinds"){
-            printCalcLines.push({k:"BLIND Area",v:(cc.sqft||0)+" sqft"});
-          } else if(tx.type==="roman_blinds"){
-            printCalcLines.push({k:c.layer.toUpperCase()+" panels",v:(cc.panels||0)+" \xd7 "+(cc.panelLen||0)+"m = "+(cc.fabricQty||0)+" mtrs"});
-          } else {
-            // Curtains — use calc.lines for accurate panel count per style
-            var np=cc.numPanels||0, pl=cc.panelLen||0, fq=cc.fabricQty||0;
-            printCalcLines.push({k:c.layer.toUpperCase()+" panels",v:np+" \xd7 "+pl+"m = "+fq+" mtrs"});
-          }
-        });
-      });
-
-      h+='<div class="sum-win-block">';
-
-      // ── LEFT: Measurements (print) ──
-      h+='<div class="win-print-left win-meas-block print-only">'
-        +'<div style="display:flex;align-items:center;gap:2mm;margin-bottom:1mm">'
-        +'<span class="win-badge">'+(wi+1)+'</span>'
-        +'<span class="sum-win-title">'+esc(win.name)+'</span></div>'
-        +'<div class="sum-win-dims">'+win.width+'" \xd7 '+win.height+'" Qty:'+win.qty+'</div>'
-        +'<div class="print-meas">';
-      printCalcLines.forEach(function(cl){
-        h+='<div class="print-meas-row"><span class="k">'+cl.k+'</span><span class="mv">'+cl.v+'</span></div>';
-      });
-      h+='</div></div>';
-
-      // ── RIGHT: Selections ──
-      h+='<div class="win-print-right">'
-        // On-screen window title
-        +'<div class="no-print" style="margin-bottom:4px">'
-        +'<div class="sum-win-title-row"><span class="win-badge">'+(wi+1)+'</span><span class="sum-win-title">'+esc(win.name)+'</span></div>'
-        +'<div class="sum-win-dims">'+win.width+'&quot; W \xd7 '+win.height+'&quot; H &nbsp;&middot;&nbsp; Qty: '+win.qty+'</div>'
-        +'</div>'
-        // Selection sheet: window title visible
-        +'<div class="print-only" style="margin-bottom:1mm">'
-        +'<div style="display:flex;align-items:center;gap:2mm"><span class="win-badge">'+(wi+1)+'</span>'
-        +'<b style="font-size:9pt">'+esc(win.name)+'</b></div>'
-        +'</div>';
-
-      win.treatments.forEach(function(tx){
-        var txLbl=tx.type==="curtains"?"Curtains":tx.type==="roman_blinds"?"Roman Blinds":"Blinds";
-        var hasItems=tx.components.some(function(c){return!!c.product;});
-        if(!hasItems)return;
-        var styleNote=(tx.type==="curtains"&&tx.stitchStyle)?" ("+tx.stitchStyle+")":"";
-        var modeNote=(tx.type==="roman_blinds"&&tx.blindMode)?" ("+tx.blindMode+")":"";
-        h+='<div class="sum-tx-lbl">'+(txLbl+styleNote+modeNote)+'</div>';
-        tx.components.forEach(function(c){
-          if(!c.product)return;
-          var cc=calcComp(win,Object.assign({},c,{treatmentType:tx.type}));
-          var p=c.product;
-          var brand=p.brand||"";
-          var catalog=p.catalog||p.product||p.blind_type||p.model||"";
-          var sno=p.s_no||p["s.no"]||"";
-          var nameLine=[brand,catalog,sno].filter(Boolean).join(" / ");
-          var styleNote=(tx.type==="curtains"&&c.stitchStyle)?" ["+c.stitchStyle+"]":"";
-          var qtyLbl=tx.type==="blinds"?(cc.sqft||0)+" sqft":(cc.fabricQty||0)+" mtrs";
-          h+='<div class="sum-comp-row">'
-            +'<div class="sum-comp-info">'
-            +'<span class="tag">'+(c.layer==="blind"?"BLIND":c.layer.toUpperCase())+'</span>'
-            +'<div class="name">'+esc(nameLine)+esc(styleNote)+'</div>'
-            // Quote mode: show all line items
-            +'<div class="sum-comp-lines quote-only">';
-          if(tx.type==="curtains"&&cc.lines){
-            cc.lines.forEach(function(ln){
-              h+='<div style="display:flex;justify-content:space-between;font-size:10pt;padding:0.3mm 0">'
-                +'<span style="color:#555">'+ln.lbl+'</span>'
-                +'<span style="color:#555;font-size:9pt">'+ln.qty+' &times; '+fmt(ln.rate)+'</span>'
-                +'<span style="font-weight:700">'+fmt(ln.amt)+'</span></div>';
-            });
-          } else if(tx.type==="roman_blinds"){
-            [{lbl:"Mechanism",qty:cc.sqft+" sqft",rate:475,amt:cc.matCost},
-             {lbl:"Fabric",qty:cc.fabricQty+"m",rate:p.mrp,amt:cc.fabCost},
-             {lbl:"Lining",qty:cc.fabricQty+"m",rate:200,amt:cc.lining},
-             {lbl:"Installation",qty:"1 win",rate:350,amt:cc.installation},
-             {lbl:"Stitching",qty:"1 win",rate:350,amt:cc.stitching}
-            ].forEach(function(ln){
-              h+='<div style="display:flex;justify-content:space-between;font-size:10pt;padding:0.3mm 0">'
-                +'<span style="color:#555">'+ln.lbl+'</span>'
-                +'<span style="color:#555;font-size:9pt">'+ln.qty+' &times; '+fmt(ln.rate)+'</span>'
-                +'<span style="font-weight:700">'+fmt(ln.amt)+'</span></div>';
-            });
-          }
-          h+='</div>'
-            +'<div class="detail price-col">'+fmt(p.mrp||0)+(tx.type==="blinds"?"/sqft":"/mtr")+" &middot; "+qtyLbl+'</div>'
-            +'</div>'
-            +'<div class="sum-comp-amt price-col">'+fmt(cc.total||0)+'</div>'
-            +'</div>';
-        });
-      });
-
-      if(wt>0){
-        h+='<div class="win-sub-line">'
-          +'<span class="win-sub-lbl">Window '+(wi+1)+' Total</span>'
-          +'<span class="win-sub-val price-col">'+fmt(wt)+'</span>'
-          +'</div>';
-      }
-      h+='</div>'; // win-print-right
-      h+='</div>'; // sum-win-block
-    });
-
-    if(rt>0){
-      h+='<div class="room-sub-footer price-col"><span class="l">'+esc(room.name)+' Sub-total</span><span class="v">'+fmt(rt)+'</span></div>';
-    }
-    h+='</div>'; // sum-room
-  });
-
-  h+='<div class="grand-card price-col"><div class="grand-lbl">Grand Total (MRP)</div>'
-    +'<div class="grand-val">'+Number(Math.round(gt)).toLocaleString("en-IN")+'</div>'
-    +'<div class="grand-sub">All prices are MRP inclusive of all charges</div></div>';
-
-  h+='<div class="terms-card"><div class="title">Terms &amp; Notes</div>'
-    +'<div class="body">'
-    +'&bull; All prices are MRP. Final prices subject to confirmation.<br>'
-    +'&bull; Quantities auto-calculated from window dimensions.<br>'
-    +'&bull; Fabric subject to stock availability at time of order.<br>'
-    +'&bull; Delivery: 3&ndash;4 weeks from order confirmation.<br>'
-    +'&bull; This is a selection reference, not a final invoice.'
-    +'</div></div>';
-
-  document.getElementById("sumContent").innerHTML=h;
-  var si=document.getElementById("sumId");
-  if(si) si.textContent=APP.quote.id||"";
-}
-
-function printMode(mode){
-  // Set print mode attribute and trigger print
-  document.body.setAttribute("data-pmode", mode);
-  // Small delay to allow CSS to apply
-  setTimeout(function(){ window.print(); }, 80);
-  // Reset after print dialog closes
-  setTimeout(function(){ document.body.removeAttribute("data-pmode"); }, 3000);
-}
-
-
-function saveDraft(){localStorage.setItem("darla_quote_draft",JSON.stringify(APP.quote));}
-
-function saveToList(){
-  var q=APP.quote; if(!q.id)return;
-  var gt=grandTotal();
-  var list=getList().filter(function(e){return e.id!==q.id;});
-  list.unshift({id:q.id,date:q.date,staff:q.staff||"",staff2:q.staff2||"",name:q.customer.name||"",mobile:q.customer.mobile||"",arch:q.customer.arch||"",addr:q.customer.addr||"",total:gt,rooms:q.rooms.length,updated:new Date().toLocaleString("en-IN"),draft:JSON.stringify(q)});
-  if(list.length>200)list=list.slice(0,200);
-  localStorage.setItem("darla_quotes_list",JSON.stringify(list));
-}
-
-function getList(){try{return JSON.parse(localStorage.getItem("darla_quotes_list")||"[]");}catch(e){return[];}}
-function cloudOK(){return ASU&&ASU.indexOf("YOUR_")!==0;}
-
-function saveQuote(){
-  saveDraft();saveToList();
-  if(!cloudOK()){showToast("Saved locally \u2713 "+APP.quote.id);return;}
-  fetch(ASU,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"saveQuote",quote:APP.quote})})
-    .then(function(r){return r.json();})
-    .then(function(){APP.quote.saved=true;saveDraft();saveToList();showToast("\u2713 Saved \u2014 "+APP.quote.id);})
-    .catch(function(){showToast("Saved locally (offline)");});
-}
-
-function saveAndList(){
-  saveDraft();saveToList();
-  if(cloudOK())fetch(ASU,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"saveQuote",quote:APP.quote})}).catch(function(){});
-  switchTab("all");
-}
-
-function saveAndExit(){
-  saveDraft();saveToList();
-  if(cloudOK())fetch(ASU,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"saveQuote",quote:APP.quote})}).then(function(){showToast("Saved \u2713");}).catch(function(){showToast("Saved locally");});
-  switchTab("all");
-}
-
-function loadById(id){
-  var local=getList().find(function(q){return q.id===id;});
-  if(local&&local.draft){applyQ(JSON.parse(local.draft));showToast("Loaded: "+id);return;}
-  if(!cloudOK()){showToast("Not found locally");return;}
-  showToast("Loading...");
-  fetch(ASU+"?action=loadQuote&id="+encodeURIComponent(id))
-    .then(function(r){return r.json();})
-    .then(function(d){if(d.quote){applyQ(d.quote);saveToList();showToast("Loaded: "+id);}else{showToast("Not found: "+id);}})
-    .catch(function(){showToast("Error loading");});
-}
-
-function applyQ(q){
-  APP.quote=q;saveDraft();
-  document.getElementById("cName").value=q.customer.name||"";
-  document.getElementById("cMobile").value=q.customer.mobile||"";
-  document.getElementById("cArch").value=q.customer.arch||"";
-  document.getElementById("cAddr").value=q.customer.addr||"";
-  var s1=document.getElementById("cSales1"),s2=document.getElementById("cSales2");
-  if(s1)s1.value=q.staff||"";
-  if(s2)s2.value=q.staff2||"";
-  document.getElementById("bldName").textContent=q.customer.name;
-  document.getElementById("bldId").textContent=q.id;
-  document.getElementById("tabNew").classList.add("active");
-  document.getElementById("tabAll").classList.remove("active");
-  goTo("screen-builder");
-}
-
-function shareQuote(){
-  var url=window.location.origin+window.location.pathname+"?load="+APP.quote.id;
-  if(navigator.share){navigator.share({title:"Darla Quote - "+APP.quote.customer.name,text:"Quote "+APP.quote.id,url:url});}
-  else if(navigator.clipboard){navigator.clipboard.writeText(url).then(function(){showToast("Link copied \u2713");});}
-  else{showToast(url);}
-}
-
-// ═══════════════════════════════════════════════════════
-// NAVIGATION
-// ═══════════════════════════════════════════════════════
-function goTo(id){
-  document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});
-  var s=document.getElementById(id);if(s)s.classList.add("active");
-  window.scrollTo(0,0);
-  var showBar=id==="screen-builder"||id==="screen-summary";
-  document.getElementById("bldBar").style.display=(id==="screen-builder")?"flex":"none";
-  document.getElementById("sumBar").style.display=(id==="screen-summary")?"flex":"none";
-  if(id==="screen-summary")renderSum();
-  if(id==="screen-builder")renderBld();
-  if(id==="screen-quotes")renderQList();
-}
-
-function switchTab(tab){
-  if(tab==="all"){
-    document.getElementById("tabNew").classList.remove("active");
-    document.getElementById("tabAll").classList.add("active");
-    goTo("screen-quotes");
-  } else {
-    clearForm();
-    document.getElementById("tabNew").classList.add("active");
-    document.getElementById("tabAll").classList.remove("active");
-    goTo("screen-customer");
-  }
-}
-
-function newQuoteBtn(){
-  clearForm();
-  document.getElementById("tabNew").classList.add("active");
-  document.getElementById("tabAll").classList.remove("active");
-  goTo("screen-customer");
-}
-
-// ═══════════════════════════════════════════════════════
-// QUOTES LIST
-// ═══════════════════════════════════════════════════════
-var qFiltered=[],qCloud=[];
-
-function renderQList(){
-  var local=getList();
-  local.sort(function(a,b){return(parseInt(b.id.replace(/\D/g,""))||0)-(parseInt(a.id.replace(/\D/g,""))||0);});
-  qFiltered=local;
-  drawQList(local,true);
-  if(!cloudOK()){drawQList(local,false);return;}
-  fetch(ASU+"?action=listQuotes")
-    .then(function(r){return r.json();})
-    .then(function(d){
-      if(d.quotes&&d.quotes.length>=0){
-        qCloud=d.quotes;
-        var merged=mergeQ(d.quotes);
-        qFiltered=merged;
-        drawQList(merged,false);
-        var c=document.getElementById("qCount");if(c)c.textContent=merged.length+" quote"+(merged.length!==1?"s":"")+" \u00b7 cloud";
-      } else drawQList(local,false);
-    }).catch(function(){drawQList(local,false);});
-}
-
-function mergeQ(cloud){
-  var lm={};getList().forEach(function(q){lm[q.id]=q;});
-  var m=cloud.map(function(c){var l=lm[c.id];return Object.assign({},c,{draft:l?l.draft:null,fromCloud:true});});
-  m.sort(function(a,b){return(parseInt(b.id.replace(/\D/g,""))||0)-(parseInt(a.id.replace(/\D/g,""))||0);});
-  return m;
-}
-
-function filterQ(){
-  var q=(document.getElementById("qSearch").value||"").trim().toLowerCase();
-  if(!cloudOK()||!qCloud.length){
-    var list=getList();
-    list.sort(function(a,b){return(parseInt(b.id.replace(/\D/g,""))||0)-(parseInt(a.id.replace(/\D/g,""))||0);});
-    qFiltered=q?list.filter(function(e){return["name","mobile","id","staff","staff2","arch"].some(function(k){return(e[k]||"").toLowerCase().indexOf(q)!==-1;});}):list;
-    drawQList(qFiltered,false);return;
-  }
-  var sel=document.getElementById("qSearch");if(sel)sel.disabled=true;
-  fetch(ASU+"?action=listQuotes&search="+encodeURIComponent(q))
-    .then(function(r){return r.json();})
-    .then(function(d){if(sel)sel.disabled=false;if(d.quotes){qFiltered=mergeQ(d.quotes);drawQList(qFiltered,false);}})
-    .catch(function(){if(sel)sel.disabled=false;drawQList(getList(),false);});
-}
-
-function drawQList(list,loading){
-  var el=document.getElementById("qList");if(!el)return;
-  var cnt=document.getElementById("qCount");
-  if(loading){el.innerHTML='<div class="q-empty"><div class="spin"></div>Loading quotes...</div>';if(cnt)cnt.textContent="Loading...";return;}
-  if(cnt)cnt.textContent=list.length+" quote"+(list.length!==1?"s":"");
-  if(!list.length){el.innerHTML='<div class="q-empty"><div class="ico">&#128196;</div>No quotes found<br><span style="font-size:13px;display:block;margin-top:6px">'+(!cloudOK()?"Save a quote to see it here.":"No cloud quotes yet.")+'</span></div>';return;}
-  var h="";
-  list.forEach(function(q,i){
-    var total=q.total||0,rooms=q.rooms||0,hasLocal=!!q.draft;
-    h+='<div class="q-card" onclick="openQ('+i+')">'
-      +'<div class="q-top"><div class="q-left">'
-      +'<div class="q-id">'+esc(q.id||"\u2014")
-      +(q.fromCloud?'<span class="q-tag q-tag-cloud" style="margin-left:6px">CLOUD</span>':'')
-      +(!hasLocal&&q.fromCloud?'<span class="q-tag q-tag-load" style="margin-left:4px">TAP TO LOAD</span>':'')
-      +'</div>'
-      +'<div class="q-name">'+esc(q.name||"Unknown")+'</div>'
-      +'<div class="q-meta">'+esc(q.mobile||"")+(q.arch?' &middot; '+esc(q.arch):'')+'</div>'
-      +'<div class="q-meta">'+esc(q.date||"")+'</div>'
-      +'</div><div class="q-right">'
-      +(total?'<div class="q-total">&#8377;'+Number(Math.round(total)).toLocaleString("en-IN")+'</div>':"")
-      +'<button onclick="delQ('+i+',event)" class="q-del">&#128465;</button>'
-      +'</div></div>'
-      +'<div class="q-bottom">'
-      +'<span class="q-tag q-tag-staff">&#128100; '+esc(q.staff||"Staff")+(q.staff2?' &amp; '+esc(q.staff2):'')+'</span>'
-      +(rooms?'<span class="q-tag q-tag-rooms">'+rooms+' room'+(rooms!==1?"s":"")+'</span>':"")
-      +'<span class="q-tag q-tag-rooms" style="margin-left:auto">'+esc(q.updated||q.date||"")+'</span>'
-      +'</div></div>';
-  });
-  el.innerHTML=h;
-}
-
-function openQ(i){
-  var e=qFiltered[i];if(!e)return;
-  if(e.draft){try{applyQ(JSON.parse(e.draft));showToast("Opened: "+e.id);}catch(ex){showToast("Error opening");}return;}
-  if(!cloudOK()){showToast("Cannot load — not configured");return;}
-  showToast("Loading from cloud...");
-  fetch(ASU+"?action=loadQuote&id="+encodeURIComponent(e.id))
-    .then(function(r){return r.json();})
-    .then(function(d){if(d.quote){e.draft=JSON.stringify(d.quote);saveQEntry(e);applyQ(d.quote);showToast("Loaded: "+e.id);}else{showToast("Not found in cloud");}})
-    .catch(function(){showToast("Error loading");});
-}
-
-function saveQEntry(e){
-  var list=getList(),found=false;
-  list=list.map(function(q){if(q.id===e.id){found=true;return e;}return q;});
-  if(!found)list.unshift(e);
-  localStorage.setItem("darla_quotes_list",JSON.stringify(list));
-}
-
-function delQ(i,ev){
-  ev.stopPropagation();
-  var e=qFiltered[i];if(!e)return;
-  if(!confirm("Delete "+e.id+" for "+e.name+"?"))return;
-  localStorage.setItem("darla_quotes_list",JSON.stringify(getList().filter(function(q){return q.id!==e.id;})));
-  qFiltered.splice(i,1);drawQList(qFiltered,false);showToast("Deleted "+e.id);
-  if(cloudOK())fetch(ASU,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"deleteQuote",id:e.id})}).catch(function(){});
-}
-
-// ═══════════════════════════════════════════════════════
-// MODALS
-// ═══════════════════════════════════════════════════════
-function openModal(id){document.getElementById(id).classList.add("open");}
-function closeModal(id){document.getElementById(id).classList.remove("open");}
-
-// ═══════════════════════════════════════════════════════
-// UTILS
-// ═══════════════════════════════════════════════════════
-function uid(){return Math.random().toString(36).substr(2,8);}
-function nextId(){var n=parseInt(localStorage.getItem("darla_qnum")||"99")+1;localStorage.setItem("darla_qnum",String(n));return "DRL-"+n;}
-function esc(t){if(!t)return"";return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
-
-// togglePrices replaced by printMode()
-
-function showToast(msg){
-  var t=document.getElementById("toast");
-  t.textContent=msg;t.classList.add("show");
-  setTimeout(function(){t.classList.remove("show");},2500);
-}
-</script>
-
+<script src="quote-calc.js"></script>
+<script src="quote-render.js"></script>
 </body>
-</html>          tx.components.forEach(function(c){
-          if(!c.product)return;
-          var cc=calcComp(win,Object.assign({},c,{treatmentType:tx.type}));
-          var p=c.product;
-          var brand=p.brand||"";
-          var catalog=p.catalog||p.product||p.blind_type||p.model||"";
-          var sno=p.s_no||p["s.no"]||"";
-          var nameLine=[brand,catalog,sno].filter(Boolean).join(" / ");
-          var styleNote=(tx.type==="curtains"&&c.stitchStyle)?" ["+c.stitchStyle+"]":"";
-          var layerLbl=c.layer==="blind"?"BLIND":c.layer.toUpperCase();
-          var qtyLbl=tx.type==="blinds"?(cc.sqft||0)+" sqft":(cc.fabricQty||0)+" mtrs";
-
-```
-      // ── ON-SCREEN ROW (hidden in print by sum-comp-row rule) ──
-      h+='<div class="sum-comp-row no-print">'
-        +'<div class="sum-comp-info">'
-        +'<span class="tag">'+layerLbl+'</span>'
-        +'<div class="name">'+esc(nameLine)+esc(styleNote)+'</div>'
-        +'<div class="detail price-col">'+fmt(p.mrp||0)+(tx.type==="blinds"?"/sqft":"/mtr")+" &middot; "+qtyLbl+'</div>'
-        +'</div>'
-        +'<div class="sum-comp-amt price-col">'+fmt(cc.total||0)+'</div>'
-        +'</div>';
-
-      // ── PRINT BLOCK (visible only when printing) ──
-      h+='<div class="print-comp-block print-only">';
-
-      // Header: LAYER tag + Product name + [Style]
-      h+='<div class="print-comp-hdr">'
-        +'<span class="print-comp-layer">'+layerLbl+'</span>'
-        +'<span class="print-comp-name">'+esc(nameLine)+'</span>';
-      if(styleNote) h+='<span class="print-comp-style">'+esc(styleNote)+'</span>';
-      h+='</div>';
-
-      // Panels line
-      if(tx.type==="curtains"){
-        h+='<div class="print-panels-line">'+( cc.numPanels||0)+" panels &times; "+(cc.panelLen||0)+"m = "+(cc.fabricQty||0)+" mtrs"+'</div>';
-      } else if(tx.type==="roman_blinds"){
-        h+='<div class="print-panels-line">'+( cc.panels||0)+" panels &times; "+(cc.panelLen||0)+"m = "+(cc.fabricQty||0)+" mtrs"+'</div>';
-      }
-
-      // Line items table
-      h+='<table class="print-lines-table"><tbody>';
-
-      if(tx.type==="curtains"&&cc.lines){
-        cc.lines.forEach(function(ln){
-          h+='<tr><td class="plt-lbl">'+ln.lbl+'</td>'
-            +'<td class="plt-qty">'+ln.qty+" &times; "+fmt(ln.rate)+'</td>'
-            +'<td class="plt-eq">=</td>'
-            +'<td class="plt-amt">'+fmt(ln.amt)+'</td></tr>';
-        });
-      } else if(tx.type==="roman_blinds"){
-        [{lbl:"Mechanism",  qty:(cc.sqft||0)+" sqft",  rate:475, amt:cc.matCost},
-         {lbl:"Fabric",     qty:(cc.fabricQty||0)+"m", rate:p.mrp||0, amt:cc.fabCost},
-         {lbl:"Lining",     qty:(cc.fabricQty||0)+"m", rate:200, amt:cc.lining},
-         {lbl:"Installation",qty:"1 window",            rate:350, amt:cc.installation},
-         {lbl:"Stitching",  qty:"1 window",            rate:350, amt:cc.stitching}
-        ].forEach(function(ln){
-          h+='<tr><td class="plt-lbl">'+ln.lbl+'</td>'
-            +'<td class="plt-qty">'+ln.qty+" &times; "+fmt(ln.rate)+'</td>'
-            +'<td class="plt-eq">=</td>'
-            +'<td class="plt-amt">'+fmt(ln.amt)+'</td></tr>';
-        });
-      } else {
-        // Blinds
-        h+='<tr><td class="plt-lbl">Blind fabric</td>'
-          +'<td class="plt-qty">'+( cc.sqft||0)+" sqft &times; "+fmt(p.mrp||0)+'</td>'
-          +'<td class="plt-eq">=</td>'
-          +'<td class="plt-amt">'+fmt(cc.unitTotal||0)+'</td></tr>';
-      }
-
-      // Total row
-      h+='<tr class="print-comp-total-row">'
-        +'<td class="plt-lbl plt-total-lbl" colspan="2">TOTAL</td>'
-        +'<td class="plt-eq"></td>'
-        +'<td class="plt-amt plt-total-amt">'+fmt(cc.total||0)+'</td></tr>';
-
-      h+='</tbody></table></div>'; // print-comp-block
-```
+</html>
