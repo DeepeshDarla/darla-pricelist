@@ -119,9 +119,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .pk.del{font-size:20px;color:#777}
 .pk.ghost{background:transparent;border-color:transparent;pointer-events:none}
 .pin-cancel{display:block;width:100%;background:none;border:none;color:#444;font-size:14px;padding:10px;cursor:pointer}
+
+/* ── QUOTE MODE BANNER ── */
+#quoteBanner{display:none;position:sticky;top:0;z-index:100;background:#0d2a1a;border-bottom:2px solid #27ae60}
+#quoteBanner.active{display:block}
+.qb-top{display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
+.qb-label{font-size:11px;color:#27ae60;font-weight:800;letter-spacing:1px;text-transform:uppercase}
+.qb-sub{font-size:11px;color:#888;margin-top:2px}
+.qb-cancel{background:none;border:1px solid #555;color:#aaa;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.qb-tabs{display:flex;background:#0a1f13;border-top:1px solid #1a4a2a}
+.qb-tab{flex:1;padding:11px 8px;font-size:13px;font-weight:700;color:#555;border:none;background:transparent;cursor:pointer;border-bottom:3px solid transparent;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.qb-tab.active{color:#fff;border-bottom-color:#c0392b}
+/* Quote select button */
+.quote-sel-btn{width:100%;background:#c0392b;color:#fff;border:none;border-radius:11px;padding:15px;font-size:15px;font-weight:800;cursor:pointer;display:block;margin:10px 0 4px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;letter-spacing:0.5px}
+.quote-sel-btn:active{opacity:0.85;transform:scale(0.98)}
 </style>
 </head>
 <body>
+<div id="quoteBanner"></div>
 <div id="app"></div>
 <div class="pin-ov" id="pOv">
   <div class="pin-sheet">
@@ -178,9 +193,9 @@ var CATS = {
   },
   blinds: {
     label:"Blinds", icon:"&#129695;", codeSearch:false,
-    inputs:["Brand","Blind Type","Catalog","Mechanism","Others"],
-    ctxCols:[["Brand","brand"],["Blind Type","blind_type"],["Catalog","catalog"],["Mechanism","mechanism"],["Others","others"]],
-    tblCols:[["Brand","brand"],["Blind Type","blind_type"],["Catalog","catalog"],["Mechanism","mechanism"],["Others","others"],["MRP","mrp"]],
+    inputs:["Brand","Blind Type","Catalog"],
+    ctxCols:[["Brand","brand"],["Blind Type","blind_type"],["Catalog","catalog"],["Mechanism","mechanism"],["Other Details","other_details"]],
+    tblCols:[["Catalog","catalog"],["Mechanism","mechanism"],["Other Details","other_details"],["MRP","mrp"]],
     mrpLabel:"MRP"
   },
   wallpapers: {
@@ -231,10 +246,7 @@ function gv(r,key){
 }
 function getParam(n){return new URLSearchParams(window.location.search).get(n)||"";}
 // ── QUOTE MODE GLOBALS ──
-var QUOTE_MODE     = false;  // true when opened from quote builder
-var ALLOW_HANGERS  = false;
 var QUOTE_HANGERS  = false;  // alias for ALLOW_HANGERS  // true when curtain component (show Fabric+Hangers tabs)
-var ACTIVE_QUOTE_CAT = "fabric";
 
 
 function esc(t){
@@ -247,18 +259,18 @@ function hasSearchAccess(){return localStorage.getItem(SAK)==="1";}
 
 // ── INIT ──
 window.addEventListener("DOMContentLoaded",function(){
-  var code        =getParam("code").trim().toUpperCase();
-  var category    =getParam("category").trim().toLowerCase()||"fabric";
-  var mode        =getParam("mode");
-  var allowHangers=getParam("allowHangers")==="1";
-  if(mode==="quote"){
+  var code     = getParam("code").trim().toUpperCase();
+  var category = getParam("category").trim().toLowerCase() || "fabric";
+  var mode     = getParam("mode");
+
+  if(mode === "quote"){
     QUOTE_MODE    = true;
-    ALLOW_HANGERS = allowHangers;
-    QUOTE_HANGERS = allowHangers;
-    ACTIVE_QUOTE_CAT = category;
-    showAdvancedSearch(category);
+    ALLOW_HANGERS = (getParam("allowHangers") === "1");
+    ACTIVE_CAT    = category;
+    initQuoteBanner();          // populate persistent banner div
+    showAdvancedSearch(category); // load search immediately
   } else if(code){
-    showProductPage(code,category);
+    showProductPage(code, category);
   } else {
     showHome();
   }
@@ -389,8 +401,6 @@ function showAdvancedSearch(cat){
 
   window._metaLoading=false;
   setTimeout(function(){loadMeta(1);},150);
-  // Inject quote banner after content is rendered
-  if(QUOTE_MODE) setTimeout(injectQuoteUI, 80);
 }
 function toFid(label){ return label.toLowerCase().replace(/[^a-z0-9]/g,"_"); }
 
@@ -639,11 +649,11 @@ function buildSingleCard(r,cat,ci,staff){
     if(r.width)             html+=card("WIDTH",r.width,"");
     if(r.mrp)               html+=cardMrp(r.mrp,ci.mrpLabel);
   } else if(cat==="blinds"){
-    if(gv(r,"blind_type"))  html+=card("BLIND TYPE",gv(r,"blind_type"),"card-accent-blue");
-    if(r.catalog)           html+=card("CATALOG",r.catalog,"");
-    if(r.mechanism)         html+=card("MECHANISM",r.mechanism,"");
-    if(r.others)            html+=card("OTHERS",r.others,"");
-    if(r.mrp)               html+=cardMrp(r.mrp,ci.mrpLabel);
+    if(gv(r,"blind_type"))        html+=card("BLIND TYPE",gv(r,"blind_type"),"card-accent-blue");
+    if(r.catalog)                 html+=card("CATALOG",r.catalog,"");
+    if(r.mechanism)               html+=card("MECHANISM",r.mechanism,"");
+    if(gv(r,"other_details"))     html+=card("OTHER DETAILS",gv(r,"other_details"),"");
+    if(r.mrp)                     html+=cardMrp(r.mrp,ci.mrpLabel);
   } else if(cat==="wallpapers"){
     if(r.catalog)               html+=card("CATALOG",r.catalog,"card-accent-blue");
     if(gv(r,"design_details"))  html+=cardSm("DESIGN DETAILS",gv(r,"design_details"));
@@ -666,12 +676,11 @@ function buildSingleCard(r,cat,ci,staff){
 
   if(r.link&&r.link.indexOf("http")===0)
     html+='<div class="card"><div class="lbl">LINK</div><div class="lbl-line"></div><a href="'+esc(r.link)+'" target="_blank" class="link-btn">View Product &#8599;</a></div>';
-  // Quote mode: big SELECT button
-  if(QUOTE_MODE){
-    html+='<div style="padding:12px 0">'
-      +'<button onclick="quoteSelectProduct('+JSON.stringify(r).replace(/</g,"\u003c").replace(/>/g,"\u003e").replace(/'/g,"\'")+')" '
-      +'style="width:100%;background:#c0392b;color:#fff;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:800;letter-spacing:0.5px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation">'
-      +'&#10003; Select This Product</button></div>';
+  // Quote mode select button
+  if(QUOTE_MODE && window._rows){
+    var ridx = window._rows.indexOf(r);
+    if(ridx < 0) ridx = window._rows.length - 1; // fallback
+    html += '<button class="quote-sel-btn" onclick="quotePickRow('+ridx+')">&#10003;&nbsp; Select This Product</button>';
   }
   return html+'</div>';
 }
@@ -719,7 +728,7 @@ function buildTable(rows,cat,ci,staff){
     var allFields=[
       ["Code","code"],["Brand","brand"],["Catalog","catalog"],
       ["S.No","s_no"],["Item Details","item_details"],
-      ["Blind Type","blind_type"],["Mechanism","mechanism"],["Others","others"],
+      ["Blind Type","blind_type"],["Mechanism","mechanism"],["Other Details","other_details"],
       ["Design Details","design_details"],
       ["Category","category"],["Product","product"],["Other Details","other_details"],
       ["Model","model"],["Thickness","thickness"],["Width","width"],
@@ -733,18 +742,15 @@ function buildTable(rows,cat,ci,staff){
       }
     });
     if(r.link&&r.link.indexOf("http")===0)expandHtml+=expLinkLine(r.link);
-    var rowIdx = rows.indexOf(r);
-    var qSelectBtn = QUOTE_MODE
-      ? '<div style="padding:8px 4px 4px">'
-        +'<button onclick="event.stopPropagation();quotePickRow('+rowIdx+')" '
-        +'style="width:100%;background:#c0392b;color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent">'
-        +'&#10003;&nbsp; Select This Product</button></div>'
+    var ridx = rows.indexOf(r);
+    var qSelBtn = QUOTE_MODE
+      ? '<button class="quote-sel-btn" onclick="quotePickRow('+ridx+')">&#10003;&nbsp; Select This Product</button>'
       : '';
-        html+='<div class="tbl-row" style="grid-template-columns:'+gridCols+'" onclick="toggleRow(this)">'
+    html+='<div class="tbl-row" style="grid-template-columns:'+gridCols+'" onclick="toggleRow(this)">'
       +'<div><div class="tr-main">'+esc(mainVal)+'</div>'+(sub?'<div class="tr-sub">'+esc(sub)+'</div>':'')+'</div>'
       +extraHtml
       +'<div class="tr-arr">'+(expandHtml||QUOTE_MODE?"&#8250;":"")+'</div></div>'
-      +'<div class="exp-panel">'+qSelectBtn+expandHtml+'</div>';
+      +'<div class="exp-panel">'+qSelBtn+expandHtml+'</div>';
   });
 
   return html+'</div><div class="tbl-hint">Tap row to expand details</div>';
@@ -795,11 +801,6 @@ function sDots(err){
     if(err)d.classList.add("err");else if(i<staffEn.length)d.classList.add("on");
   }
 }
-function quotePickRow(idx){
-  var rows = window._rows;
-  if(!rows || idx < 0 || idx >= rows.length){ showToast("Error selecting product"); return; }
-  quoteSelectProduct(rows[idx]);
-}
 
 // quoteSelectRow deprecated — quotePickRow(idx) used instead
 
@@ -824,10 +825,6 @@ function quoteSelectProduct(product){
 // ═══════════════════════════════════════════════════════════════
 
 // Switch tab — re-render tabs with new active state, load new category
-function switchQuoteTab(cat) {
-  _renderQuoteTabs(cat);
-  showAdvancedSearch(cat);
-}
 
 // Called by showAdvancedSearch — if in quote mode with hangers, 
 // inject the search UI into qSearchBody (not replacing the whole #app)
@@ -891,38 +888,62 @@ function sChk(){
 }
 
 // ── QUOTE MODE: inject banner+tabs after any search renders ──────
-function injectQuoteUI(){
-  if(!QUOTE_MODE) return;
-  var app = document.getElementById("app");
-  if(!app) return;
-  // Remove stale banner/tabs
-  ["qBanner","qTabFab","qTabHan"].forEach(function(id){
-    var el=document.getElementById(id);
-    if(el && el.parentNode) el.parentNode.removeChild(el);
-  });
-  // Build fresh HTML
-  var bannerHtml = '<div id="qBanner" style="background:#1a3a1a;border-bottom:2px solid #27ae60;padding:10px 16px;display:flex;align-items:center;justify-content:space-between">'
-    +'<div><div style="font-size:11px;color:#27ae60;font-weight:800;letter-spacing:1px">SELECT PRODUCT FOR QUOTE</div>'
-    +'<div style="font-size:11px;color:#888;margin-top:1px">Tap a product to add it to your quote</div></div>'
-    +'<button onclick="window.location.href=\'quote.html\'" style="background:none;border:1px solid #555;color:#aaa;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;white-space:nowrap">&#8592; Cancel</button>'
-    +'</div>';
-  var tabsHtml = "";
-  if(ALLOW_HANGERS){
-    tabsHtml = '<div style="display:flex;background:#111;border-bottom:2px solid #252525;padding:0 12px">'
-      +'<button id="qTabFab" onclick="switchQuoteTab(\'fabric\')" style="flex:1;padding:12px 8px;font-size:13px;font-weight:'+(ACTIVE_QUOTE_CAT==="fabric"?"800":"700")+';color:'+(ACTIVE_QUOTE_CAT==="fabric"?"#fff":"#666")+';border:none;background:transparent;cursor:pointer;border-bottom:3px solid '+(ACTIVE_QUOTE_CAT==="fabric"?"#c0392b":"transparent")+';margin-bottom:-2px;-webkit-tap-highlight-color:transparent">&#129525; Fabric</button>'
-      +'<button id="qTabHan" onclick="switchQuoteTab(\'hangers\')" style="flex:1;padding:12px 8px;font-size:13px;font-weight:'+(ACTIVE_QUOTE_CAT==="hangers"?"800":"700")+';color:'+(ACTIVE_QUOTE_CAT==="hangers"?"#fff":"#666")+';border:none;background:transparent;cursor:pointer;border-bottom:3px solid '+(ACTIVE_QUOTE_CAT==="hangers"?"#c0392b":"transparent")+';margin-bottom:-2px;-webkit-tap-highlight-color:transparent">&#129693; Hangers</button>'
-      +'</div>';
-  }
-  var tmp = document.createElement("div");
-  tmp.innerHTML = bannerHtml + tabsHtml;
-  // Prepend to app
-  var ref = app.firstChild;
-  while(tmp.firstChild) app.insertBefore(tmp.firstChild, ref);
-}
 
 function switchQuoteTab(cat){
   ACTIVE_QUOTE_CAT = cat;
   showAdvancedSearch(cat);
+}
+
+
+// ════════════════════════════════════════════════════════════
+// QUOTE MODE — clean implementation
+// ════════════════════════════════════════════════════════════
+var QUOTE_MODE = false;
+var ALLOW_HANGERS = false;
+var ACTIVE_CAT = "fabric";
+
+function initQuoteBanner(){
+  var b = document.getElementById("quoteBanner");
+  if(!b) return;
+  b.className = "active";
+  b.innerHTML =
+    '<div class="qb-top">'
+    + '<div><div class="qb-label">Selecting product for quote</div>'
+    + '<div class="qb-sub">Tap any product to add it</div></div>'
+    + '<button class="qb-cancel" onclick="window.location.href=\'quote.html\'">&#8592; Cancel</button>'
+    + '</div>'
+    + (ALLOW_HANGERS
+      ? '<div class="qb-tabs">'
+        + '<button id="qbTabFab" class="qb-tab active" onclick="switchCat(\'fabric\')">&#129525; Fabric</button>'
+        + '<button id="qbTabHan" class="qb-tab" onclick="switchCat(\'hangers\')">&#129693; Hangers / Rods</button>'
+        + '</div>'
+      : '');
+}
+
+function switchCat(cat){
+  ACTIVE_CAT = cat;
+  // Update tab styles
+  var tf = document.getElementById("qbTabFab");
+  var th = document.getElementById("qbTabHan");
+  if(tf){ tf.className = "qb-tab" + (cat==="fabric"?" active":""); }
+  if(th){ th.className = "qb-tab" + (cat==="hangers"?" active":""); }
+  showAdvancedSearch(cat);
+}
+
+// Called from Select button in results
+function quotePickRow(idx){
+  var rows = window._rows;
+  if(!rows || idx < 0 || idx >= rows.length){ showToast("Error — please try again"); return; }
+  quoteSelectProduct(rows[idx]);
+}
+
+// Show a toast inside product search
+function showToast(msg){
+  var t = document.createElement("div");
+  t.textContent = msg;
+  t.style.cssText = "position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#fff;color:#000;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:700;z-index:999;white-space:nowrap;pointer-events:none";
+  document.body.appendChild(t);
+  setTimeout(function(){ if(t.parentNode)t.parentNode.removeChild(t); }, 2500);
 }
 
 </script>
