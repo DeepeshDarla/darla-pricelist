@@ -369,12 +369,16 @@ function addComp(ri,wi,ti,layer){
 
 function addCompManual(ri,wi,ti,layer){
   APP.quote.rooms[ri].windows[wi].treatments[ti].components.push({id:uid(),layer:layer,product:null,discount:0,manualEntry:true,calc:{}});
-  saveDraft();renderBld();
-  // Scroll to new component
+  saveDraft();
+  renderBld();
+  // Re-open the window and scroll to it after render
   setTimeout(function(){
     var winEl=document.getElementById("w_"+ri+"_"+wi);
-    if(winEl)winEl.scrollIntoView({behavior:"smooth",block:"start"});
-  },150);
+    if(winEl){
+      winEl.classList.add("open");
+      winEl.scrollIntoView({behavior:"smooth",block:"start"});
+    }
+  },80);
 }
 
 // Manual product entry — called from inline form submit
@@ -468,6 +472,8 @@ function renderBld(){
       +'<div class="room-actions"><button class="btn btn-ghost btn-sm" onclick="delRoom('+ri+')" style="color:#ff6b6b;border-color:#3a1010">&#128465; Delete Room</button></div></div>';
   });
   document.getElementById("roomsWrap").innerHTML=html;
+  // Re-open any windows that are within open rooms (all rooms auto-open)
+  // Windows are open by default in renderWin — no extra work needed
 }
 
 function renderWin(win,ri,wi){
