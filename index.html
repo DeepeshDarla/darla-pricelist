@@ -245,7 +245,10 @@ window.addEventListener("DOMContentLoaded",function(){
   var mode        =getParam("mode");
   var allowHangers=getParam("allowHangers")==="1";
   if(mode==="quote"){
-    showQuoteSearch(category, allowHangers);
+    QUOTE_MODE    = true;
+    ALLOW_HANGERS = allowHangers;
+    ACTIVE_QUOTE_CAT = category;
+    showAdvancedSearch(category);
   } else if(code){
     showProductPage(code,category);
   } else {
@@ -378,8 +381,9 @@ function showAdvancedSearch(cat){
 
   window._metaLoading=false;
   setTimeout(function(){loadMeta(1);},150);
+  // Inject quote banner after content is rendered
+  if(QUOTE_MODE) setTimeout(injectQuoteUI, 80);
 }
-
 function toFid(label){ return label.toLowerCase().replace(/[^a-z0-9]/g,"_"); }
 
 // ── LOAD META ──
@@ -789,62 +793,6 @@ function quoteSelectProduct(product){
 // ═══════════════════════════════════════════════════════════════
 // QUOTE MODE — globals + clean implementation
 // ═══════════════════════════════════════════════════════════════
-var QUOTE_MODE      = false;  // true when opened from quote builder
-var QUOTE_HANGERS   = false;  // true when curtain component (show Fabric+Hangers tabs)
-var QUOTE_RETURN    = "";     // URL to return to after selection
-
-function showQuoteSearch(startCat, allowHangers) {
-  QUOTE_MODE    = true;
-  QUOTE_HANGERS = !!allowHangers;
-  startCat      = startCat || "fabric";
-
-  if (allowHangers) {
-    // Show Fabric|Hangers tab bar, then load fabric search below it
-    _renderQuoteTabs(startCat);
-    showAdvancedSearch(startCat);
-  } else {
-    // Go straight to the category search (no tabs needed)
-    showAdvancedSearch(startCat);
-  }
-}
-
-// Render the persistent banner + tab bar above the search
-function _renderQuoteTabs(activeCat) {
-  var bannerHtml =
-    '<div id="qBanner" style="background:#0d2a1a;border-bottom:2px solid #27ae60;'
-    + 'padding:10px 16px;display:flex;align-items:center;justify-content:space-between;'
-    + 'position:sticky;top:0;z-index:60">'
-    + '<div>'
-    + '<div style="font-size:11px;color:#27ae60;font-weight:800;letter-spacing:1px">SELECT PRODUCT FOR QUOTE</div>'
-    + '<div style="font-size:11px;color:#666;margin-top:1px">Tap any product to add it</div>'
-    + '</div>'
-    + '<button onclick="window.location.href='quote.html'" '
-    + 'style="background:none;border:1px solid #444;color:#aaa;border-radius:8px;'
-    + 'padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation">'
-    + '&#8592; Cancel</button>'
-    + '</div>'
-    + '<div id="qTabBar" style="display:flex;background:#111;border-bottom:1px solid #252525;padding:0 12px">'
-    + '<button id="qTabFabric" onclick="switchQuoteTab('fabric')" '
-    + 'style="flex:1;padding:13px 8px;font-size:13px;border:none;background:transparent;'
-    + 'cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;'
-    + '-webkit-tap-highlight-color:transparent;touch-action:manipulation;'
-    + 'font-weight:' + (activeCat === "fabric" ? "800" : "700") + ';'
-    + 'color:' + (activeCat === "fabric" ? "#fff" : "#666") + ';'
-    + 'border-bottom-color:' + (activeCat === "fabric" ? "#c0392b" : "transparent") + '">'
-    + '&#129525; Fabric</button>'
-    + '<button id="qTabHangers" onclick="switchQuoteTab('hangers')" '
-    + 'style="flex:1;padding:13px 8px;font-size:13px;border:none;background:transparent;'
-    + 'cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;'
-    + '-webkit-tap-highlight-color:transparent;touch-action:manipulation;'
-    + 'font-weight:' + (activeCat === "hangers" ? "800" : "700") + ';'
-    + 'color:' + (activeCat === "hangers" ? "#fff" : "#666") + ';'
-    + 'border-bottom-color:' + (activeCat === "hangers" ? "#c0392b" : "transparent") + '">'
-    + '&#129693; Hangers</button>'
-    + '</div>'
-    + '<div id="qSearchBody"></div>';
-
-  document.getElementById("app").innerHTML = bannerHtml;
-}
 
 // Switch tab — re-render tabs with new active state, load new category
 function switchQuoteTab(cat) {
@@ -912,6 +860,42 @@ function sChk(){
     if(window._rows)renderRows(window._rows,window._cat||"fabric");
   } else {sDots(true);setTimeout(function(){staffEn="";sDots();},800);}
 }
+
+// ── QUOTE MODE: inject banner+tabs after any search renders ──────
+function injectQuoteUI(){
+  if(!QUOTE_MODE) return;
+  var app = document.getElementById("app");
+  if(!app) return;
+  // Remove stale banner/tabs
+  ["qBanner","qTabFab","qTabHan"].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el && el.parentNode) el.parentNode.removeChild(el);
+  });
+  // Build fresh HTML
+  var bannerHtml = '<div id="qBanner" style="background:#1a3a1a;border-bottom:2px solid #27ae60;padding:10px 16px;display:flex;align-items:center;justify-content:space-between">'
+    +'<div><div style="font-size:11px;color:#27ae60;font-weight:800;letter-spacing:1px">SELECT PRODUCT FOR QUOTE</div>'
+    +'<div style="font-size:11px;color:#888;margin-top:1px">Tap a product to add it to your quote</div></div>'
+    +'<button onclick="window.location.href=\'quote.html\'" style="background:none;border:1px solid #555;color:#aaa;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;white-space:nowrap">&#8592; Cancel</button>'
+    +'</div>';
+  var tabsHtml = "";
+  if(ALLOW_HANGERS){
+    tabsHtml = '<div style="display:flex;background:#111;border-bottom:2px solid #252525;padding:0 12px">'
+      +'<button id="qTabFab" onclick="switchQuoteTab(\'fabric\')" style="flex:1;padding:12px 8px;font-size:13px;font-weight:'+(ACTIVE_QUOTE_CAT==="fabric"?"800":"700")+';color:'+(ACTIVE_QUOTE_CAT==="fabric"?"#fff":"#666")+';border:none;background:transparent;cursor:pointer;border-bottom:3px solid '+(ACTIVE_QUOTE_CAT==="fabric"?"#c0392b":"transparent")+';margin-bottom:-2px;-webkit-tap-highlight-color:transparent">&#129525; Fabric</button>'
+      +'<button id="qTabHan" onclick="switchQuoteTab(\'hangers\')" style="flex:1;padding:12px 8px;font-size:13px;font-weight:'+(ACTIVE_QUOTE_CAT==="hangers"?"800":"700")+';color:'+(ACTIVE_QUOTE_CAT==="hangers"?"#fff":"#666")+';border:none;background:transparent;cursor:pointer;border-bottom:3px solid '+(ACTIVE_QUOTE_CAT==="hangers"?"#c0392b":"transparent")+';margin-bottom:-2px;-webkit-tap-highlight-color:transparent">&#129693; Hangers</button>'
+      +'</div>';
+  }
+  var tmp = document.createElement("div");
+  tmp.innerHTML = bannerHtml + tabsHtml;
+  // Prepend to app
+  var ref = app.firstChild;
+  while(tmp.firstChild) app.insertBefore(tmp.firstChild, ref);
+}
+
+function switchQuoteTab(cat){
+  ACTIVE_QUOTE_CAT = cat;
+  showAdvancedSearch(cat);
+}
+
 </script>
 </body>
 </html>
