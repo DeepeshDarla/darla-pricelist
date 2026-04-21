@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -162,640 +163,670 @@ var BASE= window.location.origin+window.location.pathname;
 // tblCols: columns in results table [label, firebaseKey]
 // mrpLabel: label for MRP card
 var CATS = {
-  fabric: {
-    label:"Fabric", icon:"&#129525;", codeSearch:false,
-    inputs:["Brand","Catalog","S.No"],
-    ctxCols:[["Brand","brand"],["Catalog","catalog"],["S.No","s_no"]],
-    tblCols:[["Catalog","catalog"],["S.No","s_no"],["Item Details","item_details"],["MRP","mrp"],["Width","width"]],
-    mrpLabel:"MRP / METRE"
-  },
-  hangers: {
-    label:"Hangers", icon:"&#129693;", codeSearch:true,
-    inputs:["Code"],
-    ctxCols:[["Code","code"]],
-    tblCols:[["Brand","brand"],["Catalog","catalog"],["S.No","s_no"],["Item Details","item_details"],["MRP","mrp"],["Width","width"]],
-    mrpLabel:"MRP / METRE"
-  },
-  blinds: {
-    label:"Blinds", icon:"&#129695;", codeSearch:false,
-    inputs:["Brand","Blind Type","Catalog","Mechanism","Others"],
-    ctxCols:[["Brand","brand"],["Blind Type","blind_type"],["Catalog","catalog"],["Mechanism","mechanism"],["Others","others"]],
-    tblCols:[["Brand","brand"],["Blind Type","blind_type"],["Catalog","catalog"],["Mechanism","mechanism"],["Others","others"],["MRP","mrp"]],
-    mrpLabel:"MRP"
-  },
-  wallpapers: {
-    label:"Wallpapers", icon:"&#128444;", codeSearch:false,
-    inputs:["Brand","Catalog","Design Details"],
-    ctxCols:[["Brand","brand"],["Catalog","catalog"],["Design Details","design_details"]],
-    tblCols:[["Design Details","design_details"],["Size","size"],["MRP","mrp"]],
-    mrpLabel:"MRP / METRE"
-  },
-  motors: {
-    label:"Motors", icon:"&#9881;", codeSearch:false,
-    inputs:["Brand","Category","Product","Item Details"],
-    ctxCols:[["Brand","brand"],["Category","category"],["Product","product"]],
-    tblCols:[["Product","product"],["Item Details","item_details"],["MRP","mrp"],["Other Details","other_details"]],
-    mrpLabel:"MRP"
-  },
-  beds: {
-    label:"Beds", icon:"&#128716;", codeSearch:false,
-    inputs:["Brand","Model","Size"],
-    ctxCols:[["Brand","brand"],["Model","model"],["Size","size"]],
-    tblCols:[["Model","model"],["Size","size"],["MRP","mrp"]],
-    mrpLabel:"MRP"
-  },
-  sleepwell: {
-    label:"Sleepwell", icon:"&#128716;", codeSearch:false,
-    inputs:["Brand","Model","Size"],
-    ctxCols:[["Brand","brand"],["Model","model"],["Size","size"]],
-    tblCols:[["Model","model"],["Size","size"],["MRP","mrp"]],
-    mrpLabel:"MRP"
-  }
+fabric: {
+label:“Fabric”, icon:”🧵”, codeSearch:false,
+inputs:[“Brand”,“Catalog”,“S.No”],
+ctxCols:[[“Brand”,“brand”],[“Catalog”,“catalog”],[“S.No”,“s_no”]],
+tblCols:[[“Catalog”,“catalog”],[“S.No”,“s_no”],[“Item Details”,“item_details”],[“MRP”,“mrp”],[“Width”,“width”]],
+mrpLabel:“MRP / METRE”
+},
+hangers: {
+label:“Hangers”, icon:”🪝”, codeSearch:true,
+inputs:[“Code”],
+ctxCols:[[“Code”,“code”]],
+tblCols:[[“Brand”,“brand”],[“Catalog”,“catalog”],[“S.No”,“s_no”],[“Item Details”,“item_details”],[“MRP”,“mrp”],[“Width”,“width”]],
+mrpLabel:“MRP / METRE”
+},
+blinds: {
+label:“Blinds”, icon:”🪟”, codeSearch:false,
+inputs:[“Brand”,“Blind Type”,“Catalog”,“Mechanism”,“Others”],
+ctxCols:[[“Brand”,“brand”],[“Blind Type”,“blind_type”],[“Catalog”,“catalog”],[“Mechanism”,“mechanism”],[“Others”,“others”]],
+tblCols:[[“Brand”,“brand”],[“Blind Type”,“blind_type”],[“Catalog”,“catalog”],[“Mechanism”,“mechanism”],[“Others”,“others”],[“MRP”,“mrp”]],
+mrpLabel:“MRP”
+},
+wallpapers: {
+label:“Wallpapers”, icon:”🖼”, codeSearch:false,
+inputs:[“Brand”,“Catalog”,“Design Details”],
+ctxCols:[[“Brand”,“brand”],[“Catalog”,“catalog”],[“Design Details”,“design_details”]],
+tblCols:[[“Design Details”,“design_details”],[“Size”,“size”],[“MRP”,“mrp”]],
+mrpLabel:“MRP / METRE”
+},
+motors: {
+label:“Motors”, icon:”⚙”, codeSearch:false,
+inputs:[“Brand”,“Category”,“Product”,“Item Details”],
+ctxCols:[[“Brand”,“brand”],[“Category”,“category”],[“Product”,“product”]],
+tblCols:[[“Product”,“product”],[“Item Details”,“item_details”],[“MRP”,“mrp”],[“Other Details”,“other_details”]],
+mrpLabel:“MRP”
+},
+beds: {
+label:“Beds”, icon:”🛌”, codeSearch:false,
+inputs:[“Brand”,“Model”,“Size”],
+ctxCols:[[“Brand”,“brand”],[“Model”,“model”],[“Size”,“size”]],
+tblCols:[[“Model”,“model”],[“Size”,“size”],[“MRP”,“mrp”]],
+mrpLabel:“MRP”
+},
+sleepwell: {
+label:“Sleepwell”, icon:”🛌”, codeSearch:false,
+inputs:[“Brand”,“Model”,“Size”],
+ctxCols:[[“Brand”,“brand”],[“Model”,“model”],[“Size”,“size”]],
+tblCols:[[“Model”,“model”],[“Size”,“size”],[“MRP”,“mrp”]],
+mrpLabel:“MRP”
+}
 };
 
 // ── SANITIZERS ──
 function sk(str){
-  return String(str||"").trim()
-    .replace(/[^a-zA-Z0-9\-_]/g,"_")
-    .replace(/_+/g,"_")
-    .replace(/^_+|_+$/g,"")
-    ||"_";
+return String(str||””).trim()
+.replace(/[^a-zA-Z0-9-*]/g,”*”)
+.replace(/*+/g,”*”)
+.replace(/^*+|*+$/g,””)
+||”*”;
 }
 function codeKey(str){
-  return String(str||"").trim().toUpperCase().replace(/[^A-Z0-9\-]/g,"");
+return String(str||””).trim().toUpperCase().replace(/[^A-Z0-9-]/g,””);
 }
 function gv(r,key){
-  if(!r)return"";
-  var s=key.replace(/[^a-z0-9_]/g,"_").replace(/_+/g,"_").replace(/^_|_$/g,"");
-  return r[s]||r[key]||"";
+if(!r)return””;
+var s=key.replace(/[^a-z0-9*]/g,”*”).replace(/*+/g,”*”).replace(/^*|_$/g,””);
+return r[s]||r[key]||””;
 }
-function getParam(n){return new URLSearchParams(window.location.search).get(n)||"";}
+function getParam(n){return new URLSearchParams(window.location.search).get(n)||””;}
 // ── QUOTE MODE GLOBALS ──
 var QUOTE_MODE     = false;  // true when opened from quote builder
 var ALLOW_HANGERS  = false;
 var QUOTE_HANGERS  = false;  // alias for ALLOW_HANGERS  // true when curtain component (show Fabric+Hangers tabs)
-var ACTIVE_QUOTE_CAT = "fabric";
-
+var ACTIVE_QUOTE_CAT = “fabric”;
 
 function esc(t){
-  if(!t)return"";
-  return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+if(!t)return””;
+return String(t).replace(/&/g,”&”).replace(/</g,”<”).replace(/>/g,”>”).replace(/”/g,”"”);
 }
-function spinner(m){return '<div class="spinner"><div class="spinner-ring"></div><p>'+(m||"Loading...")+'</p></div>';}
-function isStaff(){return localStorage.getItem(SK)==="1";}
-function hasSearchAccess(){return localStorage.getItem(SAK)==="1";}
+function spinner(m){return ‘<div class="spinner"><div class="spinner-ring"></div><p>’+(m||“Loading…”)+’</p></div>’;}
+function isStaff(){return localStorage.getItem(SK)===“1”;}
+function hasSearchAccess(){return localStorage.getItem(SAK)===“1”;}
 
 // ── INIT ──
-window.addEventListener("DOMContentLoaded",function(){
-  var code        =getParam("code").trim().toUpperCase();
-  var category    =getParam("category").trim().toLowerCase()||"fabric";
-  var mode        =getParam("mode");
-  var allowHangers=getParam("allowHangers")==="1";
-  if(mode==="quote"){
-    QUOTE_MODE    = true;
-    ALLOW_HANGERS = allowHangers;
-    QUOTE_HANGERS = allowHangers;
-    ACTIVE_QUOTE_CAT = category;
-    showAdvancedSearch(category);
-  } else if(code){
-    showProductPage(code,category);
-  } else {
-    showHome();
-  }
+window.addEventListener(“DOMContentLoaded”,function(){
+var code        =getParam(“code”).trim().toUpperCase();
+var category    =getParam(“category”).trim().toLowerCase()||“fabric”;
+var mode        =getParam(“mode”);
+var allowHangers=getParam(“allowHangers”)===“1”;
+if(mode===“quote”){
+QUOTE_MODE    = true;
+ALLOW_HANGERS = allowHangers;
+QUOTE_HANGERS = allowHangers;
+ACTIVE_QUOTE_CAT = category;
+showAdvancedSearch(category);
+} else if(code){
+showProductPage(code,category);
+} else {
+showHome();
+}
 });
-
-
-
-
 
 // ── HEADER ──
 function hdr(title,code,badge){
-  return '<div class="hdr">'
-    +'<img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display=\'none\'" alt="Darla">'
-    +'<div class="hdr-brand">Darla Sales &amp; Agencies</div>'
-    +'<div class="hdr-title">'+esc(title)+'</div>'
-    +(code?'<div class="hdr-code">'+esc(code)+'</div>':'')
-    +(badge?'<div class="staff-badge" id="sBadge">&#10003; Staff View</div>':'')
-    +'</div>';
+return ‘<div class="hdr">’
++’<img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display=\'none\'" alt="Darla">’
++’<div class="hdr-brand">Darla Sales & Agencies</div>’
++’<div class="hdr-title">’+esc(title)+’</div>’
++(code?’<div class="hdr-code">’+esc(code)+’</div>’:’’)
++(badge?’<div class="staff-badge" id="sBadge">✓ Staff View</div>’:’’)
++’</div>’;
 }
 
 // ── HOME ──
 function showHome(){
-  var html=hdr("Product Lookup","",false)
-    +'<div style="padding:16px 12px 8px;text-align:center">'
-    +'<div style="font-size:13px;color:#555;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Select Category to Search</div>'
-    +'</div><div class="cat-grid">';
-  Object.keys(CATS).forEach(function(key){
-    var c=CATS[key];
-    html+='<div class="cat-btn" onclick="goSearch(\''+key+'\')">'
-      +'<div class="cat-ico">'+c.icon+'</div>'
-      +'<div class="cat-name">'+c.label+'</div></div>';
-  });
-  html+='</div>';
-  document.getElementById("app").innerHTML=html;
+var html=hdr(“Product Lookup”,””,false)
++’<div style="padding:16px 12px 8px;text-align:center">’
++’<div style="font-size:13px;color:#555;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Select Category to Search</div>’
++’</div><div class="cat-grid">’;
+Object.keys(CATS).forEach(function(key){
+var c=CATS[key];
+html+=’<div class="cat-btn" onclick="goSearch(\''+key+'\')">’
++’<div class="cat-ico">’+c.icon+’</div>’
++’<div class="cat-name">’+c.label+’</div></div>’;
+});
+html+=’</div>’;
+document.getElementById(“app”).innerHTML=html;
 }
 
 function goSearch(cat){
-  if(hasSearchAccess()) showAdvancedSearch(cat);
-  else showSearchGate(cat);
+if(hasSearchAccess()) showAdvancedSearch(cat);
+else showSearchGate(cat);
 }
 
 // ── PIN GATE ──
-var gateEn="",gateCat="";
+var gateEn=””,gateCat=””;
 function showSearchGate(cat){
-  gateCat=cat; gateEn="";
-  document.getElementById("app").innerHTML=
-    '<div class="pin-gate">'
-    +'<img class="pin-gate-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display=\'none\'" alt="Darla">'
-    +'<div class="pin-gate-title">Staff Access Required</div>'
-    +'<div class="pin-gate-sub">Enter your PIN to access search</div>'
-    +'<div class="pin-gate-dots">'
-    +'<div class="dot" id="gd0"></div><div class="dot" id="gd1"></div>'
-    +'<div class="dot" id="gd2"></div><div class="dot" id="gd3"></div>'
-    +'</div><div class="pin-gate-grid">'
-    +[1,2,3,4,5,6,7,8,9].map(function(n){return '<button class="pk" onclick="gatePk(\''+n+'\')">'+n+'</button>';}).join("")
-    +'<button class="pk ghost"></button>'
-    +'<button class="pk" onclick="gatePk(\'0\')">0</button>'
-    +'<button class="pk del" onclick="gatePd()">&#9003;</button>'
-    +'</div>'
-    +'<button class="pin-cancel" onclick="showHome()" style="color:#555;margin-top:8px">&#8592; Back</button>'
-    +'</div>';
+gateCat=cat; gateEn=””;
+document.getElementById(“app”).innerHTML=
+‘<div class="pin-gate">’
++’<img class="pin-gate-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display=\'none\'" alt="Darla">’
++’<div class="pin-gate-title">Staff Access Required</div>’
++’<div class="pin-gate-sub">Enter your PIN to access search</div>’
++’<div class="pin-gate-dots">’
++’<div class="dot" id="gd0"></div><div class="dot" id="gd1"></div>’
++’<div class="dot" id="gd2"></div><div class="dot" id="gd3"></div>’
++’</div><div class="pin-gate-grid">’
++[1,2,3,4,5,6,7,8,9].map(function(n){return ‘<button class="pk" onclick="gatePk(\''+n+'\')">’+n+’</button>’;}).join(””)
++’<button class="pk ghost"></button>’
++’<button class="pk" onclick="gatePk(\'0\')">0</button>’
++’<button class="pk del" onclick="gatePd()">⌫</button>’
++’</div>’
++’<button class="pin-cancel" onclick="showHome()" style="color:#555;margin-top:8px">← Back</button>’
++’</div>’;
 }
 function gatePk(k){if(gateEn.length>=4)return;gateEn+=k;gDots();if(gateEn.length===4)setTimeout(gChk,80);}
 function gatePd(){gateEn=gateEn.slice(0,-1);gDots();}
 function gDots(err){
-  for(var i=0;i<4;i++){
-    var d=document.getElementById("gd"+i);if(!d)return;
-    d.className="dot";
-    if(err)d.classList.add("err");else if(i<gateEn.length)d.classList.add("on");
-  }
+for(var i=0;i<4;i++){
+var d=document.getElementById(“gd”+i);if(!d)return;
+d.className=“dot”;
+if(err)d.classList.add(“err”);else if(i<gateEn.length)d.classList.add(“on”);
+}
 }
 function gChk(){
-  if(gateEn===PIN){localStorage.setItem(SAK,"1");showAdvancedSearch(gateCat);}
-  else{gDots(true);setTimeout(function(){gateEn="";gDots();},800);}
+if(gateEn===PIN){localStorage.setItem(SAK,“1”);showAdvancedSearch(gateCat);}
+else{gDots(true);setTimeout(function(){gateEn=””;gDots();},800);}
 }
 
 // ── SEARCH STATE ──
-var BCM={},BCSM={},allBrands=[],currentCat="fabric",searchCtx={};
+var BCM={},BCSM={},allBrands=[],currentCat=“fabric”,searchCtx={};
 
 // ── ADVANCED SEARCH ──
 function showAdvancedSearch(cat){
-  currentCat=String(cat||"fabric").toLowerCase();
-  var ci=CATS[currentCat]||CATS.fabric;
-  BCM={};BCSM={};allBrands=[];searchCtx={};
+currentCat=String(cat||“fabric”).toLowerCase();
+var ci=CATS[currentCat]||CATS.fabric;
+BCM={};BCSM={};allBrands=[];searchCtx={};
 
-  // Code search (Hangers)
-  if(ci.codeSearch){
-    document.getElementById("app").innerHTML=
-      hdr(ci.label+" Search","",true)
-      +'<div class="search-wrap"><div class="search-card">'
-      +'<div class="field-lbl">Code</div><div class="lbl-line-sm"></div>'
-      +'<div class="autocomplete-wrap">'
-      +'<input class="ac-input" id="codeInp" placeholder="Enter code..." autocomplete="off" spellcheck="false" style="text-transform:uppercase">'
-      +'</div>'
-      +'<button class="submit-btn" onclick="doCodeSearch()">Search &#8594;</button>'
-      +'<button class="clear-btn" onclick="clearSearch()">Clear</button>'
-      +'<button class="clear-btn" style="margin-top:6px;color:#c0392b;border-color:#c0392b" onclick="showHome()">&#8592; Categories</button>'
-      +'</div></div>'
-      +'<div class="results-wrap"><div id="results"></div></div>';
-    setTimeout(function(){
-      var inp=document.getElementById("codeInp");
-      if(inp)inp.addEventListener("keyup",function(e){if(e.key==="Enter")doCodeSearch();this.value=this.value.toUpperCase();});
-    },0);
-    return;
-  }
-
-  // Build dynamic input fields
-  var fieldsHtml='';
-  ci.inputs.forEach(function(label,idx){
-    var fid=toFid(label);
-    fieldsHtml+='<div class="field-lbl">'+label+'</div><div class="lbl-line-sm"></div>'
-      +'<div class="autocomplete-wrap">'
-      +'<input class="ac-input" id="f_'+fid+'" placeholder="'+(idx===0?'Loading...':'Select above first...')+'" '+(idx===0?'disabled':'')+' autocomplete="off" spellcheck="false">'
-      +'<div class="dropdown" id="fd_'+fid+'"></div>'
-      +'</div>';
-  });
-
-  document.getElementById("app").innerHTML=
-    hdr(ci.label+" Search","",true)
-    +'<div class="search-wrap"><div class="search-card">'
-    +'<div id="status" class="status">Loading...</div>'
-    +fieldsHtml
-    +'<button class="submit-btn" id="searchBtn" onclick="doSearch()" disabled>Search &#8594;</button>'
-    +'<button class="clear-btn" onclick="clearSearch()">Clear All</button>'
-    +'<button class="clear-btn" style="margin-top:6px;color:#c0392b;border-color:#c0392b" onclick="showHome()">&#8592; Categories</button>'
-    +'</div></div>'
-    +'<div class="results-wrap"><div id="results"></div></div>';
-
-  window._metaLoading=false;
-  setTimeout(function(){loadMeta(1);},150);
-  // Inject quote banner after content is rendered
-  if(QUOTE_MODE) setTimeout(injectQuoteUI, 80);
+// Code search (Hangers)
+if(ci.codeSearch){
+document.getElementById(“app”).innerHTML=
+hdr(ci.label+” Search”,””,true)
++’<div class="search-wrap"><div class="search-card">’
++’<div class="field-lbl">Code</div><div class="lbl-line-sm"></div>’
++’<div class="autocomplete-wrap">’
++’<input class="ac-input" id="codeInp" placeholder="Enter code..." autocomplete="off" spellcheck="false" style="text-transform:uppercase">’
++’</div>’
++’<button class="submit-btn" onclick="doCodeSearch()">Search →</button>’
++’<button class="clear-btn" onclick="clearSearch()">Clear</button>’
++’<button class="clear-btn" style="margin-top:6px;color:#c0392b;border-color:#c0392b" onclick="showHome()">← Categories</button>’
++’</div></div>’
++’<div class="results-wrap"><div id="results"></div></div>’;
+setTimeout(function(){
+var inp=document.getElementById(“codeInp”);
+if(inp)inp.addEventListener(“keyup”,function(e){if(e.key===“Enter”)doCodeSearch();this.value=this.value.toUpperCase();});
+},0);
+return;
 }
-function toFid(label){ return label.toLowerCase().replace(/[^a-z0-9]/g,"_"); }
+
+// Build dynamic input fields
+var fieldsHtml=’’;
+ci.inputs.forEach(function(label,idx){
+var fid=toFid(label);
+fieldsHtml+=’<div class="field-lbl">’+label+’</div><div class="lbl-line-sm"></div>’
++’<div class="autocomplete-wrap">’
++’<input class=“ac-input” id=“f_’+fid+’” placeholder=”’+(idx===0?‘Loading…’:‘Select above first…’)+’” ‘+(idx===0?‘disabled’:’’)+’ autocomplete=“off” spellcheck=“false”>’
++’<div class="dropdown" id="fd_'+fid+'"></div>’
++’</div>’;
+});
+
+document.getElementById(“app”).innerHTML=
+hdr(ci.label+” Search”,””,true)
++’<div class="search-wrap"><div class="search-card">’
++’<div id="status" class="status">Loading…</div>’
++fieldsHtml
++’<button class="submit-btn" id="searchBtn" onclick="doSearch()" disabled>Search →</button>’
++’<button class="clear-btn" onclick="clearSearch()">Clear All</button>’
++’<button class="clear-btn" style="margin-top:6px;color:#c0392b;border-color:#c0392b" onclick="showHome()">← Categories</button>’
++’</div></div>’
++’<div class="results-wrap"><div id="results"></div></div>’;
+
+window.*metaLoading=false;
+setTimeout(function(){loadMeta(1);},150);
+// Inject quote banner after content is rendered
+if(QUOTE_MODE) setTimeout(injectQuoteUI, 80);
+}
+function toFid(label){ return label.toLowerCase().replace(/[^a-z0-9]/g,”*”); }
 
 // ── LOAD META ──
 function loadMeta(attempt){
-  if(window._metaLoading&&attempt===1)return;
-  if(attempt===1)window._metaLoading=true;
-  var st=document.getElementById("status");
-  if(!st){window._metaLoading=false;return;}
-  st.textContent=attempt>1?"Retrying... ("+attempt+"/3)":"Loading...";
-  st.style.color="#555";st.style.cursor="default";st.onclick=null;
+if(window._metaLoading&&attempt===1)return;
+if(attempt===1)window._metaLoading=true;
+var st=document.getElementById(“status”);
+if(!st){window._metaLoading=false;return;}
+st.textContent=attempt>1?“Retrying… (”+attempt+”/3)”:“Loading…”;
+st.style.color=”#555”;st.style.cursor=“default”;st.onclick=null;
 
-  fetch(FB+"/"+currentCat+"/meta.json")
-    .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json();})
-    .then(function(d){
-      window._metaLoading=false;
-      var st2=document.getElementById("status");
-      var btn=document.getElementById("searchBtn");
-      if(!st2)return;
-      if(!d||!d.brandList||!d.brandList.length){
-        st2.textContent="No data yet for this category.";return;
-      }
-      // Populate brand/catalog/sno maps
-      allBrands=d.brandList.map(function(b){return b.label||b;}).sort();
-      d.brandList.forEach(function(b){
-        var bKey=b.key||b,bLabel=b.label||b;
-        BCM[bLabel]=(d.bcmArr[bKey]||[]).map(function(c){return c.label||c;});
-        (d.bcmArr[bKey]||[]).forEach(function(c){
-          var cKey=c.key||c,cLabel=c.label||c;
-          BCSM[bLabel+"|||"+cLabel]=(d.bcsmArr[bKey+"|||"+cKey]||[]).map(function(s){return s.label||s;});
-        });
-      });
-      // Enable first field
-      var ci=CATS[currentCat];
-      var f0=document.getElementById("f_"+toFid(ci.inputs[0]));
-      if(f0){f0.disabled=false;f0.placeholder="Type to search...";}
-      if(btn)btn.disabled=false;
-      st2.style.display="none";
-      bindInputEvents();
-    })
-    .catch(function(){
-      window._metaLoading=false;
-      var st3=document.getElementById("status");
-      if(!st3)return;
-      if(attempt<3){setTimeout(function(){loadMeta(attempt+1);},3000);}
-      else{
-        st3.textContent="Tap here to retry";
-        st3.style.color="#c0392b";st3.style.cursor="pointer";
-        st3.onclick=function(){window._metaLoading=false;loadMeta(1);};
-      }
-    });
+fetch(FB+”/”+currentCat+”/meta.json”)
+.then(function(r){if(!r.ok)throw new Error(“HTTP “+r.status);return r.json();})
+.then(function(d){
+window.*metaLoading=false;
+var st2=document.getElementById(“status”);
+var btn=document.getElementById(“searchBtn”);
+if(!st2)return;
+if(!d||!d.brandList||!d.brandList.length){
+st2.textContent=“No data yet for this category.”;return;
+}
+// Populate brand/catalog/sno maps
+allBrands=d.brandList.map(function(b){return b.label||b;}).sort();
+d.brandList.forEach(function(b){
+var bKey=b.key||b,bLabel=b.label||b;
+BCM[bLabel]=(d.bcmArr[bKey]||[]).map(function(c){return c.label||c;});
+(d.bcmArr[bKey]||[]).forEach(function(c){
+var cKey=c.key||c,cLabel=c.label||c;
+BCSM[bLabel+”|||”+cLabel]=(d.bcsmArr[bKey+”|||”+cKey]||[]).map(function(s){return s.label||s;});
+});
+});
+// Enable first field
+var ci=CATS[currentCat];
+var f0=document.getElementById(“f*”+toFid(ci.inputs[0]));
+if(f0){f0.disabled=false;f0.placeholder=“Type to search…”;}
+if(btn)btn.disabled=false;
+st2.style.display=“none”;
+bindInputEvents();
+})
+.catch(function(){
+window._metaLoading=false;
+var st3=document.getElementById(“status”);
+if(!st3)return;
+if(attempt<3){setTimeout(function(){loadMeta(attempt+1);},3000);}
+else{
+st3.textContent=“Tap here to retry”;
+st3.style.color=”#c0392b”;st3.style.cursor=“pointer”;
+st3.onclick=function(){window._metaLoading=false;loadMeta(1);};
+}
+});
 }
 
 // ── BIND INPUT EVENTS ──
 function bindInputEvents(){
-  var ci=CATS[currentCat];if(!ci)return;
-  ci.inputs.forEach(function(label,idx){
-    var fid=toFid(label);
-    var el=document.getElementById("f_"+fid);
-    var drop=document.getElementById("fd_"+fid);
-    if(!el)return;
-    el.addEventListener("focus",function(){showDrop(drop,getOpts(idx),el,function(v){pickOpt(idx,v);});});
-    el.addEventListener("input",function(){showDrop(drop,filt(getOpts(idx),this.value),el,function(v){pickOpt(idx,v);});});
-    el.addEventListener("blur",function(){setTimeout(function(){if(drop)drop.classList.remove("show");},200);});
-  });
+var ci=CATS[currentCat];if(!ci)return;
+ci.inputs.forEach(function(label,idx){
+var fid=toFid(label);
+var el=document.getElementById(“f_”+fid);
+var drop=document.getElementById(“fd_”+fid);
+if(!el)return;
+el.addEventListener(“focus”,function(){showDrop(drop,getOpts(idx),el,function(v){pickOpt(idx,v);});});
+el.addEventListener(“input”,function(){showDrop(drop,filt(getOpts(idx),this.value),el,function(v){pickOpt(idx,v);});});
+el.addEventListener(“blur”,function(){setTimeout(function(){if(drop)drop.classList.remove(“show”);},200);});
+});
 }
 
 function getOpts(idx){
-  var ci=CATS[currentCat];
-  if(idx===0) return allBrands;
-  var brand=getFieldVal(ci.inputs[0]);
-  if(idx===1) return BCM[brand]||[];
-  if(idx>=2){
-    var lvl1=getFieldVal(ci.inputs[1]);
-    var third=BCSM[brand+"|||"+lvl1]||[];
-    if(idx===2) return third;
-    // For idx>=3, return same third level options as no deeper hierarchy
-    return third;
-  }
-  return [];
+var ci=CATS[currentCat];
+if(idx===0) return allBrands;
+var brand=getFieldVal(ci.inputs[0]);
+if(idx===1) return BCM[brand]||[];
+if(idx>=2){
+var lvl1=getFieldVal(ci.inputs[1]);
+var third=BCSM[brand+”|||”+lvl1]||[];
+if(idx===2) return third;
+// For idx>=3, return same third level options as no deeper hierarchy
+return third;
+}
+return [];
 }
 
 function getFieldVal(label){
-  var el=document.getElementById("f_"+toFid(label));
-  return el?el.value.trim():"";
+var el=document.getElementById(“f_”+toFid(label));
+return el?el.value.trim():””;
 }
 
 function pickOpt(idx,val){
-  var ci=CATS[currentCat];
-  var fid=toFid(ci.inputs[idx]);
-  var el=document.getElementById("f_"+fid);
-  var drop=document.getElementById("fd_"+fid);
-  if(el)el.value=val;
-  if(drop)drop.classList.remove("show");
-  // Enable next, reset subsequent
-  for(var j=idx+1;j<ci.inputs.length;j++){
-    var jEl=document.getElementById("f_"+toFid(ci.inputs[j]));
-    if(jEl){
-      if(j===idx+1){jEl.disabled=false;jEl.placeholder="Type to search...";}
-      else{jEl.value="";jEl.disabled=true;}
-    }
-  }
+var ci=CATS[currentCat];
+var fid=toFid(ci.inputs[idx]);
+var el=document.getElementById(“f_”+fid);
+var drop=document.getElementById(“fd_”+fid);
+if(el)el.value=val;
+if(drop)drop.classList.remove(“show”);
+// Enable next, reset subsequent
+for(var j=idx+1;j<ci.inputs.length;j++){
+var jEl=document.getElementById(“f_”+toFid(ci.inputs[j]));
+if(jEl){
+if(j===idx+1){jEl.disabled=false;jEl.placeholder=“Type to search…”;}
+else{jEl.value=””;jEl.disabled=true;}
+}
+}
 }
 
 // ── SEARCH ──
 function doCodeSearch(){
-  var inp=document.getElementById("codeInp");if(!inp)return;
-  var code=codeKey(inp.value.trim());if(!code)return;
-  searchCtx={code:inp.value.trim().toUpperCase()};
-  var res=document.getElementById("results");if(res)res.innerHTML=spinner("Searching...");
-  fetch(FB+"/"+currentCat+"/by_code/"+encodeURIComponent(code)+".json")
-    .then(function(r){return r.json();})
-    .then(function(d){
-      if(!d){renderRows([],currentCat);return;}
-      renderRows(Array.isArray(d)?d:Object.values(d),currentCat);
-    })
-    .catch(function(){var r=document.getElementById("results");if(r)r.innerHTML='<div class="nf"><h3>Error</h3><p>Please try again.</p></div>';});
+var inp=document.getElementById(“codeInp”);if(!inp)return;
+var code=codeKey(inp.value.trim());if(!code)return;
+searchCtx={code:inp.value.trim().toUpperCase()};
+var res=document.getElementById(“results”);if(res)res.innerHTML=spinner(“Searching…”);
+fetch(FB+”/”+currentCat+”/by_code/”+encodeURIComponent(code)+”.json”)
+.then(function(r){return r.json();})
+.then(function(d){
+if(!d){renderRows([],currentCat);return;}
+renderRows(Array.isArray(d)?d:Object.values(d),currentCat);
+})
+.catch(function(){var r=document.getElementById(“results”);if(r)r.innerHTML=’<div class="nf"><h3>Error</h3><p>Please try again.</p></div>’;});
 }
 
 function doSearch(){
-  var ci=CATS[currentCat];if(!ci)return;
-  var res=document.getElementById("results");if(res)res.innerHTML=spinner("Searching...");
+var ci=CATS[currentCat];if(!ci)return;
+var res=document.getElementById(“results”);if(res)res.innerHTML=spinner(“Searching…”);
 
-  // Collect all field values into searchCtx
-  searchCtx={};
-  ci.inputs.forEach(function(label){
-    var fid=toFid(label);
-    searchCtx[fid]=getFieldVal(label);
-  });
+// Collect all field values into searchCtx
+searchCtx={};
+ci.inputs.forEach(function(label){
+var fid=toFid(label);
+searchCtx[fid]=getFieldVal(label);
+});
 
-  var brand=searchCtx[toFid(ci.inputs[0])]||"";
-  var lvl1 =ci.inputs[1]?searchCtx[toFid(ci.inputs[1])]||"":"";
-  var lvl2 =ci.inputs[2]?searchCtx[toFid(ci.inputs[2])]||"":"";
-  var bKey=sk(brand),cKey=sk(lvl1),sKey=sk(lvl2);
+var brand=searchCtx[toFid(ci.inputs[0])]||””;
+var lvl1 =ci.inputs[1]?searchCtx[toFid(ci.inputs[1])]||””:””;
+var lvl2 =ci.inputs[2]?searchCtx[toFid(ci.inputs[2])]||””:””;
+var bKey=sk(brand),cKey=sk(lvl1),sKey=sk(lvl2);
 
-  var url;
-  if(bKey&&bKey!="_"&&cKey&&cKey!="_"&&sKey&&sKey!="_")
-    url=FB+"/"+currentCat+"/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+"/"+encodeURIComponent(sKey)+".json";
-  else if(bKey&&bKey!="_"&&cKey&&cKey!="_")
-    url=FB+"/"+currentCat+"/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+".json";
-  else if(bKey&&bKey!="_")
-    url=FB+"/"+currentCat+"/by_brand/"+encodeURIComponent(bKey)+".json";
-  else
-    url=FB+"/"+currentCat+"/by_code.json";
+var url;
+if(bKey&&bKey!=”*”&&cKey&&cKey!=”*”&&sKey&&sKey!=”*”)
+url=FB+”/”+currentCat+”/by_brand/”+encodeURIComponent(bKey)+”/”+encodeURIComponent(cKey)+”/”+encodeURIComponent(sKey)+”.json”;
+else if(bKey&&bKey!=”*”&&cKey&&cKey!=”*”)
+url=FB+”/”+currentCat+”/by_brand/”+encodeURIComponent(bKey)+”/”+encodeURIComponent(cKey)+”.json”;
+else if(bKey&&bKey!=”*”)
+url=FB+”/”+currentCat+”/by_brand/”+encodeURIComponent(bKey)+”.json”;
+else
+url=FB+”/”+currentCat+”/by_code.json”;
 
-  fetch(url)
-    .then(function(r){return r.json();})
-    .then(function(data){
-      if(!data){renderRows([],currentCat);return;}
-      var results=[];
-      function flatten(obj){
-        if(Array.isArray(obj))obj.forEach(function(item){if(item&&item.code)results.push(item);});
-        else if(obj&&typeof obj==="object")Object.values(obj).forEach(function(v){flatten(v);});
-      }
-      flatten(data);
-      renderRows(results,currentCat);
-    })
-    .catch(function(){var r=document.getElementById("results");if(r)r.innerHTML='<div class="nf"><h3>Error</h3><p>Please try again.</p></div>';});
+fetch(url)
+.then(function(r){return r.json();})
+.then(function(data){
+if(!data){renderRows([],currentCat);return;}
+var results=[];
+function flatten(obj){
+if(Array.isArray(obj))obj.forEach(function(item){if(item&&item.code)results.push(item);});
+else if(obj&&typeof obj===“object”)Object.values(obj).forEach(function(v){flatten(v);});
+}
+flatten(data);
+renderRows(results,currentCat);
+})
+.catch(function(){var r=document.getElementById(“results”);if(r)r.innerHTML=’<div class="nf"><h3>Error</h3><p>Please try again.</p></div>’;});
 }
 
 function clearSearch(){
-  var ci=CATS[currentCat];if(!ci)return;
-  if(ci.codeSearch){
-    var inp=document.getElementById("codeInp");if(inp)inp.value="";
-  } else {
-    ci.inputs.forEach(function(label,idx){
-      var el=document.getElementById("f_"+toFid(label));
-      if(el){el.value="";if(idx>0)el.disabled=true;}
-    });
-  }
-  searchCtx={};
-  var r=document.getElementById("results");if(r)r.innerHTML="";
+var ci=CATS[currentCat];if(!ci)return;
+if(ci.codeSearch){
+var inp=document.getElementById(“codeInp”);if(inp)inp.value=””;
+} else {
+ci.inputs.forEach(function(label,idx){
+var el=document.getElementById(“f_”+toFid(label));
+if(el){el.value=””;if(idx>0)el.disabled=true;}
+});
+}
+searchCtx={};
+var r=document.getElementById(“results”);if(r)r.innerHTML=””;
 }
 
 // ── PRODUCT PAGE (QR scan) ──
 function showProductPage(code,cat){
-  var safeCode=codeKey(code);
-  var safeCat=String(cat||"fabric").toLowerCase();
-  document.getElementById("app").innerHTML=
-    hdr("Product Details",code,true)
-    +'<div class="wrap"><div id="results">'+spinner("Loading...")+'</div></div>'
-    +'<button class="fab-btn" id="fabBtn" onclick="openStaffPin()">&#128274; Staff Login</button>';
-  fetch(FB+"/"+safeCat+"/by_code/"+encodeURIComponent(safeCode)+".json")
-    .then(function(r){return r.json();})
-    .then(function(d){
-      if(!d){renderRows([],safeCat);return;}
-      renderRows(Array.isArray(d)?d:Object.values(d),safeCat);
-    })
-    .catch(function(){
-      var r=document.getElementById("results");
-      if(r)r.innerHTML='<div class="nf"><h3>Error</h3><p>Please try again</p><a class="back-link" href="'+BASE+'">&#8592; Home</a></div>';
-    });
+var safeCode=codeKey(code);
+var safeCat=String(cat||“fabric”).toLowerCase();
+document.getElementById(“app”).innerHTML=
+hdr(“Product Details”,code,true)
++’<div class="wrap"><div id="results">’+spinner(“Loading…”)+’</div></div>’
++’<button class="fab-btn" id="fabBtn" onclick="openStaffPin()">🔒 Staff Login</button>’;
+fetch(FB+”/”+safeCat+”/by_code/”+encodeURIComponent(safeCode)+”.json”)
+.then(function(r){return r.json();})
+.then(function(d){
+if(!d){renderRows([],safeCat);return;}
+renderRows(Array.isArray(d)?d:Object.values(d),safeCat);
+})
+.catch(function(){
+var r=document.getElementById(“results”);
+if(r)r.innerHTML=’<div class="nf"><h3>Error</h3><p>Please try again</p><a class="back-link" href="'+BASE+'">← Home</a></div>’;
+});
 }
 
 // ── RENDER ──
 function renderRows(rows,cat){
-  var el=document.getElementById("results");if(!el)return;
-  if(!rows||!rows.length){
-    el.innerHTML='<div class="nf"><div class="nf-ico">&#128269;</div><h3>Not Found</h3><p>No matching products</p><a class="back-link" href="'+BASE+'">&#8592; Home</a></div>';
-    return;
-  }
-  window._rows=rows;window._cat=cat;
-  var ci=CATS[cat]||CATS.fabric;
-  var staff=isStaff();
+var el=document.getElementById(“results”);if(!el)return;
+if(!rows||!rows.length){
+el.innerHTML=’<div class="nf"><div class="nf-ico">🔍</div><h3>Not Found</h3><p>No matching products</p><a class="back-link" href="'+BASE+'">← Home</a></div>’;
+return;
+}
+window._rows=rows;window._cat=cat;
+var ci=CATS[cat]||CATS.fabric;
+var staff=isStaff();
 
-  // Build context chips header
-  var ctxHtml="";
-  if(Object.keys(searchCtx).length>0){
-    var chips="";
-    if(ci.codeSearch){
-      chips+='<div class="ctx-chip"><div class="ctx-chip-lbl">Code</div><div class="ctx-chip-val">'+esc(searchCtx.code||"")+'</div></div>';
-    } else {
-      ci.ctxCols.forEach(function(col){
-        var val=searchCtx[col[1]]||searchCtx[toFid(col[0])]||gv(rows[0],col[1])||"";
-        if(val)chips+='<div class="ctx-chip"><div class="ctx-chip-lbl">'+col[0]+'</div><div class="ctx-chip-val">'+esc(val)+'</div></div>';
-      });
-    }
-    if(chips)ctxHtml='<div class="ctx-hdr"><div class="ctx-chips">'+chips+'</div></div>';
-  }
+// Build context chips header
+var ctxHtml=””;
+if(Object.keys(searchCtx).length>0){
+var chips=””;
+if(ci.codeSearch){
+chips+=’<div class="ctx-chip"><div class="ctx-chip-lbl">Code</div><div class="ctx-chip-val">’+esc(searchCtx.code||””)+’</div></div>’;
+} else {
+ci.ctxCols.forEach(function(col){
+var val=searchCtx[col[1]]||searchCtx[toFid(col[0])]||gv(rows[0],col[1])||””;
+if(val)chips+=’<div class="ctx-chip"><div class="ctx-chip-lbl">’+col[0]+’</div><div class="ctx-chip-val">’+esc(val)+’</div></div>’;
+});
+}
+if(chips)ctxHtml=’<div class="ctx-hdr"><div class="ctx-chips">’+chips+’</div></div>’;
+}
 
-  var tbl=rows.length===1?buildSingleCard(rows[0],cat,ci,staff):buildTable(rows,cat,ci,staff);
-  el.innerHTML=ctxHtml+tbl;
+var tbl=rows.length===1?buildSingleCard(rows[0],cat,ci,staff):buildTable(rows,cat,ci,staff);
+el.innerHTML=ctxHtml+tbl;
 
-  var fb=document.getElementById("fabBtn");
-  var sb=document.getElementById("sBadge");
-  if(staff){if(sb)sb.style.display="inline-block";if(fb)fb.style.display="none";}
-  else{if(fb)fb.style.display="flex";}
+var fb=document.getElementById(“fabBtn”);
+var sb=document.getElementById(“sBadge”);
+if(staff){if(sb)sb.style.display=“inline-block”;if(fb)fb.style.display=“none”;}
+else{if(fb)fb.style.display=“flex”;}
 }
 
 // ── SINGLE CARD VIEW ──
 function buildSingleCard(r,cat,ci,staff){
-  var html='<div class="item-group">';
-  if(staff&&r.code) html+=card("CODE",r.code,"card-accent-blue");
-  if(r.brand)       html+=card("BRAND",r.brand,"card-accent-red");
+var html=’<div class="item-group">’;
+if(staff&&r.code) html+=card(“CODE”,r.code,“card-accent-blue”);
+if(r.brand)       html+=card(“BRAND”,r.brand,“card-accent-red”);
 
-  if(cat==="fabric"){
-    if(r.catalog)           html+=card("CATALOG",r.catalog,"card-accent-blue");
-    if(gv(r,"s_no"))        html+=card("S.NO",gv(r,"s_no"),"");
-    if(gv(r,"item_details"))html+=cardSm("ITEM DETAILS",gv(r,"item_details"));
-    if(r.width)             html+=card("WIDTH",r.width,"");
-    if(r.mrp)               html+=cardMrp(r.mrp,ci.mrpLabel);
-  } else if(cat==="hangers"){
-    if(r.catalog)           html+=card("CATALOG",r.catalog,"card-accent-blue");
-    if(gv(r,"s_no"))        html+=card("S.NO",gv(r,"s_no"),"");
-    if(gv(r,"item_details"))html+=cardSm("ITEM DETAILS",gv(r,"item_details"));
-    if(r.width)             html+=card("WIDTH",r.width,"");
-    if(r.mrp)               html+=cardMrp(r.mrp,ci.mrpLabel);
-  } else if(cat==="blinds"){
-    if(gv(r,"blind_type"))  html+=card("BLIND TYPE",gv(r,"blind_type"),"card-accent-blue");
-    if(r.catalog)           html+=card("CATALOG",r.catalog,"");
-    if(r.mechanism)         html+=card("MECHANISM",r.mechanism,"");
-    if(r.others)            html+=card("OTHERS",r.others,"");
-    if(r.mrp)               html+=cardMrp(r.mrp,ci.mrpLabel);
-  } else if(cat==="wallpapers"){
-    if(r.catalog)               html+=card("CATALOG",r.catalog,"card-accent-blue");
-    if(gv(r,"design_details"))  html+=cardSm("DESIGN DETAILS",gv(r,"design_details"));
-    if(r.size)                  html+=card("SIZE",r.size,"");
-    if(r.mrp)                   html+=cardMrp(r.mrp,ci.mrpLabel);
-  } else if(cat==="motors"){
-    if(r.category)              html+=card("CATEGORY",r.category,"card-accent-blue");
-    if(r.product)               html+=card("PRODUCT",r.product,"");
-    if(gv(r,"item_details"))    html+=cardSm("ITEM DETAILS",gv(r,"item_details"));
-    if(gv(r,"other_details"))   html+=cardSm("OTHER DETAILS",gv(r,"other_details"));
-    if(r.mrp)                   html+=cardMrp(r.mrp,ci.mrpLabel);
-  } else if(cat==="beds"||cat==="sleepwell"){
-    if(r.model)     html+=card("MODEL",r.model,"card-accent-blue");
-    if(r.thickness) html+=card("THICKNESS",r.thickness,"");
-    if(r.width)     html+=card("WIDTH",r.width,"");
-    if(r.length)    html+=card("LENGTH",r.length,"");
-    if(r.size)      html+=card("SIZE",r.size,"");
-    if(r.mrp)       html+=cardMrp(r.mrp,ci.mrpLabel);
-  }
+if(cat===“fabric”){
+if(r.catalog)           html+=card(“CATALOG”,r.catalog,“card-accent-blue”);
+if(gv(r,“s_no”))        html+=card(“S.NO”,gv(r,“s_no”),””);
+if(gv(r,“item_details”))html+=cardSm(“ITEM DETAILS”,gv(r,“item_details”));
+if(r.width)             html+=card(“WIDTH”,r.width,””);
+if(r.mrp)               html+=cardMrp(r.mrp,ci.mrpLabel);
+} else if(cat===“hangers”){
+if(r.catalog)           html+=card(“CATALOG”,r.catalog,“card-accent-blue”);
+if(gv(r,“s_no”))        html+=card(“S.NO”,gv(r,“s_no”),””);
+if(gv(r,“item_details”))html+=cardSm(“ITEM DETAILS”,gv(r,“item_details”));
+if(r.width)             html+=card(“WIDTH”,r.width,””);
+if(r.mrp)               html+=cardMrp(r.mrp,ci.mrpLabel);
+} else if(cat===“blinds”){
+if(gv(r,“blind_type”))  html+=card(“BLIND TYPE”,gv(r,“blind_type”),“card-accent-blue”);
+if(r.catalog)           html+=card(“CATALOG”,r.catalog,””);
+if(r.mechanism)         html+=card(“MECHANISM”,r.mechanism,””);
+if(r.others)            html+=card(“OTHERS”,r.others,””);
+if(r.mrp)               html+=cardMrp(r.mrp,ci.mrpLabel);
+} else if(cat===“wallpapers”){
+if(r.catalog)               html+=card(“CATALOG”,r.catalog,“card-accent-blue”);
+if(gv(r,“design_details”))  html+=cardSm(“DESIGN DETAILS”,gv(r,“design_details”));
+if(r.size)                  html+=card(“SIZE”,r.size,””);
+if(r.mrp)                   html+=cardMrp(r.mrp,ci.mrpLabel);
+} else if(cat===“motors”){
+if(r.category)              html+=card(“CATEGORY”,r.category,“card-accent-blue”);
+if(r.product)               html+=card(“PRODUCT”,r.product,””);
+if(gv(r,“item_details”))    html+=cardSm(“ITEM DETAILS”,gv(r,“item_details”));
+if(gv(r,“other_details”))   html+=cardSm(“OTHER DETAILS”,gv(r,“other_details”));
+if(r.mrp)                   html+=cardMrp(r.mrp,ci.mrpLabel);
+} else if(cat===“beds”||cat===“sleepwell”){
+if(r.model)     html+=card(“MODEL”,r.model,“card-accent-blue”);
+if(r.thickness) html+=card(“THICKNESS”,r.thickness,””);
+if(r.width)     html+=card(“WIDTH”,r.width,””);
+if(r.length)    html+=card(“LENGTH”,r.length,””);
+if(r.size)      html+=card(“SIZE”,r.size,””);
+if(r.mrp)       html+=cardMrp(r.mrp,ci.mrpLabel);
+}
 
-  if(r.link&&r.link.indexOf("http")===0)
-    html+='<div class="card"><div class="lbl">LINK</div><div class="lbl-line"></div><a href="'+esc(r.link)+'" target="_blank" class="link-btn">View Product &#8599;</a></div>';
-  return html+'</div>';
+if(r.link&&r.link.indexOf(“http”)===0)
+html+=’<div class="card"><div class="lbl">LINK</div><div class="lbl-line"></div><a href="'+esc(r.link)+'" target="_blank" class="link-btn">View Product ↗</a></div>’;
+// Quote mode: big SELECT button
+if(QUOTE_MODE){
+html+=’<div style="padding:12px 0">’
++’<button onclick=“quoteSelectProduct(’+JSON.stringify(r).replace(/</g,”\u003c”).replace(/>/g,”\u003e”).replace(/’/g,”'”)+’)” ’
++‘style=“width:100%;background:#c0392b;color:#fff;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:800;letter-spacing:0.5px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation”>’
++’✓ Select This Product</button></div>’;
+}
+return html+’</div>’;
 }
 
 // ── TABLE VIEW ──
 function buildTable(rows,cat,ci,staff){
-  var tblCols=ci.tblCols||[["MRP","mrp"]];
+var tblCols=ci.tblCols||[[“MRP”,“mrp”]];
 
-  // Build grid columns: first col flexible, rest fixed, arrow
-  var gridCols="2fr";
-  tblCols.slice(1).forEach(function(){gridCols+=" 70px";});
-  gridCols+=" 24px";
+// Build grid columns: first col flexible, rest fixed, arrow
+var gridCols=“2fr”;
+tblCols.slice(1).forEach(function(){gridCols+=” 70px”;});
+gridCols+=” 24px”;
 
-  var html='<div class="count-badge"><span class="count-txt">Items Found</span><span class="count-num">'+rows.length+' items</span></div>'
-    +'<div class="tbl-wrap">'
-    +'<div class="tbl-head" style="grid-template-columns:'+gridCols+'">'
-    +'<span>'+tblCols[0][0]+'</span>';
-  tblCols.slice(1).forEach(function(c){html+='<span style="text-align:center">'+c[0]+'</span>';});
-  html+='<span></span></div>';
+var html=’<div class="count-badge"><span class="count-txt">Items Found</span><span class="count-num">’+rows.length+’ items</span></div>’
++’<div class="tbl-wrap">’
++’<div class="tbl-head" style="grid-template-columns:'+gridCols+'">’
++’<span>’+tblCols[0][0]+’</span>’;
+tblCols.slice(1).forEach(function(c){html+=’<span style="text-align:center">’+c[0]+’</span>’;});
+html+=’<span></span></div>’;
 
-  rows.forEach(function(r){
-    // Main column value
-    var mainVal=gv(r,tblCols[0][1])||r[tblCols[0][1]]||"—";
-    // Sub text under main
-    var sub="";
-    if(cat==="fabric"||cat==="hangers") sub=gv(r,"s_no")||"";
-    else if(cat==="blinds") sub=gv(r,"blind_type")||"";
+rows.forEach(function(r){
+// Main column value
+var mainVal=gv(r,tblCols[0][1])||r[tblCols[0][1]]||”—”;
+// Sub text under main
+var sub=””;
+if(cat===“fabric”||cat===“hangers”) sub=gv(r,“s_no”)||””;
+else if(cat===“blinds”) sub=gv(r,“blind_type”)||””;
 
-    // Extra columns
-    var extraHtml="";
-    tblCols.slice(1).forEach(function(c){
-      var v=gv(r,c[1])||r[c[1]]||"";
-      if(c[1]==="mrp"&&v){
-        extraHtml+='<div style="text-align:center"><span class="tr-mrp">&#8377;'+esc(v)+'</span></div>';
-      } else {
-        extraHtml+='<div style="text-align:center;font-size:12px;color:#aaa;font-weight:600">'+(v?esc(v):"—")+'</div>';
-      }
-    });
+```
+// Extra columns
+var extraHtml="";
+tblCols.slice(1).forEach(function(c){
+  var v=gv(r,c[1])||r[c[1]]||"";
+  if(c[1]==="mrp"&&v){
+    extraHtml+='<div style="text-align:center"><span class="tr-mrp">&#8377;'+esc(v)+'</span></div>';
+  } else {
+    extraHtml+='<div style="text-align:center;font-size:12px;color:#aaa;font-weight:600">'+(v?esc(v):"—")+'</div>';
+  }
+});
 
-    // Expand panel — all fields not already in table columns
-    var shown={};
-    tblCols.forEach(function(c){shown[c[1]]=true;});
-    if(cat==="fabric"||cat==="hangers") shown["s_no"]=true; // already in sub
+// Expand panel — all fields not already in table columns
+var shown={};
+tblCols.forEach(function(c){shown[c[1]]=true;});
+if(cat==="fabric"||cat==="hangers") shown["s_no"]=true; // already in sub
 
-    var allFields=[
-      ["Code","code"],["Brand","brand"],["Catalog","catalog"],
-      ["S.No","s_no"],["Item Details","item_details"],
-      ["Blind Type","blind_type"],["Mechanism","mechanism"],["Others","others"],
-      ["Design Details","design_details"],
-      ["Category","category"],["Product","product"],["Other Details","other_details"],
-      ["Model","model"],["Thickness","thickness"],["Width","width"],
-      ["Length","length"],["Size","size"],["MRP","mrp"]
-    ];
-    var expandHtml="";
-    allFields.forEach(function(f){
-      if(!shown[f[1]]){
-        var v=gv(r,f[1])||r[f[1]]||"";
-        if(v)expandHtml+=expLine(f[0],v);
-      }
-    });
-    if(r.link&&r.link.indexOf("http")===0)expandHtml+=expLinkLine(r.link);
+var allFields=[
+  ["Code","code"],["Brand","brand"],["Catalog","catalog"],
+  ["S.No","s_no"],["Item Details","item_details"],
+  ["Blind Type","blind_type"],["Mechanism","mechanism"],["Others","others"],
+  ["Design Details","design_details"],
+  ["Category","category"],["Product","product"],["Other Details","other_details"],
+  ["Model","model"],["Thickness","thickness"],["Width","width"],
+  ["Length","length"],["Size","size"],["MRP","mrp"]
+];
+var expandHtml="";
+allFields.forEach(function(f){
+  if(!shown[f[1]]){
+    var v=gv(r,f[1])||r[f[1]]||"";
+    if(v)expandHtml+=expLine(f[0],v);
+  }
+});
+if(r.link&&r.link.indexOf("http")===0)expandHtml+=expLinkLine(r.link);
+var     var rowIdx = rows.indexOf(r);
+var qSelectBtn = QUOTE_MODE
+  ? '<div style="padding:8px 4px 4px">'
+    +'<button onclick="event.stopPropagation();quotePickRow('+rowIdx+')" '
+    +'style="width:100%;background:#c0392b;color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent">'
+    +'&#10003;&nbsp; Select This Product</button></div>'
+  : '';
+    html+='<div class="tbl-row" style="grid-template-columns:'+gridCols+'" onclick="toggleRow(this)" data-row=\''+esc(JSON.stringify(r))+'\'>'
+  +'<div><div class="tr-main">'+esc(mainVal)+'</div>'+(sub?'<div class="tr-sub">'+esc(sub)+'</div>':'')+'</div>'
+  +extraHtml
+  +'<div class="tr-arr">'+(expandHtml||QUOTE_MODE?"&#8250;":"")+'</div></div>'
+  +'<div class="exp-panel">'+qSelectBtn+expandHtml+'</div>';
+```
 
-    html+='<div class="tbl-row" style="grid-template-columns:'+gridCols+'" onclick="toggleRow(this)">'
-      +'<div><div class="tr-main">'+esc(mainVal)+'</div>'+(sub?'<div class="tr-sub">'+esc(sub)+'</div>':'')+'</div>'
-      +extraHtml
-      +'<div class="tr-arr">'+(expandHtml?"&#8250;":"")+'</div></div>'
-      +'<div class="exp-panel">'+expandHtml+'</div>';
-  });
+});
 
-  return html+'</div><div class="tbl-hint">Tap row to expand details</div>';
+return html+’</div><div class="tbl-hint">Tap row to expand details</div>’;
 }
 
 // ── CARD HELPERS ──
-function card(lbl,val,cls){if(!val)return"";return '<div class="card '+(cls||'')+'"><div class="lbl">'+lbl+'</div><div class="lbl-line"></div><div class="val">'+esc(val)+'</div></div>';}
-function cardSm(lbl,val){if(!val)return"";return '<div class="card"><div class="lbl">'+lbl+'</div><div class="lbl-line"></div><div class="val-sm">'+esc(val)+'</div></div>';}
-function cardMrp(val,lbl){if(!val)return"";return '<div class="card card-mrp"><div class="lbl lbl-dark">'+(lbl||"MRP")+'</div><div class="lbl-line"></div><div class="mrp-row"><span class="rsym">&#8377;</span><span class="mrp-val">'+esc(val)+'</span></div></div>';}
-function expLine(lbl,val){if(!val)return"";return '<div class="exp-line"><span class="exp-lbl">'+lbl+'</span><span class="exp-val">'+esc(val)+'</span></div>';}
-function expLinkLine(url){if(!url||url.indexOf("http")!==0)return"";return '<div class="exp-line"><span class="exp-lbl">Link</span><span class="exp-val"><a class="exp-link" href="'+esc(url)+'" target="_blank">View &#8599;</a></span></div>';}
+function card(lbl,val,cls){if(!val)return””;return ‘<div class="card '+(cls||'')+'"><div class="lbl">’+lbl+’</div><div class="lbl-line"></div><div class="val">’+esc(val)+’</div></div>’;}
+function cardSm(lbl,val){if(!val)return””;return ‘<div class="card"><div class="lbl">’+lbl+’</div><div class="lbl-line"></div><div class="val-sm">’+esc(val)+’</div></div>’;}
+function cardMrp(val,lbl){if(!val)return””;return ‘<div class="card card-mrp"><div class="lbl lbl-dark">’+(lbl||“MRP”)+’</div><div class="lbl-line"></div><div class="mrp-row"><span class="rsym">₹</span><span class="mrp-val">’+esc(val)+’</span></div></div>’;}
+function expLine(lbl,val){if(!val)return””;return ‘<div class="exp-line"><span class="exp-lbl">’+lbl+’</span><span class="exp-val">’+esc(val)+’</span></div>’;}
+function expLinkLine(url){if(!url||url.indexOf(“http”)!==0)return””;return ‘<div class="exp-line"><span class="exp-lbl">Link</span><span class="exp-val"><a class="exp-link" href="'+esc(url)+'" target="_blank">View ↗</a></span></div>’;}
 
 function toggleRow(row){
-  var panel=row.nextElementSibling;
-  var isOpen=panel.classList.contains("show");
-  document.querySelectorAll(".exp-panel.show").forEach(function(p){p.classList.remove("show");});
-  document.querySelectorAll(".tbl-row.open").forEach(function(r){r.classList.remove("open");});
-  if(!isOpen){panel.classList.add("show");row.classList.add("open");row.scrollIntoView({behavior:"smooth",block:"nearest"});}
+var panel=row.nextElementSibling;
+var isOpen=panel.classList.contains(“show”);
+document.querySelectorAll(”.exp-panel.show”).forEach(function(p){p.classList.remove(“show”);});
+document.querySelectorAll(”.tbl-row.open”).forEach(function(r){r.classList.remove(“open”);});
+if(!isOpen){panel.classList.add(“show”);row.classList.add(“open”);row.scrollIntoView({behavior:“smooth”,block:“nearest”});}
 }
 function filt(arr,q){
-  if(!arr||!arr.length)return[];
-  if(!q||!q.trim())return arr.slice(0,50);
-  var l=q.trim().toLowerCase();
-  return arr.filter(function(x){return String(x).toLowerCase().indexOf(l)!==-1;}).slice(0,50);
+if(!arr||!arr.length)return[];
+if(!q||!q.trim())return arr.slice(0,50);
+var l=q.trim().toLowerCase();
+return arr.filter(function(x){return String(x).toLowerCase().indexOf(l)!==-1;}).slice(0,50);
 }
 function showDrop(drop,items,inp,onSel){
-  if(!drop||!items||!items.length){if(drop)drop.classList.remove("show");return;}
-  var q=(inp.value||"").trim().toLowerCase();
-  var h=items.map(function(item){
-    var s=String(item).replace(/&/g,"&amp;").replace(/</g,"&lt;");
-    var hi=q?s.replace(new RegExp("("+q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","gi"),"<mark>$1</mark>"):s;
-    return "<div class='dd-item' onmousedown='selItem(this,event)'>"+hi+"</div>";
-  }).join("");
-  drop.innerHTML=h;drop.classList.add("show");drop._cb=onSel;
+if(!drop||!items||!items.length){if(drop)drop.classList.remove(“show”);return;}
+var q=(inp.value||””).trim().toLowerCase();
+var h=items.map(function(item){
+var s=String(item).replace(/&/g,”&”).replace(/</g,”<”);
+var hi=q?s.replace(new RegExp(”(”+q.replace(/[.*+?^${}()|[]\]/g,”\$&”)+”)”,“gi”),”<mark>$1</mark>”):s;
+return “<div class='dd-item' onmousedown='selItem(this,event)'>”+hi+”</div>”;
+}).join(””);
+drop.innerHTML=h;drop.classList.add(“show”);drop._cb=onSel;
 }
 function selItem(el,ev){ev.preventDefault();var cb=el.parentElement._cb;if(cb)cb(el.textContent);}
 
 // ── STAFF PIN ──
-var staffEn="";
-function openStaffPin(){staffEn="";sDots();document.getElementById("pOv").classList.add("open");}
-function closeStaffPin(){document.getElementById("pOv").classList.remove("open");staffEn="";sDots();}
+var staffEn=””;
+function openStaffPin(){staffEn=””;sDots();document.getElementById(“pOv”).classList.add(“open”);}
+function closeStaffPin(){document.getElementById(“pOv”).classList.remove(“open”);staffEn=””;sDots();}
 function staffPk(k){if(staffEn.length>=4)return;staffEn+=k;sDots();if(staffEn.length===4)setTimeout(sChk,80);}
 function staffPd(){staffEn=staffEn.slice(0,-1);sDots();}
 function sDots(err){
-  for(var i=0;i<4;i++){
-    var d=document.getElementById("d"+i);if(!d)return;
-    d.className="dot";
-    if(err)d.classList.add("err");else if(i<staffEn.length)d.classList.add("on");
-  }
+for(var i=0;i<4;i++){
+var d=document.getElementById(“d”+i);if(!d)return;
+d.className=“dot”;
+if(err)d.classList.add(“err”);else if(i<staffEn.length)d.classList.add(“on”);
 }
+}
+function quotePickRow(idx){
+var rows = window._rows;
+if(!rows || idx < 0 || idx >= rows.length){ showToast(“Error selecting product”); return; }
+quoteSelectProduct(rows[idx]);
+}
+
+function quoteSelectRow(el){
+// Walk up DOM to find tbl-row with data-row attr
+var node = el;
+while(node && !node.getAttribute(‘data-row’)){
+node = node.parentElement;
+}
+if(!node){ console.log(“quoteSelectRow: no data-row found”); return; }
+try{
+var raw = node.getAttribute(‘data-row’);
+quoteSelectProduct(JSON.parse(raw));
+}catch(e){ console.error(“quoteSelectRow parse error:”, e); }
+}
+
 function quoteSelectProduct(product){
-  // Save selected product and return to quote
-  localStorage.setItem("darla_selected_product", JSON.stringify({
-    code:         product.code||"",
-    brand:        product.brand||"",
-    catalog:      product.catalog||product.model||product.product||product.category||"",
-    s_no:         product.s_no||product["s.no"]||gv(product,"s_no")||"",
-    mrp:          parseFloat(product.mrp)||0,
-    width:        product.width||"",
-    item_details: product.item_details||"",
-    size:         product.size||"",
-    thickness:    product.thickness||""
-  }));
-  window.location.href = "quote.html";
+// Save selected product and return to quote
+localStorage.setItem(“darla_selected_product”, JSON.stringify({
+code:         product.code||””,
+brand:        product.brand||””,
+catalog:      product.catalog||product.model||product.product||product.category||””,
+s_no:         product.s_no||product[“s.no”]||gv(product,“s_no”)||””,
+mrp:          parseFloat(product.mrp)||0,
+width:        product.width||””,
+item_details: product.item_details||””,
+size:         product.size||””,
+thickness:    product.thickness||””
+}));
+window.location.href = “quote.html”;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -804,104 +835,103 @@ function quoteSelectProduct(product){
 
 // Switch tab — re-render tabs with new active state, load new category
 function switchQuoteTab(cat) {
-  _renderQuoteTabs(cat);
-  showAdvancedSearch(cat);
+_renderQuoteTabs(cat);
+showAdvancedSearch(cat);
 }
 
-// Called by showAdvancedSearch — if in quote mode with hangers, 
+// Called by showAdvancedSearch — if in quote mode with hangers,
 // inject the search UI into qSearchBody (not replacing the whole #app)
 var _origShowAdvanced = null;
 
 // Wrap showAdvancedSearch to keep banner+tabs intact in quote+hangers mode
 (function() {
-  var _orig = showAdvancedSearch;
-  showAdvancedSearch = function(cat) {
-    if (QUOTE_MODE && QUOTE_HANGERS) {
-      // Let showAdvancedSearch render into #app first
-      _orig(cat);
-      // Then move its content into qSearchBody, restoring banner+tabs
-      var app = document.getElementById("app");
-      var body = document.getElementById("qSearchBody");
-      if (!body) {
-        // qSearchBody was wiped — re-render tabs then move content
-        var content = app.innerHTML;
-        _renderQuoteTabs(cat);
-        var qs = document.getElementById("qSearchBody");
-        if (qs) qs.innerHTML = content;
-      }
-      // Add cancel button to header if not already there
-      injectCancelToHeader();
-    } else if (QUOTE_MODE) {
-      // Non-hangers quote mode — just add the cancel button
-      _orig(cat);
-      injectCancelToHeader();
-    } else {
-      _orig(cat);
-    }
-  };
+var _orig = showAdvancedSearch;
+showAdvancedSearch = function(cat) {
+if (QUOTE_MODE && QUOTE_HANGERS) {
+// Let showAdvancedSearch render into #app first
+_orig(cat);
+// Then move its content into qSearchBody, restoring banner+tabs
+var app = document.getElementById(“app”);
+var body = document.getElementById(“qSearchBody”);
+if (!body) {
+// qSearchBody was wiped — re-render tabs then move content
+var content = app.innerHTML;
+_renderQuoteTabs(cat);
+var qs = document.getElementById(“qSearchBody”);
+if (qs) qs.innerHTML = content;
+}
+// Add cancel button to header if not already there
+injectCancelToHeader();
+} else if (QUOTE_MODE) {
+// Non-hangers quote mode — just add the cancel button
+_orig(cat);
+injectCancelToHeader();
+} else {
+_orig(cat);
+}
+};
 })();
 
 function injectCancelToHeader() {
-  if (document.getElementById("qCancelBtn")) return; // already added
-  var hdrEl = document.querySelector(".hdr");
-  if (!hdrEl) return;
-  var btn = document.createElement("button");
-  btn.id = "qCancelBtn";
-  btn.innerHTML = "&#8592; Cancel";
-  btn.style.cssText = "background:none;border:1px solid #444;color:#aaa;border-radius:8px;"
-    + "padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;"
-    + "touch-action:manipulation;margin-left:8px;white-space:nowrap";
-  btn.onclick = function() { window.location.href = "quote.html"; };
-  hdrEl.appendChild(btn);
+if (document.getElementById(“qCancelBtn”)) return; // already added
+var hdrEl = document.querySelector(”.hdr”);
+if (!hdrEl) return;
+var btn = document.createElement(“button”);
+btn.id = “qCancelBtn”;
+btn.innerHTML = “← Cancel”;
+btn.style.cssText = “background:none;border:1px solid #444;color:#aaa;border-radius:8px;”
++ “padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;”
++ “touch-action:manipulation;margin-left:8px;white-space:nowrap”;
+btn.onclick = function() { window.location.href = “quote.html”; };
+hdrEl.appendChild(btn);
 }
 
 function goSearchQuote(cat) {
-  showAdvancedSearch(cat);
-  injectCancelToHeader();
+showAdvancedSearch(cat);
+injectCancelToHeader();
 }
 
-
 function sChk(){
-  if(staffEn===PIN){
-    localStorage.setItem(SK,"1");localStorage.setItem(SAK,"1");
-    closeStaffPin();
-    if(window._rows)renderRows(window._rows,window._cat||"fabric");
-  } else {sDots(true);setTimeout(function(){staffEn="";sDots();},800);}
+if(staffEn===PIN){
+localStorage.setItem(SK,“1”);localStorage.setItem(SAK,“1”);
+closeStaffPin();
+if(window._rows)renderRows(window._rows,window._cat||“fabric”);
+} else {sDots(true);setTimeout(function(){staffEn=””;sDots();},800);}
 }
 
 // ── QUOTE MODE: inject banner+tabs after any search renders ──────
 function injectQuoteUI(){
-  if(!QUOTE_MODE) return;
-  var app = document.getElementById("app");
-  if(!app) return;
-  // Remove stale banner/tabs
-  ["qBanner","qTabFab","qTabHan"].forEach(function(id){
-    var el=document.getElementById(id);
-    if(el && el.parentNode) el.parentNode.removeChild(el);
-  });
-  // Build fresh HTML
-  var bannerHtml = '<div id="qBanner" style="background:#1a3a1a;border-bottom:2px solid #27ae60;padding:10px 16px;display:flex;align-items:center;justify-content:space-between">'
-    +'<div><div style="font-size:11px;color:#27ae60;font-weight:800;letter-spacing:1px">SELECT PRODUCT FOR QUOTE</div>'
-    +'<div style="font-size:11px;color:#888;margin-top:1px">Tap a product to add it to your quote</div></div>'
-    +'<button onclick="window.location.href=\'quote.html\'" style="background:none;border:1px solid #555;color:#aaa;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;white-space:nowrap">&#8592; Cancel</button>'
-    +'</div>';
-  var tabsHtml = "";
-  if(ALLOW_HANGERS){
-    tabsHtml = '<div style="display:flex;background:#111;border-bottom:2px solid #252525;padding:0 12px">'
-      +'<button id="qTabFab" onclick="switchQuoteTab(\'fabric\')" style="flex:1;padding:12px 8px;font-size:13px;font-weight:'+(ACTIVE_QUOTE_CAT==="fabric"?"800":"700")+';color:'+(ACTIVE_QUOTE_CAT==="fabric"?"#fff":"#666")+';border:none;background:transparent;cursor:pointer;border-bottom:3px solid '+(ACTIVE_QUOTE_CAT==="fabric"?"#c0392b":"transparent")+';margin-bottom:-2px;-webkit-tap-highlight-color:transparent">&#129525; Fabric</button>'
-      +'<button id="qTabHan" onclick="switchQuoteTab(\'hangers\')" style="flex:1;padding:12px 8px;font-size:13px;font-weight:'+(ACTIVE_QUOTE_CAT==="hangers"?"800":"700")+';color:'+(ACTIVE_QUOTE_CAT==="hangers"?"#fff":"#666")+';border:none;background:transparent;cursor:pointer;border-bottom:3px solid '+(ACTIVE_QUOTE_CAT==="hangers"?"#c0392b":"transparent")+';margin-bottom:-2px;-webkit-tap-highlight-color:transparent">&#129693; Hangers</button>'
-      +'</div>';
-  }
-  var tmp = document.createElement("div");
-  tmp.innerHTML = bannerHtml + tabsHtml;
-  // Prepend to app
-  var ref = app.firstChild;
-  while(tmp.firstChild) app.insertBefore(tmp.firstChild, ref);
+if(!QUOTE_MODE) return;
+var app = document.getElementById(“app”);
+if(!app) return;
+// Remove stale banner/tabs
+[“qBanner”,“qTabFab”,“qTabHan”].forEach(function(id){
+var el=document.getElementById(id);
+if(el && el.parentNode) el.parentNode.removeChild(el);
+});
+// Build fresh HTML
+var bannerHtml = ‘<div id="qBanner" style="background:#1a3a1a;border-bottom:2px solid #27ae60;padding:10px 16px;display:flex;align-items:center;justify-content:space-between">’
++’<div><div style="font-size:11px;color:#27ae60;font-weight:800;letter-spacing:1px">SELECT PRODUCT FOR QUOTE</div>’
++’<div style="font-size:11px;color:#888;margin-top:1px">Tap a product to add it to your quote</div></div>’
++’<button onclick="window.location.href=\'quote.html\'" style="background:none;border:1px solid #555;color:#aaa;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;white-space:nowrap">← Cancel</button>’
++’</div>’;
+var tabsHtml = “”;
+if(ALLOW_HANGERS){
+tabsHtml = ‘<div style="display:flex;background:#111;border-bottom:2px solid #252525;padding:0 12px">’
++’<button id=“qTabFab” onclick=“switchQuoteTab('fabric')” style=“flex:1;padding:12px 8px;font-size:13px;font-weight:’+(ACTIVE_QUOTE_CAT===“fabric”?“800”:“700”)+’;color:’+(ACTIVE_QUOTE_CAT===“fabric”?”#fff”:”#666”)+’;border:none;background:transparent;cursor:pointer;border-bottom:3px solid ‘+(ACTIVE_QUOTE_CAT===“fabric”?”#c0392b”:“transparent”)+’;margin-bottom:-2px;-webkit-tap-highlight-color:transparent”>🧵 Fabric</button>’
++’<button id=“qTabHan” onclick=“switchQuoteTab('hangers')” style=“flex:1;padding:12px 8px;font-size:13px;font-weight:’+(ACTIVE_QUOTE_CAT===“hangers”?“800”:“700”)+’;color:’+(ACTIVE_QUOTE_CAT===“hangers”?”#fff”:”#666”)+’;border:none;background:transparent;cursor:pointer;border-bottom:3px solid ‘+(ACTIVE_QUOTE_CAT===“hangers”?”#c0392b”:“transparent”)+’;margin-bottom:-2px;-webkit-tap-highlight-color:transparent”>🪝 Hangers</button>’
++’</div>’;
+}
+var tmp = document.createElement(“div”);
+tmp.innerHTML = bannerHtml + tabsHtml;
+// Prepend to app
+var ref = app.firstChild;
+while(tmp.firstChild) app.insertBefore(tmp.firstChild, ref);
 }
 
 function switchQuoteTab(cat){
-  ACTIVE_QUOTE_CAT = cat;
-  showAdvancedSearch(cat);
+ACTIVE_QUOTE_CAT = cat;
+showAdvancedSearch(cat);
 }
 
 </script>
