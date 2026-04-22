@@ -1497,6 +1497,13 @@ body[data-pmode=“select”] .win-meas-block { display: none !important; }
 }
 </style>
 
+<!-- Firebase compat SDK (no build step required) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+<script src="firebase-init.js"></script>
+
 </head>
 <body>
 <!-- ══════════════════════════════════════════
@@ -1720,7 +1727,6 @@ var CFG = {
   tagline:    "Sales & Agencies · Mysore",
   logo:       "https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg",
   firebase:   "https://pricelist-qr-codes-default-rtdb.asia-southeast1.firebasedatabase.app",
-  sheetsUrl:  "https://script.google.com/macros/s/AKfycbx9A43LVU7Ikyxj5MNgRAnCvf9PSR5GisthNyC9oc_ye56OkTag32IUXstlDXtoWJ6v/exec",
   accentColor:"#c0392b",
   terms: [
     "All prices are MRP. Final prices subject to confirmation.",
@@ -1775,10 +1781,16 @@ var CATS = {
 };
 
 // ═══════════════════════════════════════════════════════════
-// STAFF
+// STATE
 // ═══════════════════════════════════════════════════════════
-var STAFF = [{ name:"Deepesh Darla", pin:"1516" }];
+var STAFF = [];  // populated from Firestore staffDirectory
 var APP   = { staff: null, quote: blankQ() };
+
+// Firebase sync state
+var _quoteListener = null;   // Firestore onSnapshot unsubscribe fn
+var _lastSavedAt   = 0;      // ms timestamp of last local write — suppress echo
+var _saveDraftTimer = null;  // debounce handle for Firestore draft writes
+var _fbReady       = false;  // true once AUTH.onAuthStateChanged fires
 
 // ═══════════════════════════════════════════════════════════
 // HELPERS
@@ -1792,18 +1804,87 @@ function gv(r,k)       { if(!r)return''; var s=k.replace(/[^a-z0-9_]/g,'_').repl
 function sk(s)         { return String(s||'').trim().replace(/[^a-zA-Z0-9\-_]/g,'_').replace(/_+/g,'_').replace(/^_+|_+$/g,'')||'_'; }
 function toFid(l)      { return l.toLowerCase().replace(/[^a-z0-9]/g,'_'); }
 function qp(n)         { return new URLSearchParams(window.location.search).get(n)||''; }
-function saveDraft()   { try{ localStorage.setItem('darla_draft', JSON.stringify(APP.quote)); }catch(e){} }
-function cloudOK()     { return CFG.sheetsUrl && CFG.sheetsUrl.indexOf('YOUR_')===-1; }
-function blankQ()      {
+function blankQ() {
   return { id:null, date:new Date().toLocaleDateString('en-IN'), staff:'', staff2:'',
-           customer:{name:'',mobile:'',arch:'',addr:''}, rooms:[], status:'draft', saved:false };
+           customer:{name:'',mobile:'',arch:'',addr:''}, rooms:[], status:'draft', saved:false,
+           tenantId:'darla' };
 }
-function nextId() {
-  var n = parseInt(localStorage.getItem('darla_qnum')||'99')+1;
-  localStorage.setItem('darla_qnum', String(n));
-  var yr = new Date().getFullYear().toString().slice(-2);
-  return CFG.tenantId.toUpperCase().slice(0,3)+yr+'-'+n;
+
+// Local-only draft save (always called first for speed)
+function saveDraftLocal() {
+  try{ localStorage.setItem('darla_draft', JSON.stringify(APP.quote)); }catch(e){}
 }
+
+// Full save: local + debounced Firestore write
+function saveDraft() {
+  saveDraftLocal();
+  if(!APP.quote.id) return;
+  clearTimeout(_saveDraftTimer);
+  _saveDraftTimer = setTimeout(function(){ _saveToFirestore(false); }, 1500);
+}
+
+// Generate quote ID via Cloud Function (atomic), fallback to local counter
+function _generateQuoteId(cb) {
+  var genFn = FN.httpsCallable('generateQuoteId');
+  genFn({}).then(function(res){ cb(res.data.quoteId); }).catch(function() {
+    // Fallback: local counter (works offline; collision risk on concurrent devices)
+    var n  = parseInt(localStorage.getItem('darla_qnum')||'99')+1;
+    localStorage.setItem('darla_qnum', String(n));
+    var yr = new Date().getFullYear().toString().slice(-2);
+    cb('DRL'+yr+'-'+n);
+  });
+}
+
+// Write current quote to Firestore
+function _saveToFirestore(finalSave) {
+  if(!APP.quote.id) return;
+  var user = AUTH.currentUser;
+  if(!user || user.isAnonymous) return;
+  var doc = Object.assign({}, APP.quote, {
+    grandNet:   grandTotal(),
+    grandGross: grandGross(),
+    staffName:  APP.staff ? APP.staff.name : '',
+    createdBy:  user.uid,
+    tenantId:   'darla',
+    updatedAt:  firebase.firestore.FieldValue.serverTimestamp(),
+    customerName:  APP.quote.customer ? APP.quote.customer.name  : '',
+    customerPhone: APP.quote.customer ? APP.quote.customer.mobile : ''
+  });
+  if(!doc.createdAt) doc.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+  _lastSavedAt = Date.now();
+  DB.collection('quotes').doc(APP.quote.id).set(doc, {merge:true})
+    .then(function(){ if(finalSave){ APP.quote.saved=true; saveDraftLocal(); saveToList(); showToast('✓ Saved — '+APP.quote.id); } })
+    .catch(function(err){ console.warn('[Firestore save]', err); });
+}
+
+// Start real-time sync for a quote (onSnapshot → update local state)
+function startQuoteSync(quoteId) {
+  stopQuoteSync();
+  _quoteListener = DB.collection('quotes').doc(quoteId).onSnapshot(function(snap) {
+    if(!snap.exists) return;
+    if(Date.now() - _lastSavedAt < 2500) return; // suppress own-write echo
+    var remote = snap.data();
+    if(!remote) return;
+    APP.quote = Object.assign(APP.quote, {
+      rooms:    remote.rooms    || APP.quote.rooms,
+      status:   remote.status   || APP.quote.status,
+      customer: remote.customer || APP.quote.customer,
+      staff:    remote.staff    || APP.quote.staff,
+      staff2:   remote.staff2   || APP.quote.staff2
+    });
+    saveDraftLocal();
+    var tt = grandTotal();
+    var totEl = document.getElementById('bldTotal');
+    if(totEl) totEl.textContent = tt ? fmt(tt) : '₹0';
+  }, function(err){ console.warn('[Quote sync]', err); });
+}
+
+function stopQuoteSync() {
+  if(_quoteListener){ _quoteListener(); _quoteListener=null; }
+}
+
+// Legacy compatibility: was cloudOK() — always true when Firebase is ready
+function cloudOK() { return _fbReady; }
 
 // ═══════════════════════════════════════════════════════════
 // CALCULATIONS (Fixed: Plain style + discount in lines)
@@ -1910,10 +1991,27 @@ function grandGross() {
 // ═══════════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', function(){
   addPinTouchFeedback();
-  buildStaffDrop();
-  loadStaff();
-  var lid = qp('load');
-  if(lid){ loadById(lid); return; }
+  loadStaff(); // pre-populate dropdown from Firestore (public collection)
+
+  AUTH.onAuthStateChanged(function(user) {
+    _fbReady = true;
+    if(user && !user.isAnonymous) {
+      // Already authenticated — restore last staff session
+      var cached = null;
+      try{ cached = JSON.parse(localStorage.getItem('darla_staff')||'null'); }catch(e){}
+      if(cached && cached.name){ APP.staff = cached; }
+      else { APP.staff = { name: user.displayName || user.email || 'Staff', uid: user.uid }; }
+      // Touch staff lastLoginAt
+      DB.collection('staff').doc(user.uid).update({ lastLoginAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(function(){});
+      var lid = qp('load');
+      if(lid){ loadById(lid); return; }
+      clearForm(); goToCustomer();
+    } else {
+      // Not signed in — show login screen (already active by default)
+      var lid = qp('load');
+      if(lid){ loadById(lid); }
+    }
+  });
 });
 
 function addPinTouchFeedback() {
@@ -1934,13 +2032,26 @@ function buildStaffDrop() {
     var o=document.createElement('option'); o.value=s.name; o.textContent=s.name; el.appendChild(o);
   });
 }
+
 function loadStaff() {
-  try{ var c=localStorage.getItem('darla_staff_cache'); if(c){ var l=JSON.parse(c); if(l&&l.length){ STAFF=l; buildStaffDrop(); }}}catch(e){}
-  if(!cloudOK()) return;
-  fetch(CFG.sheetsUrl+'?action=getStaff&t='+Date.now())
-    .then(function(r){ return r.json(); })
-    .then(function(d){ if(d.staff&&d.staff.length){ STAFF=d.staff; localStorage.setItem('darla_staff_cache',JSON.stringify(d.staff)); buildStaffDrop(); }})
-    .catch(function(){});
+  // Seed from localStorage cache for instant display
+  try{
+    var c=localStorage.getItem('darla_staff_cache');
+    if(c){ var l=JSON.parse(c); if(l&&l.length){ STAFF=l; buildStaffDrop(); }}
+  }catch(e){}
+
+  // Fetch fresh list from Firestore staffDirectory (public read — no auth required)
+  DB.collection('staffDirectory')
+    .where('active','==',true)
+    .orderBy('name')
+    .get({ source:'server' })
+    .then(function(snap){
+      var list=[];
+      snap.forEach(function(doc){ var d=doc.data(); list.push({ uid:doc.id, name:d.name, role:d.role }); });
+      if(list.length){ STAFF=list; localStorage.setItem('darla_staff_cache',JSON.stringify(list)); buildStaffDrop(); }
+    }).catch(function(){
+      // Firestore unavailable (offline on first load) — cached list already shown
+    });
 }
 
 var _pinBuf='', _pickedStaff=null;
@@ -1969,20 +2080,31 @@ function dotUpdate(err) {
 }
 function checkPin() {
   if(!_pickedStaff) return;
-  // Simple hash comparison — production would use bcrypt via server
-  if(_pinBuf===_pickedStaff.pin){
-    APP.staff=_pickedStaff;
-    localStorage.setItem('darla_staff',JSON.stringify(APP.staff));
-    clearForm(); goToCustomer();
-  } else {
-    dotUpdate(true);
-    document.getElementById('pinErr').textContent='Incorrect PIN — try again';
-    setTimeout(function(){ _pinBuf=''; dotUpdate(); document.getElementById('pinErr').textContent=''; },1200);
-  }
+  var email = _pickedStaff.name.toLowerCase().replace(/\s+/g,'.') + '@darla.in';
+  AUTH.signInWithEmailAndPassword(email, _pinBuf)
+    .then(function(cred){
+      APP.staff = Object.assign({}, _pickedStaff, { uid: cred.user.uid });
+      localStorage.setItem('darla_staff', JSON.stringify(APP.staff));
+      clearForm(); goToCustomer();
+    })
+    .catch(function(err){
+      dotUpdate(true);
+      var msg = (err.code==='auth/wrong-password'||err.code==='auth/invalid-credential')
+        ? 'Incorrect PIN — try again' : 'Login error: '+err.message;
+      document.getElementById('pinErr').textContent = msg;
+      setTimeout(function(){ _pinBuf=''; dotUpdate(); document.getElementById('pinErr').textContent=''; }, 1400);
+    });
 }
+
 function skipLogin() {
-  APP.staff={name:'Staff',pin:''};
-  clearForm(); goToCustomer();
+  AUTH.signInAnonymously().then(function(){
+    APP.staff = { name:'Staff', uid:'anon' };
+    clearForm(); goToCustomer();
+  }).catch(function(){
+    // Fallback — allow offline-only mode without sign-in
+    APP.staff = { name:'Staff', uid:'anon' };
+    clearForm(); goToCustomer();
+  });
 }
 function clearForm() {
   APP.quote=blankQ();
@@ -2050,8 +2172,11 @@ function setNavForQuotes() {
   document.getElementById('navActions').innerHTML='';
 }
 function switchTab(tab) {
-  if(tab==='all'){ setNavForQuotes(); goTo('screen-quotes'); }
-  else { clearForm(); setNavForCustomer(); goTo('screen-customer'); }
+  if(tab==='all'){ stopQuoteSync(); setNavForQuotes(); goTo('screen-quotes'); }
+  else {
+    if(_qListListener){ _qListListener(); _qListListener=null; }
+    clearForm(); setNavForCustomer(); goTo('screen-customer');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2065,10 +2190,21 @@ function startQuote() {
   APP.quote.customer={name:name,mobile:mob,arch:document.getElementById('cArch').value.trim(),addr:document.getElementById('cAddr').value.trim()};
   APP.quote.staff=document.getElementById('cSales1').value.trim()||(APP.staff?APP.staff.name:'Staff');
   APP.quote.staff2=document.getElementById('cSales2').value.trim();
-  if(!APP.quote.id){ APP.quote.id=nextId(); APP.quote.date=new Date().toLocaleDateString('en-IN'); }
-  saveDraft();
-  setNavForBuilder();
-  goTo('screen-builder');
+  if(APP.quote.id){
+    saveDraft(); setNavForBuilder(); goTo('screen-builder');
+    startQuoteSync(APP.quote.id);
+    return;
+  }
+  // New quote — get atomic ID from Cloud Function then save to Firestore
+  APP.quote.date = new Date().toLocaleDateString('en-IN');
+  _generateQuoteId(function(qid){
+    APP.quote.id = qid;
+    saveDraftLocal();
+    _saveToFirestore(false);
+    startQuoteSync(qid);
+    setNavForBuilder();
+    goTo('screen-builder');
+  });
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2905,25 +3041,42 @@ function saveToList() {
   try{ localStorage.setItem('darla_list', JSON.stringify(list)); }catch(e){}
 }
 function getList(){ try{ return JSON.parse(localStorage.getItem('darla_list')||'[]'); }catch(e){ return []; } }
+
 function saveQuote() {
-  saveDraft(); saveToList();
-  if(!cloudOK()){ showToast('Saved locally ✓ '+APP.quote.id); return; }
-  fetch(CFG.sheetsUrl, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({action:'saveQuote',quote:APP.quote})})
-    .then(function(r){ return r.json(); })
-    .then(function(){ APP.quote.saved=true; saveDraft(); saveToList(); showToast('✓ Saved — '+APP.quote.id); })
-    .catch(function(){ showToast('Saved locally (offline)'); });
+  saveDraftLocal(); saveToList();
+  clearTimeout(_saveDraftTimer);
+  _saveToFirestore(true);
 }
-function saveAndGoList() { saveDraft(); saveToList(); if(cloudOK()) fetch(CFG.sheetsUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'saveQuote',quote:APP.quote})}).catch(function(){}); switchTab('all'); }
-function saveAndExit()   { saveDraft(); saveToList(); if(cloudOK()) fetch(CFG.sheetsUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'saveQuote',quote:APP.quote})}).then(function(){ showToast('Saved ✓'); }).catch(function(){ showToast('Saved locally'); }); switchTab('all'); }
+
+function saveAndGoList() {
+  saveDraftLocal(); saveToList();
+  clearTimeout(_saveDraftTimer);
+  _saveToFirestore(false);
+  stopQuoteSync();
+  switchTab('all');
+}
+
+function saveAndExit() {
+  saveDraftLocal(); saveToList();
+  clearTimeout(_saveDraftTimer);
+  _saveToFirestore(false);
+  stopQuoteSync();
+  showToast('Saved ✓');
+  switchTab('all');
+}
+
 function loadById(id) {
+  // Check local cache first for instant load
   var local=getList().find(function(q){ return q.id===id; });
-  if(local&&local.draft){ applyQ(JSON.parse(local.draft)); showToast('Loaded: '+id); return; }
-  if(!cloudOK()){ showToast('Not found locally'); return; }
+  if(local&&local.draft){ applyQ(JSON.parse(local.draft)); showToast('Loaded: '+id); startQuoteSync(id); return; }
+  // Load from Firestore
   showToast('Loading…');
-  fetch(CFG.sheetsUrl+'?action=loadQuote&id='+encodeURIComponent(id))
-    .then(function(r){ return r.json(); })
-    .then(function(d){ if(d.quote){ applyQ(d.quote); saveToList(); showToast('Loaded: '+id); }else{ showToast('Not found: '+id); }})
-    .catch(function(){ showToast('Error loading'); });
+  DB.collection('quotes').doc(id).get()
+    .then(function(snap){
+      if(snap.exists){
+        var q=snap.data(); applyQ(q); saveToList(); showToast('Loaded: '+id); startQuoteSync(id);
+      } else { showToast('Not found: '+id); }
+    }).catch(function(){ showToast('Not found — check connection'); });
 }
 function applyQ(q) {
   APP.quote=q; saveDraft();
@@ -2946,33 +3099,61 @@ function shareQuote() {
 // ═══════════════════════════════════════════════════════════
 // QUOTES LIST
 // ═══════════════════════════════════════════════════════════
-var _qFiltered=[], _qCloud=[];
+var _qFiltered=[], _qAll=[], _qListListener=null;
+
 function renderQList() {
   setNavForQuotes();
+  // Show local cache immediately
   var local=getList();
   local.sort(function(a,b){ return(parseInt(b.id.replace(/\D/g,''))||0)-(parseInt(a.id.replace(/\D/g,''))||0); });
-  _qFiltered=local; drawQList(local,false);
-  if(!cloudOK()) return;
-  fetch(CFG.sheetsUrl+'?action=listQuotes')
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(d.quotes&&d.quotes.length>=0){
-        _qCloud=d.quotes; var merged=mergeQ(d.quotes); _qFiltered=merged; drawQList(merged,false);
-        var cnt=document.getElementById('navSub'); if(cnt) cnt.textContent=merged.length+' quotes · synced';
-      }
-    }).catch(function(){});
+  _qAll=local; _qFiltered=local; drawQList(local,false);
+
+  var user=AUTH.currentUser;
+  if(!user || user.isAnonymous) return; // anonymous users see local-only list
+
+  // Kill previous listener if any
+  if(_qListListener){ _qListListener(); _qListListener=null; }
+
+  var query=DB.collection('quotes')
+    .where('tenantId','==','darla')
+    .orderBy('updatedAt','desc')
+    .limit(200);
+
+  drawQList(local,true);
+  _qListListener=query.onSnapshot(function(snap){
+    var cloudList=[];
+    snap.forEach(function(doc){
+      var d=doc.data();
+      var local=getList().find(function(q){ return q.id===doc.id; });
+      cloudList.push({
+        id:doc.id, date:d.date||'', staff:d.staff||'', staff2:d.staff2||'',
+        name:d.customerName||'', mobile:d.customerPhone||'',
+        arch:d.customer?d.customer.arch:'', addr:d.customer?d.customer.addr:'',
+        total:d.grandNet||0, rooms:d.rooms?d.rooms.length:0,
+        status:d.status||'draft', updated:d.updatedAt?new Date(d.updatedAt.toDate()).toLocaleString('en-IN'):'',
+        fromCloud:true, draft: local ? local.draft : null,
+        _fullDoc: d
+      });
+    });
+    // Merge with local drafts that aren't in Firestore yet
+    var localOnly=getList().filter(function(q){
+      return !cloudList.find(function(c){ return c.id===q.id; });
+    });
+    _qAll=cloudList.concat(localOnly);
+    _qFiltered=_qAll;
+    drawQList(_qFiltered,false);
+    var cnt=document.getElementById('navSub');
+    if(cnt) cnt.textContent=_qAll.length+' quotes · synced';
+  }, function(){ drawQList(_qFiltered,false); });
 }
-function mergeQ(cloud) {
-  var lm={}; getList().forEach(function(q){ lm[q.id]=q; });
-  var m=cloud.map(function(c){ var l=lm[c.id]; return Object.assign({},c,{draft:l?l.draft:null,fromCloud:true}); });
-  m.sort(function(a,b){ return(parseInt(b.id.replace(/\D/g,''))||0)-(parseInt(a.id.replace(/\D/g,''))||0); });
-  return m;
-}
+
 function filterQ() {
   var q=(document.getElementById('qSearch').value||'').trim().toLowerCase();
-  var list=getList();
-  list.sort(function(a,b){ return(parseInt(b.id.replace(/\D/g,''))||0)-(parseInt(a.id.replace(/\D/g,''))||0); });
-  _qFiltered=q?list.filter(function(e){ return['name','mobile','id','staff','staff2','arch'].some(function(k){ return(e[k]||'').toLowerCase().indexOf(q)!==-1; }); }):list;
+  _qFiltered=q?_qAll.filter(function(e){
+    return['name','mobile','id','staff','staff2','arch'].some(function(k){
+      return(e[k]||'').toLowerCase().indexOf(q)!==-1;
+    });
+  }):_qAll;
   drawQList(_qFiltered,false);
 }
 function drawQList(list,loading) {
@@ -3006,14 +3187,16 @@ function drawQList(list,loading) {
 }
 function openQ(i) {
   var e=_qFiltered[i]; if(!e) return;
-  if(e.draft){ try{ applyQ(JSON.parse(e.draft)); showToast('Opened: '+e.id); }catch(ex){ showToast('Error opening'); } return; }
-  if(!cloudOK()){ showToast('Cannot load — not configured'); return; }
-  showToast('Loading from cloud…');
-  fetch(CFG.sheetsUrl+'?action=loadQuote&id='+encodeURIComponent(e.id))
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(d.quote){ e.draft=JSON.stringify(d.quote); saveQEntry(e); applyQ(d.quote); showToast('Loaded: '+e.id); }
-      else showToast('Not found in cloud');
+  // Use local draft if available
+  if(e.draft){ try{ applyQ(JSON.parse(e.draft)); showToast('Opened: '+e.id); startQuoteSync(e.id); return; }catch(ex){} }
+  // Use embedded full doc from onSnapshot
+  if(e._fullDoc){ applyQ(e._fullDoc); saveToList(); showToast('Opened: '+e.id); startQuoteSync(e.id); return; }
+  // Fetch from Firestore
+  showToast('Loading…');
+  DB.collection('quotes').doc(e.id).get()
+    .then(function(snap){
+      if(snap.exists){ var q=snap.data(); e.draft=JSON.stringify(q); saveQEntry(e); applyQ(q); showToast('Loaded: '+e.id); startQuoteSync(e.id); }
+      else showToast('Not found: '+e.id);
     }).catch(function(){ showToast('Error loading'); });
 }
 function saveQEntry(e) {
@@ -3027,8 +3210,17 @@ function delQ(i,ev) {
   var e=_qFiltered[i]; if(!e) return;
   if(!confirm('Delete '+e.id+' for '+e.name+'?')) return;
   try{ localStorage.setItem('darla_list',JSON.stringify(getList().filter(function(q){ return q.id!==e.id; }))); }catch(ex){}
-  _qFiltered.splice(i,1); drawQList(_qFiltered,false); showToast('Deleted '+e.id);
-  if(cloudOK()) fetch(CFG.sheetsUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'deleteQuote',id:e.id})}).catch(function(){});
+  _qFiltered.splice(i,1);
+  _qAll=_qAll.filter(function(q){ return q.id!==e.id; });
+  drawQList(_qFiltered,false);
+  showToast('Deleted '+e.id);
+  // Delete from Firestore (manager+ permission enforced by security rules)
+  var user=AUTH.currentUser;
+  if(user && !user.isAnonymous){
+    DB.collection('quotes').doc(e.id).delete().catch(function(err){
+      showToast('Could not delete from cloud: '+err.message);
+    });
+  }
 }
 
 // ═══════════════════════════════════════════════════════════

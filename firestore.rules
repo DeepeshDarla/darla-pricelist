@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── helpers ─────────────────────────────────────────────────────
+    function isSignedIn()  { return request.auth != null; }
+    function isAnon()      { return request.auth.token.firebase.sign_in_provider == 'anonymous'; }
+    function isStaff()     { return isSignedIn() && !isAnon(); }
+    function uid()         { return request.auth.uid; }
+    function role()        { return request.auth.token.role; }
+    function isAdmin()     { return isStaff() && role() == 'admin'; }
+    function isManager()   { return isStaff() && (role() == 'manager' || role() == 'admin'); }
+    function sameTenant(d) { return d.tenantId == 'darla'; }
+
+    // ── staffDirectory ───────────────────────────────────────────────
+    // Public read so login screen can populate staff dropdown before auth
+    match /staffDirectory/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ── staff/{uid} ──────────────────────────────────────────────────
+    match /staff/{userId} {
+      allow read:   if isManager() || uid() == userId;
+      allow create: if isAdmin();
+      allow delete: if isAdmin();
+      allow update: if isAdmin()
+        || (uid() == userId && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['lastLoginAt']));
+    }
+
+    // ── quotes ───────────────────────────────────────────────────────
+    match /quotes/{quoteId} {
+      allow read:   if (isStaff() && sameTenant(resource.data))
+        || resource.data.status == 'sent';
+      allow create: if isStaff()
+        && request.resource.data.tenantId == 'darla'
+        && request.resource.data.createdBy == uid();
+      allow update: if isStaff()
+        && sameTenant(resource.data)
+        && request.resource.data.tenantId == 'darla';
+      allow delete: if isManager() && sameTenant(resource.data);
+    }
+
+    // ── customers ────────────────────────────────────────────────────
+    match /customers/{customerId} {
+      allow read, write: if isStaff();
+    }
+
+    // ── counters ─────────────────────────────────────────────────────
+    // Only Cloud Functions (admin SDK) should write; authenticated users can read
+    match /counters/{counterId} {
+      allow read:  if isStaff();
+      allow write: if false; // server-side only via admin SDK
+    }
+  }
+}

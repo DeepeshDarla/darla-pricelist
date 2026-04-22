@@ -146,6 +146,10 @@ button:focus-visible,input:focus-visible{outline:2px solid #c0392b;outline-offse
 .quote-sel-btn{width:100%;background:#c0392b;color:#fff;border:none;border-radius:11px;padding:15px;font-size:15px;font-weight:800;cursor:pointer;display:block;margin:10px 0 4px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;letter-spacing:0.5px}
 .quote-sel-btn:active{opacity:0.85;transform:scale(0.98)}
 </style>
+<!-- Firebase compat SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="firebase-init.js"></script>
 </head>
 <body>
 <div id="quoteBanner"></div>
@@ -154,7 +158,10 @@ button:focus-visible,input:focus-visible{outline:2px solid #c0392b;outline-offse
   <div class="pin-sheet">
     <div class="pin-handle"></div>
     <div class="pin-title">Staff Access</div>
-    <div class="pin-sub">Enter your PIN once — saved on this phone</div>
+    <select id="staffPinNameSel" style="width:100%;padding:11px;background:#1c1c1c;border:1px solid #333;border-radius:8px;color:#f0f0f0;font-size:14px;margin-bottom:8px" onchange="staffPickName()">
+      <option value="">— Select your name —</option>
+    </select>
+    <div class="pin-sub" id="staffPinSub">Select your name, then enter PIN</div>
     <div class="pin-dots">
       <div class="dot" id="d0"></div><div class="dot" id="d1"></div>
       <div class="dot" id="d2"></div><div class="dot" id="d3"></div>
@@ -173,12 +180,12 @@ button:focus-visible,input:focus-visible{outline:2px solid #c0392b;outline-offse
       <button class="pk" onclick="staffPk('0')">0</button>
       <button class="pk del" onclick="staffPd()">&#9003;</button>
     </div>
+    <div id="staffPinErr" style="color:#e74c3c;font-size:13px;font-weight:600;min-height:16px;margin:6px 0"></div>
     <button class="pin-cancel" onclick="closeStaffPin()">Cancel</button>
   </div>
 </div>
 <script>
 var FB  = "https://pricelist-qr-codes-default-rtdb.asia-southeast1.firebasedatabase.app";
-var PIN = "1516";
 var SK  = "darla_staff_v1";
 var SAK = "darla_search_v1";
 var BASE= window.location.origin+window.location.pathname;
@@ -266,8 +273,29 @@ function esc(t){
   return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 function spinner(m){return '<div class="spinner"><div class="spinner-ring"></div><p>'+(m||"Loading...")+'</p></div>';}
-function isStaff(){return localStorage.getItem(SK)==="1";}
-function hasSearchAccess(){return localStorage.getItem(SAK)==="1";}
+function isStaff(){
+  var u=AUTH.currentUser;
+  if(u && !u.isAnonymous) return true;
+  return localStorage.getItem(SK)==="1";  // fallback for offline
+}
+function hasSearchAccess(){
+  var u=AUTH.currentUser;
+  if(u && !u.isAnonymous) return true;
+  return localStorage.getItem(SAK)==="1";
+}
+
+// Sync Firebase Auth state with localStorage flags so renderRows works before observer fires
+AUTH.onAuthStateChanged(function(user){
+  if(user && !user.isAnonymous){
+    localStorage.setItem(SK,"1"); localStorage.setItem(SAK,"1");
+    var sb=document.getElementById("sBadge");
+    if(sb){ sb.style.display="inline-block"; sb.textContent="STAFF ✓"; }
+    var fb=document.getElementById("fabBtn");
+    if(fb) fb.style.display="none";
+  } else {
+    localStorage.removeItem(SK); localStorage.removeItem(SAK);
+  }
+});
 
 // ── INIT ──
 window.addEventListener("DOMContentLoaded",function(){
@@ -325,14 +353,18 @@ function goSearch(cat){
 }
 
 // ── PIN GATE ──
-var gateEn="",gateCat="";
+var gateEn="",gateCat="",gateStaff=null;
 function showSearchGate(cat){
-  gateCat=cat; gateEn="";
+  gateCat=cat; gateEn=""; gateStaff=null;
+  // Load staff list from Firestore (public read)
+  var staffOpts='<option value="">— Select Name —</option>';
+  try{ var sc=JSON.parse(localStorage.getItem("darla_staff_cache")||"[]"); sc.forEach(function(s){ staffOpts+='<option value="'+esc(s.name)+'">'+esc(s.name)+'</option>'; }); }catch(e){}
   document.getElementById("app").innerHTML=
     '<div class="pin-gate">'
     +'<img class="pin-gate-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display=\'none\'" alt="Darla">'
     +'<div class="pin-gate-title">Staff Access Required</div>'
-    +'<div class="pin-gate-sub">Enter your PIN to access search</div>'
+    +'<select id="gateNameSel" style="width:100%;max-width:280px;margin:12px auto 0;display:block;padding:12px;background:#1c1c1c;border:1px solid #333;border-radius:8px;color:#f0f0f0;font-size:15px" onchange="gatePickStaff()">'+staffOpts+'</select>'
+    +'<div class="pin-gate-sub" id="gateSubTxt" style="margin-top:10px">Select your name, then enter PIN</div>'
     +'<div class="pin-gate-dots">'
     +'<div class="dot" id="gd0"></div><div class="dot" id="gd1"></div>'
     +'<div class="dot" id="gd2"></div><div class="dot" id="gd3"></div>'
@@ -342,10 +374,30 @@ function showSearchGate(cat){
     +'<button class="pk" onclick="gatePk(\'0\')">0</button>'
     +'<button class="pk del" onclick="gatePd()">&#9003;</button>'
     +'</div>'
+    +'<div id="gateErr" style="color:#e74c3c;font-size:13px;font-weight:600;min-height:18px;margin-top:8px"></div>'
     +'<button class="pin-cancel" onclick="showHome()" style="color:#555;margin-top:8px">&#8592; Back</button>'
     +'</div>';
+  // Also load fresh staff list from Firestore
+  DB.collection("staffDirectory").where("active","==",true).orderBy("name").get({source:"server"})
+    .then(function(snap){
+      var list=[]; snap.forEach(function(d){ list.push({uid:d.id,name:d.data().name,role:d.data().role}); });
+      if(!list.length) return;
+      localStorage.setItem("darla_staff_cache",JSON.stringify(list));
+      var sel=document.getElementById("gateNameSel"); if(!sel) return;
+      sel.innerHTML='<option value="">— Select Name —</option>';
+      list.forEach(function(s){ var o=document.createElement("option"); o.value=s.name; o.textContent=s.name; sel.appendChild(o); });
+    }).catch(function(){});
 }
-function gatePk(k){if(gateEn.length>=4)return;gateEn+=k;gDots();if(gateEn.length===4)setTimeout(gChk,80);}
+function gatePickStaff(){
+  var n=document.getElementById("gateNameSel").value;
+  try{ var sc=JSON.parse(localStorage.getItem("darla_staff_cache")||"[]"); gateStaff=sc.find(function(s){ return s.name===n; })||null; }catch(e){}
+  if(!gateStaff && n) gateStaff={name:n};
+  gateEn=""; gDots();
+}
+function gatePk(k){
+  if(!gateStaff){ document.getElementById("gateErr").textContent="Select your name first"; return; }
+  if(gateEn.length>=4)return; gateEn+=k; gDots(); if(gateEn.length===4)setTimeout(gChk,80);
+}
 function gatePd(){gateEn=gateEn.slice(0,-1);gDots();}
 function gDots(err){
   for(var i=0;i<4;i++){
@@ -355,8 +407,19 @@ function gDots(err){
   }
 }
 function gChk(){
-  if(gateEn===PIN){localStorage.setItem(SAK,"1");showAdvancedSearch(gateCat);}
-  else{gDots(true);setTimeout(function(){gateEn="";gDots();},800);}
+  if(!gateStaff) return;
+  var email=gateStaff.name.toLowerCase().replace(/\s+/g,".")+"@darla.in";
+  AUTH.signInWithEmailAndPassword(email, gateEn)
+    .then(function(){
+      localStorage.setItem(SAK,"1");
+      showAdvancedSearch(gateCat);
+    })
+    .catch(function(){
+      gDots(true);
+      var err=document.getElementById("gateErr");
+      if(err) err.textContent="Incorrect PIN — try again";
+      setTimeout(function(){ gateEn=""; gDots(); if(err) err.textContent=""; },1000);
+    });
 }
 
 // ── SEARCH STATE ──
@@ -801,10 +864,33 @@ function showDrop(drop,items,inp,onSel){
 function selItem(el,ev){ev.preventDefault();var cb=el.parentElement._cb;if(cb)cb(el.textContent);}
 
 // ── STAFF PIN ──
-var staffEn="";
-function openStaffPin(){staffEn="";sDots();document.getElementById("pOv").classList.add("open");}
-function closeStaffPin(){document.getElementById("pOv").classList.remove("open");staffEn="";sDots();}
-function staffPk(k){if(staffEn.length>=4)return;staffEn+=k;sDots();if(staffEn.length===4)setTimeout(sChk,80);}
+var staffEn="", staffPinStaff=null;
+function openStaffPin(){
+  staffEn=""; staffPinStaff=null; sDots();
+  // Populate dropdown from cache
+  var sel=document.getElementById("staffPinNameSel");
+  if(sel){
+    sel.innerHTML='<option value="">— Select your name —</option>';
+    try{ var sc=JSON.parse(localStorage.getItem("darla_staff_cache")||"[]");
+      sc.forEach(function(s){ var o=document.createElement("option"); o.value=s.name; o.textContent=s.name; sel.appendChild(o); }); }catch(e){}
+    // If already know who this is from previous session
+    try{ var ss=JSON.parse(localStorage.getItem("darla_staff")||"null"); if(ss&&ss.name){ sel.value=ss.name; staffPinStaff=ss; }}catch(e){}
+  }
+  document.getElementById("pOv").classList.add("open");
+}
+function staffPickName(){
+  var n=document.getElementById("staffPinNameSel").value;
+  try{ var sc=JSON.parse(localStorage.getItem("darla_staff_cache")||"[]"); staffPinStaff=sc.find(function(s){ return s.name===n; })||null; }catch(e){}
+  if(!staffPinStaff&&n) staffPinStaff={name:n};
+  staffEn=""; sDots();
+  var sub=document.getElementById("staffPinSub");
+  if(sub) sub.textContent=n?"Enter your PIN":"Select your name, then enter PIN";
+}
+function closeStaffPin(){document.getElementById("pOv").classList.remove("open");staffEn="";staffPinStaff=null;sDots();}
+function staffPk(k){
+  if(!staffPinStaff){ var err=document.getElementById("staffPinErr"); if(err) err.textContent="Select your name first"; return; }
+  if(staffEn.length>=4)return; staffEn+=k; sDots(); if(staffEn.length===4)setTimeout(sChk,80);
+}
 function staffPd(){staffEn=staffEn.slice(0,-1);sDots();}
 function sDots(err){
   for(var i=0;i<4;i++){
@@ -892,11 +978,21 @@ function goSearchQuote(cat) {
 
 
 function sChk(){
-  if(staffEn===PIN){
-    localStorage.setItem(SK,"1");localStorage.setItem(SAK,"1");
-    closeStaffPin();
-    if(window._rows)renderRows(window._rows,window._cat||"fabric");
-  } else {sDots(true);setTimeout(function(){staffEn="";sDots();},800);}
+  if(!staffPinStaff){ sDots(true); setTimeout(function(){staffEn="";sDots();},800); return; }
+  var email = staffPinStaff.name.toLowerCase().replace(/\s+/g,'.') + '@darla.in';
+  AUTH.signInWithEmailAndPassword(email, staffEn)
+    .then(function(cred){
+      localStorage.setItem(SK,"1"); localStorage.setItem(SAK,"1");
+      localStorage.setItem("darla_staff", JSON.stringify(Object.assign({},staffPinStaff,{uid:cred.user.uid})));
+      closeStaffPin();
+      if(window._rows) renderRows(window._rows, window._cat||"fabric");
+    })
+    .catch(function(){
+      sDots(true);
+      var err=document.getElementById("staffPinErr");
+      if(err) err.textContent="Incorrect PIN";
+      setTimeout(function(){ staffEn=""; sDots(); if(err) err.textContent=""; },1000);
+    });
 }
 
 // ── QUOTE MODE: inject banner+tabs after any search renders ──────
