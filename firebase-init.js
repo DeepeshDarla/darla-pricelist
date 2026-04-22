@@ -4,13 +4,13 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 var FB_CONFIG = {
-  apiKey:            "REPLACE_API_KEY",
+  apiKey:            "AIzaSyALBliT2h5QSBHWQpgifzHdPch08S41jrM",
   authDomain:        "pricelist-qr-codes.firebaseapp.com",
   databaseURL:       "https://pricelist-qr-codes-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId:         "pricelist-qr-codes",
-  storageBucket:     "pricelist-qr-codes.appspot.com",
-  messagingSenderId: "REPLACE_MESSAGING_SENDER_ID",
-  appId:             "REPLACE_APP_ID"
+  storageBucket:     "pricelist-qr-codes.firebasestorage.app",
+  messagingSenderId: "261035409646",
+  appId:             "1:261035409646:web:bc908bc205313eebf173ff"
 };
 
 if (!firebase.apps.length) {
