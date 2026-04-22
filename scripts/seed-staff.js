@@ -23,6 +23,9 @@ const db   = admin.firestore();
 const auth = admin.auth();
 
 // ── Staff list from spreadsheet ─────────────────────────────────────────────
+// PIN_SUFFIX keeps Firebase's 6-char minimum. App appends same suffix on sign-in.
+const PIN_SUFFIX = '!drla';
+
 const STAFF = [
   { name: 'Deepesh Darla', pin: '1516', role: 'manager', active: true },
   { name: 'Gaurav',        pin: '1234', role: 'staff',   active: true },
@@ -49,7 +52,7 @@ async function createStaff(s) {
   try {
     const user = await auth.createUser({
       email,
-      password: s.pin,
+      password: s.pin + PIN_SUFFIX,
       displayName: s.name,
       emailVerified: true
     });

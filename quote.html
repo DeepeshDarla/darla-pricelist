@@ -2078,10 +2078,12 @@ function dotUpdate(err) {
     else if(i<_pinBuf.length) d.classList.add('filled');
   }
 }
+var PIN_SUFFIX = '!drla'; // appended to every PIN before Firebase Auth — never shown to user
+
 function checkPin() {
   if(!_pickedStaff) return;
   var email = _pickedStaff.name.toLowerCase().replace(/\s+/g,'.') + '@darla.in';
-  AUTH.signInWithEmailAndPassword(email, _pinBuf)
+  AUTH.signInWithEmailAndPassword(email, _pinBuf + PIN_SUFFIX)
     .then(function(cred){
       APP.staff = Object.assign({}, _pickedStaff, { uid: cred.user.uid });
       localStorage.setItem('darla_staff', JSON.stringify(APP.staff));

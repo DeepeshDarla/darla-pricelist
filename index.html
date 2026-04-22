@@ -409,7 +409,7 @@ function gDots(err){
 function gChk(){
   if(!gateStaff) return;
   var email=gateStaff.name.toLowerCase().replace(/\s+/g,".")+"@darla.in";
-  AUTH.signInWithEmailAndPassword(email, gateEn)
+  AUTH.signInWithEmailAndPassword(email, gateEn + PIN_SUFFIX)
     .then(function(){
       localStorage.setItem(SAK,"1");
       showAdvancedSearch(gateCat);
@@ -977,10 +977,12 @@ function goSearchQuote(cat) {
 }
 
 
+var PIN_SUFFIX = '!drla';
+
 function sChk(){
   if(!staffPinStaff){ sDots(true); setTimeout(function(){staffEn="";sDots();},800); return; }
   var email = staffPinStaff.name.toLowerCase().replace(/\s+/g,'.') + '@darla.in';
-  AUTH.signInWithEmailAndPassword(email, staffEn)
+  AUTH.signInWithEmailAndPassword(email, staffEn + PIN_SUFFIX)
     .then(function(cred){
       localStorage.setItem(SK,"1"); localStorage.setItem(SAK,"1");
       localStorage.setItem("darla_staff", JSON.stringify(Object.assign({},staffPinStaff,{uid:cred.user.uid})));
