@@ -1425,9 +1425,10 @@ PRINT STYLES
 #printDoc { display: none; }
 @page { size: A5 portrait; margin: 9mm 11mm; }
 @media print {
-/* Hide the whole app; show only the injected print document */
+/* Show only the printDoc content; hide everything else */
 body > *:not(#printDoc) { display: none !important; }
-#printDoc { display: block !important; }
+#printDoc { display: block !important; position: static !important; overflow: visible !important; }
+#printToolbar { display: none !important; }
 *, *::before, *::after {
 -webkit-print-color-adjust: exact !important;
 print-color-adjust: exact !important;
@@ -1435,7 +1436,7 @@ color-adjust: exact !important;
 }
 html, body { background: #fff !important; color: #000 !important; font-size: 9pt; margin: 0; padding: 0; }
 
-/* ── Header classes used by _printHdr() ── */
+/* Header classes used by _printHdr() */
 .print-hdr {
 display: flex !important;
 justify-content: space-between;
@@ -2366,6 +2367,11 @@ function editMrp(ri,wi,ti,ci,v) {
   var n=parseFloat(v); if(isNaN(n)||n<0) return;
   c.product.mrp=n; saveDraft(); renderBld();
 }
+function editNotes(ri,wi,ti,ci,v) {
+  var c=APP.quote.rooms[ri].windows[wi].treatments[ti].components[ci];
+  if(!c) return;
+  c.notes=v.trim(); saveDraft();
+}
 function updateDiscount(ri,wi,ti,ci,v) {
   var c=APP.quote.rooms[ri].windows[wi].treatments[ti].components[ci];
   c.discount=Math.min(100,Math.max(0,parseFloat(v)||0));
@@ -2573,6 +2579,9 @@ function renderComp(c,ri,wi,ti,ci,win,t) {
   var nameParts=[brand,catalog,sno].filter(Boolean);
   var unitLbl=t.type==='blinds'?'sqft':'mtr';
   html+='<div class="comp-product-name">'+esc(nameParts.join(' / '))+'</div>';
+  html+='<input class="inp" placeholder="Colour / design notes (optional)" '
+    +'style="font-size:12px;padding:7px 10px;margin-bottom:6px;width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text3)" '
+    +'value="'+esc(c.notes||'')+'" onchange="editNotes('+ri+','+wi+','+ti+','+ci+',this.value)">';
   html+='<div class="mrp-row">'
     +'<span class="mrp-lbl">MRP /'+unitLbl+'</span>'
     +'<input class="mrp-inp" type="number" value="'+esc(String(p.mrp||0))+'" min="0" step="0.5" inputmode="decimal" onchange="editMrp('+ri+','+wi+','+ti+','+ci+',this.value)" onclick="this.select()">'
@@ -2640,8 +2649,7 @@ function openProductModal(ri,wi,ti,ci) {
   _prodCat  = (ttype==='blinds') ? 'blinds' : 'fabric';
   // Build cat tabs — curtains show fabric+hangers, blinds show only blinds
   var tabsHtml='';
-  var showCats = (ttype==='curtains') ? ['fabric','hangers'] :
-                 (ttype==='roman_blinds') ? ['fabric'] : ['blinds'];
+  var showCats = (ttype==='blinds') ? ['blinds'] : ['fabric','hangers'];
   showCats.forEach(function(cat){
     var ci2=CATS[cat];
     tabsHtml+='<button class="search-cat-tab'+(cat===_prodCat?' active':'')+'" onclick="switchProdCat(\''+cat+'\')">'+ci2.icon+' '+ci2.label+'</button>';
@@ -2670,7 +2678,7 @@ function loadProdCat(cat) {
   document.getElementById('productResults').innerHTML='';
   renderProdFields(cat);
   // Load meta if not cached
-  if(_prodMeta[cat]) return;
+  if(_prodMeta[cat]) { bindProdInputs(cat); return; }
   document.getElementById('productSearchBtn').disabled=true;
   fetch(CFG.firebase+'/'+cat+'/meta.json')
     .then(function(r){ return r.json(); })
@@ -2875,128 +2883,175 @@ function selectProduct(idx) {
 // ═══════════════════════════════════════════════════════════
 // SUMMARY RENDER
 // ═══════════════════════════════════════════════════════════
+function _compCalcRows(win, c, tx) {
+  // Returns HTML rows for calc breakdown of a single component
+  if(!c.product) return '';
+  var cc = calcComp(win, Object.assign({},c,{treatmentType:tx.type}));
+  var h = '';
+  var disc = c.discount || 0;
+  if(tx.type==='curtains') {
+    var panelLine = cc.numPanels+'panels×'+cc.panelLen+'m = '+cc.fabricQty+'m';
+    h += '<div style="font-size:11px;color:var(--text3);margin:3px 0 5px">'+panelLine+'</div>';
+    (cc.lines||[]).forEach(function(ln){
+      h += '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:2px 0;border-bottom:1px dotted var(--border)">'
+        +'<span style="font-size:11px;color:var(--text3)">'+esc(ln.lbl)+'</span>'
+        +'<span style="font-size:11px;color:var(--text2)">'+esc(String(ln.qty))+' × '+fmt(ln.rate)+'</span>'
+        +'<span style="font-size:12px;font-weight:700;color:var(--text);min-width:60px;text-align:right">'+fmt(ln.amt)+'</span>'
+        +'</div>';
+    });
+  } else if(tx.type==='roman_blinds') {
+    var rpLine = cc.panels+'panels×'+cc.panelLen+'m = '+cc.fabricQty+'m';
+    h += '<div style="font-size:11px;color:var(--text3);margin:3px 0 5px">'+rpLine+'</div>';
+    [{lbl:'Mechanism',s:cc.sqft+'sqft',a:cc.matCost},
+     {lbl:'Fabric',s:cc.fabricQty+'m×'+fmt(c.product.mrp),a:cc.fabCost},
+     {lbl:'Lining',s:cc.fabricQty+'m',a:cc.lining},
+     {lbl:'Installation',s:'per win',a:cc.installation},
+     {lbl:'Stitching',s:'per win',a:cc.stitching}
+    ].forEach(function(ln){
+      h += '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:2px 0;border-bottom:1px dotted var(--border)">'
+        +'<span style="font-size:11px;color:var(--text3)">'+esc(ln.lbl)+'</span>'
+        +'<span style="font-size:11px;color:var(--text2)">'+esc(String(ln.s))+'</span>'
+        +'<span style="font-size:12px;font-weight:700;color:var(--text);min-width:60px;text-align:right">'+fmt(ln.a)+'</span>'
+        +'</div>';
+    });
+  } else {
+    h += '<div style="display:flex;justify-content:space-between;padding:2px 0">'
+      +'<span style="font-size:11px;color:var(--text3)">Area</span>'
+      +'<span style="font-size:12px;font-weight:700;color:var(--text)">'+cc.sqft+' sqft</span></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:2px 0">'
+      +'<span style="font-size:11px;color:var(--text3)">'+fmt(cc.sqft)+' × '+fmt(c.product.mrp)+'</span>'
+      +'<span style="font-size:12px;font-weight:700;color:var(--text)">'+fmt(cc.unitTotal)+'</span></div>';
+  }
+  if((parseInt(win.qty)||1)>1) {
+    h += '<div style="display:flex;justify-content:space-between;padding:2px 0;margin-top:2px;border-top:1px solid var(--border)">'
+      +'<span style="font-size:11px;color:var(--text3)">× '+win.qty+' windows</span>'
+      +'<span style="font-size:12px;font-weight:700;color:var(--text)">'+fmt(cc.total)+'</span></div>';
+  }
+  if(disc>0) {
+    var d=applyDiscount(cc.total,disc);
+    h += '<div style="display:flex;justify-content:space-between;padding:2px 0;color:#f39c12">'
+      +'<span style="font-size:11px">Discount '+disc+'%</span>'
+      +'<span style="font-size:12px;font-weight:700">–'+fmt(d.discountAmt)+'</span></div>';
+  }
+  return h;
+}
+
 function renderSum() {
   setNavForSummary();
-  var q=APP.quote, gt=grandTotal();
+  var q=APP.quote, gt=grandTotal(), gross=grandGross(), totalDisc=gross-gt;
   var h='';
-  // Print header
-  h+='<div class="print-only print-hdr">'
-    +'<div class="print-brand"><div class="name">'+esc(CFG.brandName)+'</div><div class="tag">'+esc(CFG.tagline)+'</div></div>'
-    +'<div class="print-qinfo"><div class="qid">'+esc(q.id||'—')+'</div><div class="date">'+esc(q.date)+'</div></div>'
-    +'</div>';
-  // Quote ID badge (screen only)
-  h+='<div class="no-print" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 16px;font-size:10px;color:var(--text3);text-align:center;margin-bottom:14px;letter-spacing:0.1em;text-transform:uppercase;font-weight:700">'
+
+  // ── Quote ID badge ──
+  h+='<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 16px;font-size:10px;color:var(--text3);text-align:center;margin-bottom:12px;letter-spacing:0.1em;text-transform:uppercase;font-weight:700">'
     +'Quote Reference<span style="color:var(--text);font-weight:900;font-size:16px;display:block;margin-top:3px;letter-spacing:0.15em">'+esc(q.id||'—')+'</span></div>';
-  // Customer
-  h+='<div class="sum-cust">'
-    +'<div class="sum-field"><span class="l">Customer</span><span class="v">'+esc(q.customer.name)+'</span></div>'
-    +'<div class="sum-field"><span class="l">Mobile</span><span class="v">'+esc(q.customer.mobile)+'</span></div>'
-    +(q.customer.arch?'<div class="sum-field"><span class="l">Designer</span><span class="v">'+esc(q.customer.arch)+'</span></div>':'')
-    +(q.customer.addr?'<div class="sum-field"><span class="l">Project</span><span class="v">'+esc(q.customer.addr)+'</span></div>':'')
-    +'<div class="sum-field"><span class="l">Salesman</span><span class="v">'+esc(q.staff||'')+(q.staff2?' &amp; '+esc(q.staff2):'')+'</span></div>'
-    +'<div class="sum-field"><span class="l">Date</span><span class="v">'+esc(q.date)+'</span></div>'
-    // Print columns
-    +'<div class="cust-print-col print-only"><h4>Customer</h4>'
-    +'<div class="cname">'+esc(q.customer.name)+'</div>'
-    +'<div class="cval">'+esc(q.customer.mobile)+'</div>'
-    +(q.customer.addr?'<div class="cval" style="font-size:8pt;color:#666">'+esc(q.customer.addr)+'</div>':'')
-    +'</div>'
-    +'<div class="cust-print-col cust-print-right print-only"><h4>Staff</h4>'
-    +(q.customer.arch?'<div class="cval">Designer: '+esc(q.customer.arch)+'</div>':'')
-    +'<div class="cval">'+esc(q.staff||'')+'</div>'
-    +(q.staff2?'<div class="cval">'+esc(q.staff2)+'</div>':'')
-    +'</div></div>';
-  // Rooms
+
+  // ── Client card ──
+  h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;margin-bottom:12px">';
+  h+='<div style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:4px">'+esc(q.customer.name||'—')+'</div>';
+  h+='<div style="font-size:14px;color:var(--text2);margin-bottom:2px">📱 '+esc(q.customer.mobile||'—')+'</div>';
+  if(q.customer.addr) h+='<div style="font-size:13px;color:var(--text3);margin-bottom:2px">📍 '+esc(q.customer.addr)+'</div>';
+  h+='<div style="height:1px;background:var(--border);margin:10px 0"></div>';
+  if(q.customer.arch) h+='<div style="font-size:13px;color:var(--text2);margin-bottom:4px"><span style="color:var(--text3);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px">Designer</span> '+esc(q.customer.arch)+'</div>';
+  h+='<div style="font-size:13px;color:var(--text2);margin-bottom:2px"><span style="color:var(--text3);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px">Salesman</span> '+esc(q.staff||'—')+(q.staff2?' &amp; '+esc(q.staff2):'')+'</div>';
+  h+='<div style="font-size:12px;color:var(--text3)">'+esc(q.date)+'</div>';
+  h+='</div>';
+
+  // ── Rooms ──
   q.rooms.forEach(function(room){
     var rt=roomTotal(room);
-    h+='<div class="sum-room"><div class="sum-room-hdr">'
-      +'<span class="sum-room-name">'+esc(room.name)+'</span>'
-      +'<span class="sum-room-total price-col">'+fmt(rt)+'</span>'
+    // Room header
+    h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;margin-bottom:14px">';
+    h+='<div style="background:var(--red);padding:10px 16px;display:flex;justify-content:space-between;align-items:center">'
+      +'<span style="font-size:14px;font-weight:900;color:#fff;letter-spacing:0.5px">'+esc(room.name).toUpperCase()+'</span>'
+      +(rt>0?'<span style="font-size:14px;font-weight:900;color:rgba(255,255,255,0.9)">'+fmt(rt)+'</span>':'')
       +'</div>';
+
     room.windows.forEach(function(win,wi){
       var wt=0;
-      var printCalcLines=[];
       win.treatments.forEach(function(tx){
         tx.components.forEach(function(c){
           if(!c.product) return;
           var cc=calcComp(win,Object.assign({},c,{treatmentType:tx.type}));
-          wt+=cc.total||0;
-          if(tx.type==='blinds') printCalcLines.push({k:'BLIND Area',v:(cc.sqft||0)+' sqft'});
-          else if(tx.type==='roman_blinds') printCalcLines.push({k:c.layer.toUpperCase()+' panels',v:(cc.panels||0)+'×'+(cc.panelLen||0)+'m='+(cc.fabricQty||0)+'m'});
-          else printCalcLines.push({k:c.layer.toUpperCase()+' panels',v:(cc.numPanels||0)+'×'+(cc.panelLen||0)+'m='+(cc.fabricQty||0)+'m'});
+          var net=applyDiscount(cc.total||0,c.discount||0).net;
+          wt+=net;
         });
       });
-      h+='<div class="sum-win-block">';
-      // Left: measurements (print)
-      h+='<div class="win-print-left win-meas-block print-only">'
-        +'<div style="display:flex;align-items:center;gap:2mm;margin-bottom:1mm">'
-        +'<span class="win-badge">'+(wi+1)+'</span>'
-        +'<span class="sum-win-title">'+esc(win.name)+'</span></div>'
-        +'<div class="sum-win-dims">'+win.width+'" × '+win.height+'" Qty:'+win.qty+'</div>'
-        +'<div class="print-meas">';
-      printCalcLines.forEach(function(cl){ h+='<div class="print-meas-row"><span class="k">'+cl.k+'</span><span class="mv">'+cl.v+'</span></div>'; });
-      h+='</div></div>';
-      // Right: selections
-      h+='<div class="win-print-right">'
-        +'<div class="no-print" style="margin-bottom:4px">'
-        +'<div class="sum-win-title-row"><span class="win-badge">'+(wi+1)+'</span><span class="sum-win-title">'+esc(win.name)+'</span></div>'
-        +'<div class="sum-win-dims">'+win.width+'" W × '+win.height+'" H · Qty: '+win.qty+'</div>'
-        +'</div>'
-        +'<div class="print-only" style="margin-bottom:1mm"><div style="display:flex;align-items:center;gap:2mm">'
-        +'<span class="win-badge">'+(wi+1)+'</span><b style="font-size:9pt">'+esc(win.name)+'</b></div></div>';
+
+      h+='<div style="border-top:1px solid var(--border);padding:12px 14px">';
+      // Window header
+      h+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
+        +'<span style="background:var(--red);color:#fff;width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0">'+(wi+1)+'</span>'
+        +'<div><div style="font-size:15px;font-weight:800;color:var(--text)">'+esc(win.name)+'</div>'
+        +'<div style="font-size:12px;color:var(--text3)">'+win.width+'" W × '+win.height+'" H · Qty: '+win.qty+'</div></div>'
+        +'</div>';
+
       win.treatments.forEach(function(tx){
-        var txLbl=tx.type==='curtains'?'Curtains':tx.type==='roman_blinds'?'Roman Blinds':'Blinds';
-        var hasItems=tx.components.some(function(c){ return !!c.product; });
-        if(!hasItems) return;
-        h+='<div class="sum-tx-lbl">'+txLbl+(tx.type==='roman_blinds'&&tx.blindMode?' ('+tx.blindMode+')':'')+'</div>';
-        tx.components.forEach(function(c){
+        var txHasItems=tx.components.some(function(c){ return !!c.product; });
+        if(!txHasItems) return;
+        var txLbl=tx.type==='curtains'?'CURTAINS':tx.type==='roman_blinds'?'ROMAN BLINDS'+(tx.blindMode==='double'?' (DOUBLE)':''):'BLINDS';
+        h+='<div style="font-size:10px;font-weight:900;color:var(--text3);letter-spacing:1.5px;margin:10px 0 6px">'+txLbl+'</div>';
+
+        tx.components.forEach(function(c,ci){
           if(!c.product) return;
-          var cc=calcComp(win,Object.assign({},c,{treatmentType:tx.type}));
           var p=c.product;
+          var cc=calcComp(win,Object.assign({},c,{treatmentType:tx.type}));
+          var disc=c.discount||0;
+          var grossAmt=cc.total||0;
+          var netAmt=applyDiscount(grossAmt,disc).net;
           var brand=p.brand||'', catalog=p.catalog||p.product||p.blind_type||p.model||'', sno=p.s_no||p['s.no']||'';
           var nameLine=[brand,catalog,sno].filter(Boolean).join(' / ');
-          var styleNote=(tx.type==='curtains'&&c.stitchStyle)?' ['+c.stitchStyle+']':'';
-          var qtyLbl=tx.type==='blinds'?(cc.sqft||0)+' sqft':(cc.fabricQty||0)+' mtrs';
-          var grossAmt=cc.total||0;
-          var discResult=applyDiscount(grossAmt,c.discount||0);
-          var displayAmt=discResult.net;
-          h+='<div class="sum-comp-row">'
-            +'<div class="sum-comp-info">'
-            +'<span class="tag">'+(c.layer==='blind'?'BLIND':c.layer.toUpperCase())+'</span>'
-            +'<div class="name">'+esc(nameLine)+esc(styleNote)+'</div>'
-            +'<div class="detail price-col">'+fmt(p.mrp||0)+(tx.type==='blinds'?'/sqft':'/mtr')+' · '+qtyLbl
-            +(c.discount>0?' · <span style="color:#f39c12">'+c.discount+'% off</span>':'')
-            +'</div></div>'
-            +'<div class="sum-comp-amt price-col">'+fmt(displayAmt)+'</div>'
+          var layerLbl=c.layer==='blind'?'BLIND':c.layer.toUpperCase();
+          var styleNote=(tx.type==='curtains'&&c.stitchStyle)?' · '+c.stitchStyle:'';
+
+          h+='<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:8px">';
+          // Layer badge + product name
+          h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">'
+            +'<div style="flex:1">'
+            +'<span style="font-size:9px;font-weight:900;background:var(--bg2);border:1px solid var(--border);padding:2px 7px;border-radius:4px;letter-spacing:1px;color:var(--text3)">'+layerLbl+'</span>'
+            +'<div style="font-size:13px;font-weight:800;color:var(--text);margin-top:4px">'+esc(nameLine)+esc(styleNote)+'</div>'
+            +(c.notes?'<div style="font-size:11px;color:var(--text3);font-style:italic;margin-top:2px">'+esc(c.notes)+'</div>':'')
+            +'</div>'
+            +'<span style="font-size:15px;font-weight:900;color:'+(disc>0?'var(--green)':'var(--text)')+';margin-left:10px;white-space:nowrap">'+fmt(netAmt)+'</span>'
             +'</div>';
+          // Calc rows
+          h+=_compCalcRows(win, c, tx);
+          h+='</div>';
         });
       });
-      if(wt>0){
-        h+='<div class="win-sub-line"><span class="win-sub-lbl">Window '+(wi+1)+' Total</span><span class="win-sub-val price-col">'+fmt(wt)+'</span></div>';
+
+      if(wt>0) {
+        h+='<div style="display:flex;justify-content:space-between;padding:8px 0 0;border-top:1px solid var(--border);margin-top:4px">'
+          +'<span style="font-size:12px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Window '+(wi+1)+' Total</span>'
+          +'<span style="font-size:14px;font-weight:900;color:var(--red)">'+fmt(wt)+'</span>'
+          +'</div>';
       }
-      h+='</div></div>';
+      h+='</div>';
     });
-    if(rt>0){
-      h+='<div class="room-sub-footer price-col"><span class="l">'+esc(room.name)+' Sub-total</span><span class="v">'+fmt(rt)+'</span></div>';
+
+    if(rt>0) {
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg3);border-top:1px solid var(--border);padding:10px 16px">'
+        +'<span style="font-size:12px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">'+esc(room.name)+' Sub-total</span>'
+        +'<span style="font-size:15px;font-weight:900;color:var(--text)">'+fmt(rt)+'</span>'
+        +'</div>';
     }
     h+='</div>';
   });
-  // Grand total
-  var gross=grandGross(), totalDisc=gross-gt;
+
+  // ── Grand Total ──
   if(totalDisc>0){
-    h+='<div class="grand-card price-col">'
+    h+='<div class="grand-card">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
       +'<span class="grand-lbl" style="margin-bottom:0">MRP Total</span>'
-      +'<span style="font-size:18pt;font-weight:800;color:#555;text-decoration:line-through">'+fmt(gross)+'</span></div>'
+      +'<span style="font-size:18px;font-weight:800;color:#555;text-decoration:line-through">'+fmt(gross)+'</span></div>'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-      +'<span style="font-size:9pt;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#f39c12">Total Discount</span>'
-      +'<span style="font-size:16pt;font-weight:800;color:#f39c12">-'+fmt(totalDisc)+'</span></div>'
+      +'<span style="font-size:12px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#f39c12">Total Discount</span>'
+      +'<span style="font-size:16px;font-weight:800;color:#f39c12">-'+fmt(totalDisc)+'</span></div>'
       +'<div style="border-top:1px solid #333;padding-top:10px;text-align:center">'
       +'<div class="grand-lbl">Your Price</div>'
       +'<div class="grand-val">'+Number(Math.round(gt)).toLocaleString('en-IN')+'</div>'
       +'</div><div class="grand-sub">After discounts · inclusive of all charges</div></div>';
   } else {
-    h+='<div class="grand-card price-col"><div class="grand-lbl">Grand Total (MRP)</div>'
+    h+='<div class="grand-card"><div class="grand-lbl">Grand Total (MRP)</div>'
       +'<div class="grand-val">'+Number(Math.round(gt)).toLocaleString('en-IN')+'</div>'
       +'<div class="grand-sub">All prices are MRP inclusive of all charges</div></div>';
   }
@@ -3221,17 +3276,32 @@ function _buildPrintQuote() {
 }
 
 function printMode(mode) {
-  var html;
-  if(mode==='measure') html=_buildPrintMeasure();
-  else if(mode==='select') html=_buildPrintSelect();
-  else html=_buildPrintQuote();
-  // Inject into a print-only container
+  try {
+    var html;
+    if(mode==='measure') html=_buildPrintMeasure();
+    else if(mode==='select') html=_buildPrintSelect();
+    else html=_buildPrintQuote();
+    var pd=document.getElementById('printDoc');
+    if(!pd){ pd=document.createElement('div'); pd.id='printDoc'; document.body.appendChild(pd); }
+    // Toolbar: close + print — hidden during actual print via CSS
+    var modeLabel=mode==='measure'?'📏 Measurements':mode==='select'?'🎨 Selections':'💰 Quote';
+    pd.innerHTML='<div id="printToolbar" style="position:sticky;top:0;z-index:10;background:#fff;border-bottom:2px solid #eee;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">'
+      +'<button onclick="closePrintDoc()" style="background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;color:#333">✕ Close</button>'
+      +'<span style="font-size:13px;font-weight:800;color:#333">'+modeLabel+'</span>'
+      +'<button onclick="window.print()" style="background:#c0392b;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer">🖨 Print</button>'
+      +'</div>'
+      +'<div style="padding:5mm 5mm 10mm">'+html+'</div>';
+    // Show as full-screen overlay
+    pd.style.cssText='display:block!important;position:fixed;inset:0;z-index:800;background:#fff;overflow-y:auto;-webkit-overflow-scrolling:touch;color:#000;font-family:-apple-system,BlinkMacSystemFont,sans-serif';
+    document.body.setAttribute('data-pmode',mode);
+  } catch(e) {
+    showToast('Error: '+e.message);
+  }
+}
+function closePrintDoc() {
   var pd=document.getElementById('printDoc');
-  if(!pd){ pd=document.createElement('div'); pd.id='printDoc'; document.body.appendChild(pd); }
-  pd.innerHTML=html;
-  document.body.setAttribute('data-pmode',mode);
-  setTimeout(function(){ window.print(); },80);
-  setTimeout(function(){ document.body.removeAttribute('data-pmode'); pd.innerHTML=''; },3500);
+  if(pd){ pd.style.cssText=''; pd.innerHTML=''; }
+  document.body.removeAttribute('data-pmode');
 }
 
 // ═══════════════════════════════════════════════════════════
