@@ -149,6 +149,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #c0392b;outline-offse
 <!-- Firebase compat SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="firebase-init.js"></script>
 </head>
 <body>
@@ -377,10 +378,12 @@ function showSearchGate(cat){
     +'<div id="gateErr" style="color:#e74c3c;font-size:13px;font-weight:600;min-height:18px;margin-top:8px"></div>'
     +'<button class="pin-cancel" onclick="showHome()" style="color:#555;margin-top:8px">&#8592; Back</button>'
     +'</div>';
-  // Also load fresh staff list from Firestore
-  DB.collection("staffDirectory").where("active","==",true).orderBy("name").get({source:"server"})
+  // Also load fresh staff list from Firestore (simple get — no composite index needed)
+  DB.collection("staffDirectory").get()
     .then(function(snap){
-      var list=[]; snap.forEach(function(d){ list.push({uid:d.id,name:d.data().name,role:d.data().role}); });
+      var list=[];
+      snap.forEach(function(d){ var dt=d.data(); if(dt.active!==false) list.push({uid:d.id,name:dt.name,role:dt.role}); });
+      list.sort(function(a,b){ return a.name.localeCompare(b.name); });
       if(!list.length) return;
       localStorage.setItem("darla_staff_cache",JSON.stringify(list));
       var sel=document.getElementById("gateNameSel"); if(!sel) return;
