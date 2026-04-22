@@ -2018,17 +2018,15 @@ function loadStaff() {
     if(c){ var l=JSON.parse(c); if(l&&l.length){ STAFF=l; buildStaffDrop(); }}
   }catch(e){}
 
-  // Fetch fresh list from Firestore staffDirectory (public read — no auth required)
-  DB.collection('staffDirectory')
-    .where('active','==',true)
-    .orderBy('name')
-    .get({ source:'server' })
+  // Fetch fresh list from Firestore staffDirectory (simple get — no composite index needed)
+  DB.collection('staffDirectory').get()
     .then(function(snap){
       var list=[];
-      snap.forEach(function(doc){ var d=doc.data(); list.push({ uid:doc.id, name:d.name, role:d.role }); });
+      snap.forEach(function(doc){ var d=doc.data(); if(d.active!==false) list.push({ uid:doc.id, name:d.name, role:d.role }); });
+      list.sort(function(a,b){ return a.name.localeCompare(b.name); });
       if(list.length){ STAFF=list; localStorage.setItem('darla_staff_cache',JSON.stringify(list)); buildStaffDrop(); }
     }).catch(function(){
-      // Firestore unavailable (offline on first load) — cached list already shown
+      // Firestore unavailable — cached list already shown
     });
 }
 
