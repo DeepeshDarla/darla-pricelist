@@ -1364,6 +1364,11 @@ margin-right: 8px;
 /* ═══════════════════════════════════════════
 DESKTOP RESPONSIVE
 ═══════════════════════════════════════════ */
+
+/* ── Sidebar: hidden on mobile ── */
+.bld-sidebar { display: none; }
+.sum-aside { /* flows inline on mobile */ }
+
 @media (min-width: 768px) {
 .page-wrap { padding: 24px 24px 120px; }
 .pin-grid { max-width: 280px; }
@@ -1371,26 +1376,69 @@ DESKTOP RESPONSIVE
 .search-modal-hdr { padding: 20px 20px 0; }
 .search-modal-body { padding: 16px 20px; }
 .std-sheet { border-radius: var(--r-xl); margin: auto auto 0; }
-.btm-bar { max-width: 680px; left: 50%; transform: translateX(-50%); border-radius: var(--r-lg) var(--r-lg) 0 0; border: 1px solid var(--border); border-bottom: none; }
-/* Desktop: wider summary and customer screens */
-#screen-summary .page-wrap, #screen-customer .page-wrap { max-width: 720px; }
-/* Desktop: quotes list wider */
-#screen-quotes .search-bar-wrap { max-width: 960px; margin: 0 auto; }
-#screen-quotes > div:last-child { max-width: 960px; margin: 0 auto; padding: 12px 24px 120px; }
+.btm-bar { max-width: 720px; left: 50%; transform: translateX(-50%); border-radius: var(--r-lg) var(--r-lg) 0 0; border: 1px solid var(--border); border-bottom: none; }
+
+/* Customer screen centred */
+#screen-customer .page-wrap { max-width: 680px; }
+
+/* ── Quote list: 2-column card grid ── */
+#screen-quotes .search-bar-wrap, #adminFilterRow { max-width: 1040px; margin-left: auto; margin-right: auto; }
+#screen-quotes > div:last-child { max-width: 1040px; margin: 0 auto; padding: 12px 24px 120px; }
+#qList { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.q-card { margin-bottom: 0; }
+/* Bigger quote card typography on desktop */
+.q-name { font-size: 17px; }
+.q-total { font-size: 18px; }
+
+/* ── Summary: 2-column layout ── */
+#screen-summary .page-wrap { max-width: 1040px; padding: 28px 28px 100px; }
+.sum-layout { display: grid; grid-template-columns: 1fr 320px; gap: 28px; align-items: start; }
+.sum-aside { position: sticky; top: 74px; }
 }
+
 @media (min-width: 1024px) {
 .search-modal { max-height: 90vh; max-width: 620px; }
-/* Desktop: wider builder, summary, quotes */
-#screen-builder .page-wrap { max-width: 860px; padding: 28px 32px 120px; }
-#screen-summary .page-wrap { max-width: 800px; }
-.btm-bar { max-width: 860px; }
-/* Desktop: room cards get a bit more breathing room */
+
+/* ── Builder: sidebar layout ── */
+.bld-wrap {
+  display: grid;
+  grid-template-columns: 1fr 290px;
+  gap: 28px;
+  align-items: start;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 36px 120px;
+}
+.bld-main { min-width: 0; }
+.bld-sidebar {
+  display: block;
+  position: sticky;
+  top: 74px;
+  max-height: calc(100vh - 90px);
+  overflow-y: auto;
+}
+
+.btm-bar { max-width: 1200px; }
+
+/* Room cards: more breathing room */
 .room-hdr { padding: 16px 20px 16px 24px; }
 .room-body { padding: 0 18px 18px; }
 .win-hdr { padding: 12px 16px; }
 .win-body { padding: 8px 16px 14px; }
 .tx-card { padding: 15px; }
 .comp-card { padding: 14px; }
+
+/* Larger type for builder on desktop */
+.win-name { font-size: 15px; }
+.room-name { font-size: 16px; }
+}
+
+@media (min-width: 1280px) {
+/* Extra breathing room on large screens */
+#screen-quotes > div:last-child { max-width: 1200px; }
+#qList { grid-template-columns: 1fr 1fr 1fr; }
+#screen-summary .page-wrap { max-width: 1100px; }
+.sum-layout { grid-template-columns: 1fr 360px; gap: 36px; }
 }
 /* Better transitions for interactive elements */
 .room-card, .win-card, .tx-card, .comp-card {
@@ -1553,9 +1601,12 @@ border-bottom: 1.5pt solid #000;
 
 <!-- SCREEN: BUILDER -->
 <div id="screen-builder" class="screen">
-  <div class="page-wrap">
-    <div id="roomsWrap"></div>
-    <button class="btn add-btn" onclick="openRoomModal()">+ Add Room</button>
+  <div class="page-wrap bld-wrap">
+    <div class="bld-main">
+      <div id="roomsWrap"></div>
+      <button class="btn add-btn" onclick="openRoomModal()">+ Add Room</button>
+    </div>
+    <aside id="bldSidebar" class="bld-sidebar"></aside>
   </div>
   <div class="btm-bar" id="bldBar">
     <button class="btn ghost" style="margin-top:0;flex:1;min-width:0;font-size:13px" onclick="saveAndGoList()">≡ All</button>
@@ -2426,6 +2477,44 @@ function saveManualProduct(ri,wi,ti,ci) {
 // ═══════════════════════════════════════════════════════════
 // BUILDER RENDER
 // ═══════════════════════════════════════════════════════════
+function renderBldSidebar() {
+  var sb=document.getElementById('bldSidebar'); if(!sb||!sb.offsetParent) return;
+  var q=APP.quote, gt=grandTotal(), gross=grandGross(), disc=gross-gt;
+  var h='';
+  // Total card
+  h+='<div style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--r-md);padding:20px;margin-bottom:14px">';
+  h+='<div style="font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--text4);margin-bottom:10px">Quote Total</div>';
+  if(disc>0){
+    h+='<div style="font-size:13px;color:var(--text4);text-decoration:line-through;margin-bottom:2px">'+fmt(gross)+'</div>';
+    h+='<div style="font-size:30px;font-weight:900;color:var(--red);letter-spacing:-1.5px;line-height:1.1">'+fmt(gt)+'</div>';
+    h+='<div style="font-size:11px;color:#e67e22;font-weight:700;margin-top:5px">–'+fmt(disc)+' discount applied</div>';
+  } else {
+    h+='<div style="font-size:30px;font-weight:900;color:var(--red);letter-spacing:-1.5px;line-height:1.1">'+fmt(gt)+'</div>';
+    h+='<div style="font-size:11px;color:var(--text4);font-weight:500;margin-top:5px">All prices at MRP</div>';
+  }
+  h+='</div>';
+  // Room nav
+  if(q.rooms.length){
+    h+='<div style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--r-md);overflow:hidden;margin-bottom:14px">';
+    h+='<div style="font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--text4);padding:11px 16px;border-bottom:1px solid var(--border)">Rooms</div>';
+    q.rooms.forEach(function(room,ri){
+      var rt=roomTotal(room);
+      h+='<div onclick="(function(){var el=document.getElementById(\'r_'+ri+'\');if(el)el.scrollIntoView({behavior:\'smooth\',block:\'start\'});})()"'
+        +' style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;transition:background 0.1s"'
+        +' onmouseenter="this.style.background=\'var(--bg3)\'" onmouseleave="this.style.background=\'\'">'
+        +'<span style="font-size:13px;font-weight:700;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(room.name)+'</span>'
+        +(rt>0?'<span style="font-size:12px;font-weight:800;color:var(--text2);margin-left:8px;flex-shrink:0">'+fmt(rt)+'</span>':'')
+        +'</div>';
+    });
+    h+='</div>';
+  }
+  // Action buttons
+  h+='<button class="btn" style="width:100%;margin-bottom:8px" onclick="goTo(\'screen-summary\')">Summary →</button>';
+  h+='<button class="btn ghost" style="width:100%;margin-bottom:8px" onclick="saveQuote()">✦ Save</button>';
+  h+='<button class="btn ghost" style="width:100%;font-size:12px" onclick="saveAndGoList()">≡ All Quotes</button>';
+  sb.innerHTML=h;
+}
+
 function renderBld() {
   setNavForBuilder();
   // Update running total in bottom bar
@@ -2461,6 +2550,7 @@ function renderBld() {
       +'</div></div>';
   });
   document.getElementById('roomsWrap').innerHTML=html;
+  renderBldSidebar();
 }
 function renderWin(win,ri,wi) {
   return '<div class="win-card open" id="w_'+ri+'_'+wi+'">'
@@ -3050,9 +3140,12 @@ function renderSum() {
     h+='</div>';
   });
 
+  // ── Split: main content done, aside begins ──
+  var mainH=h; var asideH='';
+
   // ── Grand Total ──
   if(totalDisc>0){
-    h+='<div class="grand-card">'
+    asideH+='<div class="grand-card">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
       +'<span class="grand-lbl" style="margin-bottom:0">MRP Total</span>'
       +'<span style="font-size:18px;font-weight:800;color:#555;text-decoration:line-through">'+fmt(gross)+'</span></div>'
@@ -3064,14 +3157,18 @@ function renderSum() {
       +'<div class="grand-val">'+Number(Math.round(gt)).toLocaleString('en-IN')+'</div>'
       +'</div><div class="grand-sub">After discounts · inclusive of all charges</div></div>';
   } else {
-    h+='<div class="grand-card"><div class="grand-lbl">Grand Total (MRP)</div>'
+    asideH+='<div class="grand-card"><div class="grand-lbl">Grand Total (MRP)</div>'
       +'<div class="grand-val">'+Number(Math.round(gt)).toLocaleString('en-IN')+'</div>'
       +'<div class="grand-sub">All prices are MRP inclusive of all charges</div></div>';
   }
-  h+='<div class="terms-card"><div class="title">Terms &amp; Notes</div><div class="body">';
-  CFG.terms.forEach(function(t){ h+='· '+esc(t)+'<br>'; });
-  h+='</div></div>';
-  document.getElementById('sumContent').innerHTML=h;
+  asideH+='<div class="terms-card"><div class="title">Terms &amp; Notes</div><div class="body">';
+  CFG.terms.forEach(function(t){ asideH+='· '+esc(t)+'<br>'; });
+  asideH+='</div></div>';
+  document.getElementById('sumContent').innerHTML=
+    '<div class="sum-layout">'
+    +'<div class="sum-main">'+mainH+'</div>'
+    +'<div class="sum-aside">'+asideH+'</div>'
+    +'</div>';
 }
 // ── PRINT HEADER (shared) ────────────────────────────────────────────────────
 function _printHdr(q) {
