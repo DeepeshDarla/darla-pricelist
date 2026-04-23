@@ -776,6 +776,7 @@ function buildResultCard(r,cat,ci,staff,ridx){
     if(staff&&r.code)html+='<div class="rc-badge">'+esc(r.code)+'</div>';
     html+='<div class="rc-hdr">'+esc(h)+'</div>';
     html+=rcRow("Width",r.width);
+    html+=rcRow("Item Details",gv(r,"item_details"));
     html+=rcMrp(r.mrp,ci.mrpLabel);
   } else if(cat==="hangers"){
     if(r.code)html+='<div class="rc-badge">'+esc(r.code)+'</div>';
