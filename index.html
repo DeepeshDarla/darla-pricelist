@@ -144,6 +144,17 @@ button:focus-visible,input:focus-visible{outline:2px solid #c0392b;outline-offse
 .qb-tab.active{color:#fff;border-bottom-color:#c0392b}
 /* Quote select button */
 .quote-sel-btn{width:100%;background:#c0392b;color:#fff;border:none;border-radius:11px;padding:15px;font-size:15px;font-weight:800;cursor:pointer;display:block;margin:10px 0 4px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;letter-spacing:0.5px}
+/* Result cards */
+.res-card{background:#161616;border:1px solid #252525;border-radius:14px;padding:16px;margin-bottom:10px}
+.rc-badge{font-size:10px;font-weight:800;color:#c0392b;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+.rc-hdr{font-size:19px;font-weight:900;color:#fff;margin-bottom:10px;line-height:1.3;word-break:break-word}
+.rc-row{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid #1e1e1e;gap:10px}
+.rc-row:last-of-type{border-bottom:none}
+.rc-lbl{font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;flex-shrink:0}
+.rc-val{font-size:14px;font-weight:700;color:#ccc;text-align:right;word-break:break-word}
+.rc-mrp-wrap{background:#fff;border-radius:10px;padding:14px 16px;text-align:center;margin-top:12px}
+.rc-mrp-lbl{font-size:10px;font-weight:800;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.rc-mrp-val{font-size:40px;font-weight:900;color:#000;letter-spacing:-2px}
 .quote-sel-btn:active{opacity:0.85;transform:scale(0.98)}
 </style>
 <!-- Firebase compat SDK -->
@@ -192,59 +203,50 @@ var SAK = "darla_search_v1";
 var BASE= window.location.origin+window.location.pathname;
 
 // ── CATEGORY DEFINITIONS ──
-// inputs: search fields in order (first is always Brand except Hangers)
-// ctxCols: chips shown above results [label, firebaseKey]
-// tblCols: columns in results table [label, firebaseKey]
-// mrpLabel: label for MRP card
+// inputs: search fields in order
+// rtdbPath: Firebase path (defaults to key if omitted)
+// lvl4Field: Firebase field name for 4th-level client-side filter
+// mrpLabel: label for MRP display
 var CATS = {
   fabric: {
     label:"Fabric", icon:"&#129525;", codeSearch:false,
     inputs:["Brand","Catalog","S.No"],
-    ctxCols:[["Brand","brand"],["Catalog","catalog"],["S.No","s_no"]],
-    tblCols:[["Catalog","catalog"],["S.No","s_no"],["Item Details","item_details"],["MRP","mrp"],["Width","width"]],
     mrpLabel:"MRP / METRE"
   },
   hangers: {
     label:"Hangers", icon:"&#129693;", codeSearch:true,
     inputs:["Code"],
-    ctxCols:[["Code","code"]],
-    tblCols:[["Brand","brand"],["Catalog","catalog"],["S.No","s_no"],["Item Details","item_details"],["MRP","mrp"],["Width","width"]],
     mrpLabel:"MRP / METRE"
   },
   blinds: {
     label:"Blinds", icon:"&#129695;", codeSearch:false,
     inputs:["Brand","Blind Type","Catalog"],
-    ctxCols:[["Brand","brand"],["Blind Type","blind_type"],["Catalog","catalog"],["Mechanism","mechanism"],["Other Details","other_details"]],
-    tblCols:[["Catalog","catalog"],["Mechanism","mechanism"],["Other Details","other_details"],["MRP","mrp"]],
     mrpLabel:"MRP"
   },
   wallpapers: {
     label:"Wallpapers", icon:"&#128444;", codeSearch:false,
-    inputs:["Brand","Catalog","Design Details"],
-    ctxCols:[["Brand","brand"],["Catalog","catalog"],["Design Details","design_details"]],
-    tblCols:[["Design Details","design_details"],["Size","size"],["MRP","mrp"]],
-    mrpLabel:"MRP / METRE"
-  },
-  motors: {
-    label:"Motors", icon:"&#9881;", codeSearch:false,
-    inputs:["Brand","Category","Product","Item Details"],
-    ctxCols:[["Brand","brand"],["Category","category"],["Product","product"]],
-    tblCols:[["Product","product"],["Item Details","item_details"],["MRP","mrp"],["Other Details","other_details"]],
-    mrpLabel:"MRP"
+    inputs:["Brand","Catalog","Design"],
+    mrpLabel:"MRP / ROLL"
   },
   beds: {
     label:"Beds", icon:"&#128716;", codeSearch:false,
     inputs:["Brand","Model","Size"],
-    ctxCols:[["Brand","brand"],["Model","model"],["Size","size"]],
-    tblCols:[["Model","model"],["Size","size"],["MRP","mrp"]],
     mrpLabel:"MRP"
   },
-  sleepwell: {
-    label:"Sleepwell", icon:"&#128716;", codeSearch:false,
-    inputs:["Brand","Model","Size"],
-    ctxCols:[["Brand","brand"],["Model","model"],["Size","size"]],
-    tblCols:[["Model","model"],["Size","size"],["MRP","mrp"]],
-    mrpLabel:"MRP"
+  flooring: {
+    label:"Flooring", icon:"&#128305;", codeSearch:false, rtdbPath:"sleepwell",
+    inputs:["Category","Brand","Catalog","Item"],
+    lvl4Field:"item", mrpLabel:"MRP"
+  },
+  motors: {
+    label:"Motors", icon:"&#9881;", codeSearch:false,
+    inputs:["Brand","Category","Product","Item Details"],
+    lvl4Field:"item_details", mrpLabel:"MRP"
+  },
+  rods: {
+    label:"Rods & Tracks", icon:"&#128296;", codeSearch:false,
+    inputs:["Category","Product","Colour","Style"],
+    lvl4Field:"style", mrpLabel:"MRP"
   }
 };
 
@@ -491,7 +493,8 @@ function loadMeta(attempt){
   st.textContent=attempt>1?"Retrying... ("+attempt+"/3)":"Loading...";
   st.style.color="#555";st.style.cursor="default";st.onclick=null;
 
-  fetch(FB+"/"+currentCat+"/meta.json")
+  var ci0=CATS[currentCat];
+  fetch(FB+"/"+(ci0&&ci0.rtdbPath?ci0.rtdbPath:currentCat)+"/meta.json")
     .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json();})
     .then(function(d){
       window._metaLoading=false;
@@ -551,13 +554,8 @@ function getOpts(idx){
   if(idx===0) return allBrands;
   var brand=getFieldVal(ci.inputs[0]);
   if(idx===1) return BCM[brand]||[];
-  if(idx>=2){
-    var lvl1=getFieldVal(ci.inputs[1]);
-    var third=BCSM[brand+"|||"+lvl1]||[];
-    if(idx===2) return third;
-    // For idx>=3, return same third level options as no deeper hierarchy
-    return third;
-  }
+  if(idx===2){var lvl1=getFieldVal(ci.inputs[1]);return BCSM[brand+"|||"+lvl1]||[];}
+  if(idx>=3) return window._lvl4Opts||[];
   return [];
 }
 
@@ -573,7 +571,7 @@ function pickOpt(idx,val){
   var drop=document.getElementById("fd_"+fid);
   if(el)el.value=val;
   if(drop)drop.classList.remove("show");
-  // Enable next, reset subsequent
+  // Enable next field, reset subsequent
   for(var j=idx+1;j<ci.inputs.length;j++){
     var jEl=document.getElementById("f_"+toFid(ci.inputs[j]));
     if(jEl){
@@ -581,6 +579,69 @@ function pickOpt(idx,val){
       else{jEl.value="";jEl.disabled=true;}
     }
   }
+  // After 3rd field picked: fetch level-4 opts or blinds mechanisms
+  if(idx===2){
+    var brand=getFieldVal(ci.inputs[0]);
+    var lvl1=getFieldVal(ci.inputs[1]);
+    var bKey=sk(brand),cKey=sk(lvl1),sKey=sk(val);
+    var rp=ci.rtdbPath||currentCat;
+    if(ci.inputs.length>=4&&ci.lvl4Field){
+      window._lvl4Opts=[];
+      var l4El=document.getElementById("f_"+toFid(ci.inputs[3]));
+      if(l4El){l4El.disabled=true;l4El.placeholder="Loading...";}
+      fetch(FB+"/"+rp+"/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+"/"+encodeURIComponent(sKey)+".json")
+        .then(function(r){return r.json();})
+        .then(function(data){
+          var res=[];function flat(o){if(Array.isArray(o))o.forEach(function(x){if(x&&x.code)res.push(x);});else if(o&&typeof o==="object")Object.values(o).forEach(flat);}flat(data);
+          var fk=ci.lvl4Field,seen={},unique=[];
+          res.forEach(function(x){var v=gv(x,fk)||x[fk]||"";if(v&&!seen[v]){seen[v]=true;unique.push(v);}});
+          unique.sort();window._lvl4Opts=unique;
+          var l4=document.getElementById("f_"+toFid(ci.inputs[3]));
+          if(l4){l4.disabled=false;l4.placeholder=unique.length?"Type to filter...":"Type to search...";}
+          bindLvl4Input();
+        })
+        .catch(function(){var l4=document.getElementById("f_"+toFid(ci.inputs[3]));if(l4){l4.disabled=false;l4.placeholder="Type to search...";}});
+    } else if(currentCat==="blinds"){
+      fetchBlindsMechanisms(bKey,cKey,sKey);
+    }
+  }
+}
+
+function bindLvl4Input(){
+  var ci=CATS[currentCat];if(!ci||ci.inputs.length<4)return;
+  var label=ci.inputs[3],fid=toFid(label);
+  var el=document.getElementById("f_"+fid);
+  var drop=document.getElementById("fd_"+fid);
+  if(!el)return;
+  var n=el.cloneNode(true);el.parentNode.replaceChild(n,el);
+  n.addEventListener("focus",function(){showDrop(drop,filt(window._lvl4Opts||[],""),n,function(v){n.value=v;if(drop)drop.classList.remove("show");});});
+  n.addEventListener("input",function(){showDrop(drop,filt(window._lvl4Opts||[],this.value),n,function(v){n.value=v;if(drop)drop.classList.remove("show");});});
+  n.addEventListener("blur",function(){setTimeout(function(){if(drop)drop.classList.remove("show");},200);});
+}
+
+function fetchBlindsMechanisms(bKey,cKey,sKey){
+  var mw=document.getElementById("mech_wrap");if(mw)mw.remove();
+  fetch(FB+"/blinds/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+"/"+encodeURIComponent(sKey)+".json")
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var res=[];function flat(o){if(Array.isArray(o))o.forEach(function(x){if(x&&x.code)res.push(x);});else if(o&&typeof o==="object")Object.values(o).forEach(flat);}flat(data);
+      var seen={},unique=[];
+      res.forEach(function(x){var v=x.mechanism||gv(x,"mechanism")||"";if(v&&!seen[v]){seen[v]=true;unique.push(v);}});
+      unique.sort();if(!unique.length)return;
+      var card=document.querySelector(".search-card");if(!card)return;
+      var btn=card.querySelector(".submit-btn");if(!btn)return;
+      var wrap=document.createElement("div");wrap.id="mech_wrap";
+      wrap.innerHTML='<div class="field-lbl">Mechanism</div><div class="lbl-line-sm"></div>'
+        +'<div class="autocomplete-wrap"><input class="ac-input" id="f_mechanism" placeholder="All mechanisms..." autocomplete="off" spellcheck="false">'
+        +'<div class="dropdown" id="fd_mechanism"></div></div>';
+      card.insertBefore(wrap,btn);
+      var mel=document.getElementById("f_mechanism");
+      var mdrop=document.getElementById("fd_mechanism");
+      mel.addEventListener("focus",function(){showDrop(mdrop,unique,mel,function(v){mel.value=v;mdrop.classList.remove("show");});});
+      mel.addEventListener("input",function(){showDrop(mdrop,filt(unique,this.value),mel,function(v){mel.value=v;mdrop.classList.remove("show");});});
+      mel.addEventListener("blur",function(){setTimeout(function(){mdrop.classList.remove("show");},200);});
+    })
+    .catch(function(){});
 }
 
 // ── SEARCH ──
@@ -588,8 +649,10 @@ function doCodeSearch(){
   var inp=document.getElementById("codeInp");if(!inp)return;
   var code=codeKey(inp.value.trim());if(!code)return;
   searchCtx={code:inp.value.trim().toUpperCase()};
+  var ci=CATS[currentCat];
+  var rp=ci?ci.rtdbPath||currentCat:currentCat;
   var res=document.getElementById("results");if(res)res.innerHTML=spinner("Searching...");
-  fetch(FB+"/"+currentCat+"/by_code/"+encodeURIComponent(code)+".json")
+  fetch(FB+"/"+rp+"/by_code/"+encodeURIComponent(code)+".json")
     .then(function(r){return r.json();})
     .then(function(d){
       if(!d){renderRows([],currentCat);return;}
@@ -601,28 +664,27 @@ function doCodeSearch(){
 function doSearch(){
   var ci=CATS[currentCat];if(!ci)return;
   var res=document.getElementById("results");if(res)res.innerHTML=spinner("Searching...");
+  var rp=ci.rtdbPath||currentCat;
 
-  // Collect all field values into searchCtx
   searchCtx={};
-  ci.inputs.forEach(function(label){
-    var fid=toFid(label);
-    searchCtx[fid]=getFieldVal(label);
-  });
+  ci.inputs.forEach(function(label){searchCtx[toFid(label)]=getFieldVal(label);});
+  // Capture optional mechanism for blinds
+  if(currentCat==="blinds"){var mel=document.getElementById("f_mechanism");if(mel)searchCtx["mechanism"]=mel.value.trim();}
 
   var brand=searchCtx[toFid(ci.inputs[0])]||"";
-  var lvl1 =ci.inputs[1]?searchCtx[toFid(ci.inputs[1])]||"":"";
-  var lvl2 =ci.inputs[2]?searchCtx[toFid(ci.inputs[2])]||"":"";
+  var lvl1=ci.inputs[1]?searchCtx[toFid(ci.inputs[1])]||"":"";
+  var lvl2=ci.inputs[2]?searchCtx[toFid(ci.inputs[2])]||"":"";
   var bKey=sk(brand),cKey=sk(lvl1),sKey=sk(lvl2);
 
   var url;
   if(bKey&&bKey!="_"&&cKey&&cKey!="_"&&sKey&&sKey!="_")
-    url=FB+"/"+currentCat+"/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+"/"+encodeURIComponent(sKey)+".json";
+    url=FB+"/"+rp+"/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+"/"+encodeURIComponent(sKey)+".json";
   else if(bKey&&bKey!="_"&&cKey&&cKey!="_")
-    url=FB+"/"+currentCat+"/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+".json";
+    url=FB+"/"+rp+"/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+".json";
   else if(bKey&&bKey!="_")
-    url=FB+"/"+currentCat+"/by_brand/"+encodeURIComponent(bKey)+".json";
+    url=FB+"/"+rp+"/by_brand/"+encodeURIComponent(bKey)+".json";
   else
-    url=FB+"/"+currentCat+"/by_code.json";
+    url=FB+"/"+rp+"/by_code.json";
 
   fetch(url)
     .then(function(r){return r.json();})
@@ -634,6 +696,16 @@ function doSearch(){
         else if(obj&&typeof obj==="object")Object.values(obj).forEach(function(v){flatten(v);});
       }
       flatten(data);
+      // Filter by 4th-level field if provided
+      if(ci.inputs.length>=4&&ci.lvl4Field){
+        var v4=searchCtx[toFid(ci.inputs[3])]||"";
+        if(v4){var fk=ci.lvl4Field;results=results.filter(function(x){return(gv(x,fk)||x[fk]||"").toLowerCase()===v4.toLowerCase();});}
+      }
+      // Filter by mechanism for blinds
+      if(currentCat==="blinds"&&searchCtx["mechanism"]){
+        var mv=searchCtx["mechanism"];
+        results=results.filter(function(x){return(x.mechanism||gv(x,"mechanism")||"").toLowerCase()===mv.toLowerCase();});
+      }
       renderRows(results,currentCat);
     })
     .catch(function(){var r=document.getElementById("results");if(r)r.innerHTML='<div class="nf"><h3>Error</h3><p>Please try again.</p></div>';});
@@ -648,6 +720,8 @@ function clearSearch(){
       var el=document.getElementById("f_"+toFid(label));
       if(el){el.value="";if(idx>0)el.disabled=true;}
     });
+    var mw=document.getElementById("mech_wrap");if(mw)mw.remove();
+    window._lvl4Opts=[];
   }
   searchCtx={};
   var r=document.getElementById("results");if(r)r.innerHTML="";
@@ -683,170 +757,79 @@ function renderRows(rows,cat){
   window._rows=rows;window._cat=cat;
   var ci=CATS[cat]||CATS.fabric;
   var staff=isStaff();
-
-  // Build context chips header
-  var ctxHtml="";
-  if(Object.keys(searchCtx).length>0){
-    var chips="";
-    if(ci.codeSearch){
-      chips+='<div class="ctx-chip"><div class="ctx-chip-lbl">Code</div><div class="ctx-chip-val">'+esc(searchCtx.code||"")+'</div></div>';
-    } else {
-      ci.ctxCols.forEach(function(col){
-        var val=searchCtx[col[1]]||searchCtx[toFid(col[0])]||gv(rows[0],col[1])||"";
-        if(val)chips+='<div class="ctx-chip"><div class="ctx-chip-lbl">'+col[0]+'</div><div class="ctx-chip-val">'+esc(val)+'</div></div>';
-      });
-    }
-    if(chips)ctxHtml='<div class="ctx-hdr"><div class="ctx-chips">'+chips+'</div></div>';
-  }
-
-  var tbl=rows.length===1?buildSingleCard(rows[0],cat,ci,staff):buildTable(rows,cat,ci,staff);
-  el.innerHTML=ctxHtml+tbl;
-
-  var fb=document.getElementById("fabBtn");
-  var sb=document.getElementById("sBadge");
+  var html='';
+  if(rows.length>1)html+='<div class="count-badge"><span class="count-txt">Items Found</span><span class="count-num">'+rows.length+' items</span></div>';
+  rows.forEach(function(r,ridx){html+=buildResultCard(r,cat,ci,staff,ridx);});
+  el.innerHTML=html;
+  var fb=document.getElementById("fabBtn");var sb=document.getElementById("sBadge");
   if(staff){if(sb)sb.style.display="inline-block";if(fb)fb.style.display="none";}
   else{if(fb)fb.style.display="flex";}
 }
 
-// ── SINGLE CARD VIEW ──
-function buildSingleCard(r,cat,ci,staff){
-  var html='<div class="item-group">';
-  if(staff&&r.code) html+=card("CODE",r.code,"card-accent-blue");
-  if(r.brand)       html+=card("BRAND",r.brand,"card-accent-red");
+function rcRow(lbl,val){if(!val&&val!==0)return"";return '<div class="rc-row"><span class="rc-lbl">'+lbl+'</span><span class="rc-val">'+esc(String(val))+'</span></div>';}
+function rcMrp(val,lbl){if(!val)return"";return '<div class="rc-mrp-wrap"><div class="rc-mrp-lbl">'+esc(lbl||"MRP")+'</div><div class="rc-mrp-val">&#8377;'+esc(String(val))+'</div></div>';}
 
+function buildResultCard(r,cat,ci,staff,ridx){
+  var html='<div class="res-card">';
   if(cat==="fabric"){
-    if(r.catalog)           html+=card("CATALOG",r.catalog,"card-accent-blue");
-    if(gv(r,"s_no"))        html+=card("S.NO",gv(r,"s_no"),"");
-    if(gv(r,"item_details"))html+=cardSm("ITEM DETAILS",gv(r,"item_details"));
-    if(r.width)             html+=card("WIDTH",r.width,"");
-    if(r.mrp)               html+=cardMrp(r.mrp,ci.mrpLabel);
+    var h=[r.brand,r.catalog,gv(r,"s_no")].filter(Boolean).join(" / ");
+    if(staff&&r.code)html+='<div class="rc-badge">'+esc(r.code)+'</div>';
+    html+='<div class="rc-hdr">'+esc(h)+'</div>';
+    html+=rcRow("Width",r.width);
+    html+=rcMrp(r.mrp,ci.mrpLabel);
   } else if(cat==="hangers"){
-    if(r.catalog)           html+=card("CATALOG",r.catalog,"card-accent-blue");
-    if(gv(r,"s_no"))        html+=card("S.NO",gv(r,"s_no"),"");
-    if(gv(r,"item_details"))html+=cardSm("ITEM DETAILS",gv(r,"item_details"));
-    if(r.width)             html+=card("WIDTH",r.width,"");
-    if(r.mrp)               html+=cardMrp(r.mrp,ci.mrpLabel);
+    if(r.code)html+='<div class="rc-badge">'+esc(r.code)+'</div>';
+    var h=[r.brand,r.catalog,gv(r,"s_no")].filter(Boolean).join(" / ");
+    html+='<div class="rc-hdr">'+esc(h)+'</div>';
+    html+=rcRow("Item Details",gv(r,"item_details"));
+    html+=rcRow("Width",r.width);
+    html+=rcMrp(r.mrp,ci.mrpLabel);
   } else if(cat==="blinds"){
-    if(gv(r,"blind_type"))        html+=card("BLIND TYPE",gv(r,"blind_type"),"card-accent-blue");
-    if(r.catalog)                 html+=card("CATALOG",r.catalog,"");
-    if(r.mechanism)               html+=card("MECHANISM",r.mechanism,"");
-    if(gv(r,"other_details"))     html+=card("OTHER DETAILS",gv(r,"other_details"),"");
-    if(r.mrp)                     html+=cardMrp(r.mrp,ci.mrpLabel);
+    var h=[r.brand,gv(r,"blind_type")].filter(Boolean).join(" / ");
+    html+='<div class="rc-hdr">'+esc(h)+'</div>';
+    html+=rcRow("Catalog",r.catalog);
+    var mech=r.mechanism||gv(r,"mechanism")||"";if(mech)html+=rcRow("Mechanism",mech);
+    html+=rcRow("Other",gv(r,"other_details"));
+    html+=rcMrp(r.mrp,ci.mrpLabel);
   } else if(cat==="wallpapers"){
-    if(r.catalog)               html+=card("CATALOG",r.catalog,"card-accent-blue");
-    if(gv(r,"design_details"))  html+=cardSm("DESIGN DETAILS",gv(r,"design_details"));
-    if(r.size)                  html+=card("SIZE",r.size,"");
-    if(r.mrp)                   html+=cardMrp(r.mrp,ci.mrpLabel);
+    var h=[r.brand,r.catalog].filter(Boolean).join(" / ");
+    html+='<div class="rc-hdr">'+esc(h)+'</div>';
+    html+=rcRow("Design",gv(r,"design")||gv(r,"design_details"));
+    html+=rcRow("Size",r.size);
+    html+=rcMrp(r.mrp,ci.mrpLabel);
+  } else if(cat==="beds"){
+    var h=[r.brand,r.model].filter(Boolean).join(" / ");
+    html+='<div class="rc-hdr">'+esc(h)+'</div>';
+    html+=rcRow("Size",r.size);
+    html+=rcMrp(r.mrp,ci.mrpLabel);
+  } else if(cat==="flooring"){
+    html+='<div class="rc-hdr">'+esc(r.category||"")+'</div>';
+    html+=rcRow("Brand",r.brand);
+    html+=rcRow("Catalog",r.catalog);
+    html+=rcRow("Item",gv(r,"item")||gv(r,"item_details"));
+    html+=rcRow("Width",r.width);
+    html+=rcRow("Min Qty",gv(r,"min_qty")||gv(r,"min_quantity"));
+    html+=rcMrp(r.mrp,ci.mrpLabel);
   } else if(cat==="motors"){
-    if(r.category)              html+=card("CATEGORY",r.category,"card-accent-blue");
-    if(r.product)               html+=card("PRODUCT",r.product,"");
-    if(gv(r,"item_details"))    html+=cardSm("ITEM DETAILS",gv(r,"item_details"));
-    if(gv(r,"other_details"))   html+=cardSm("OTHER DETAILS",gv(r,"other_details"));
-    if(r.mrp)                   html+=cardMrp(r.mrp,ci.mrpLabel);
-  } else if(cat==="beds"||cat==="sleepwell"){
-    if(r.model)     html+=card("MODEL",r.model,"card-accent-blue");
-    if(r.thickness) html+=card("THICKNESS",r.thickness,"");
-    if(r.width)     html+=card("WIDTH",r.width,"");
-    if(r.length)    html+=card("LENGTH",r.length,"");
-    if(r.size)      html+=card("SIZE",r.size,"");
-    if(r.mrp)       html+=cardMrp(r.mrp,ci.mrpLabel);
+    html+='<div class="rc-hdr">'+esc(r.brand||"")+'</div>';
+    html+=rcRow("Category",r.category);
+    html+=rcRow("Product",r.product);
+    html+=rcRow("Item Details",gv(r,"item_details"));
+    html+=rcRow("Other Details",gv(r,"other_details"));
+    html+=rcMrp(r.mrp,ci.mrpLabel);
+  } else if(cat==="rods"){
+    var h=[r.category,r.product,r.colour||r.color].filter(Boolean).join(" / ");
+    html+='<div class="rc-hdr">'+esc(h)+'</div>';
+    html+=rcRow("Style",r.style);
+    html+=rcRow("Size",r.size);
+    html+=rcMrp(r.mrp,ci.mrpLabel);
+  } else {
+    html+='<div class="rc-hdr">'+esc(r.brand||r.code||"")+'</div>';
+    html+=rcRow("Item Details",gv(r,"item_details"));
+    html+=rcMrp(r.mrp,ci.mrpLabel);
   }
-
-  if(r.link&&r.link.indexOf("http")===0)
-    html+='<div class="card"><div class="lbl">LINK</div><div class="lbl-line"></div><a href="'+esc(r.link)+'" target="_blank" class="link-btn">View Product &#8599;</a></div>';
-  // Quote mode select button
-  if(QUOTE_MODE && window._rows){
-    var ridx = window._rows.indexOf(r);
-    if(ridx < 0) ridx = window._rows.length - 1; // fallback
-    html += '<button class="quote-sel-btn" onclick="quotePickRow('+ridx+')">&#10003;&nbsp; Select This Product</button>';
-  }
+  if(QUOTE_MODE)html+='<button class="quote-sel-btn" onclick="quotePickRow('+ridx+')">&#10003;&nbsp; Select This Product</button>';
   return html+'</div>';
-}
-
-// ── TABLE VIEW ──
-function buildTable(rows,cat,ci,staff){
-  var tblCols=ci.tblCols||[["MRP","mrp"]];
-
-  // Build grid columns: first col flexible, rest fixed, arrow
-  var gridCols="2fr";
-  tblCols.slice(1).forEach(function(){gridCols+=" 70px";});
-  gridCols+=" 24px";
-
-  var html='<div class="count-badge"><span class="count-txt">Items Found</span><span class="count-num">'+rows.length+' items</span></div>'
-    +'<div class="tbl-wrap">'
-    +'<div class="tbl-head" style="grid-template-columns:'+gridCols+'">'
-    +'<span>'+tblCols[0][0]+'</span>';
-  tblCols.slice(1).forEach(function(c){html+='<span style="text-align:center">'+c[0]+'</span>';});
-  html+='<span></span></div>';
-
-  rows.forEach(function(r){
-    // Main column value
-    var mainVal=gv(r,tblCols[0][1])||r[tblCols[0][1]]||"—";
-    // Sub text under main
-    var sub="";
-    if(cat==="fabric"||cat==="hangers") sub=gv(r,"s_no")||"";
-    else if(cat==="blinds") sub=gv(r,"blind_type")||"";
-
-    // Extra columns
-    var extraHtml="";
-    tblCols.slice(1).forEach(function(c){
-      var v=gv(r,c[1])||r[c[1]]||"";
-      if(c[1]==="mrp"&&v){
-        extraHtml+='<div style="text-align:center"><span class="tr-mrp">&#8377;'+esc(v)+'</span></div>';
-      } else {
-        extraHtml+='<div style="text-align:center;font-size:12px;color:#aaa;font-weight:600">'+(v?esc(v):"—")+'</div>';
-      }
-    });
-
-    // Expand panel — all fields not already in table columns
-    var shown={};
-    tblCols.forEach(function(c){shown[c[1]]=true;});
-    if(cat==="fabric"||cat==="hangers") shown["s_no"]=true; // already in sub
-
-    var allFields=[
-      ["Code","code"],["Brand","brand"],["Catalog","catalog"],
-      ["S.No","s_no"],["Item Details","item_details"],
-      ["Blind Type","blind_type"],["Mechanism","mechanism"],["Other Details","other_details"],
-      ["Design Details","design_details"],
-      ["Category","category"],["Product","product"],["Other Details","other_details"],
-      ["Model","model"],["Thickness","thickness"],["Width","width"],
-      ["Length","length"],["Size","size"],["MRP","mrp"]
-    ];
-    var expandHtml="";
-    allFields.forEach(function(f){
-      if(!shown[f[1]]){
-        var v=gv(r,f[1])||r[f[1]]||"";
-        if(v)expandHtml+=expLine(f[0],v);
-      }
-    });
-    if(r.link&&r.link.indexOf("http")===0)expandHtml+=expLinkLine(r.link);
-    var ridx = rows.indexOf(r);
-    var qSelBtn = QUOTE_MODE
-      ? '<button class="quote-sel-btn" onclick="quotePickRow('+ridx+')">&#10003;&nbsp; Select This Product</button>'
-      : '';
-    html+='<div class="tbl-row" style="grid-template-columns:'+gridCols+'" onclick="toggleRow(this)">'
-      +'<div><div class="tr-main">'+esc(mainVal)+'</div>'+(sub?'<div class="tr-sub">'+esc(sub)+'</div>':'')+'</div>'
-      +extraHtml
-      +'<div class="tr-arr">'+(expandHtml||QUOTE_MODE?"&#8250;":"")+'</div></div>'
-      +'<div class="exp-panel">'+qSelBtn+expandHtml+'</div>';
-  });
-
-  return html+'</div><div class="tbl-hint">Tap row to expand details</div>';
-}
-
-// ── CARD HELPERS ──
-function card(lbl,val,cls){if(!val)return"";return '<div class="card '+(cls||'')+'"><div class="lbl">'+lbl+'</div><div class="lbl-line"></div><div class="val">'+esc(val)+'</div></div>';}
-function cardSm(lbl,val){if(!val)return"";return '<div class="card"><div class="lbl">'+lbl+'</div><div class="lbl-line"></div><div class="val-sm">'+esc(val)+'</div></div>';}
-function cardMrp(val,lbl){if(!val)return"";return '<div class="card card-mrp"><div class="lbl lbl-dark">'+(lbl||"MRP")+'</div><div class="lbl-line"></div><div class="mrp-row"><span class="rsym">&#8377;</span><span class="mrp-val">'+esc(val)+'</span></div></div>';}
-function expLine(lbl,val){if(!val)return"";return '<div class="exp-line"><span class="exp-lbl">'+lbl+'</span><span class="exp-val">'+esc(val)+'</span></div>';}
-function expLinkLine(url){if(!url||url.indexOf("http")!==0)return"";return '<div class="exp-line"><span class="exp-lbl">Link</span><span class="exp-val"><a class="exp-link" href="'+esc(url)+'" target="_blank">View &#8599;</a></span></div>';}
-
-function toggleRow(row){
-  var panel=row.nextElementSibling;
-  var isOpen=panel.classList.contains("show");
-  document.querySelectorAll(".exp-panel.show").forEach(function(p){p.classList.remove("show");});
-  document.querySelectorAll(".tbl-row.open").forEach(function(r){r.classList.remove("open");});
-  if(!isOpen){panel.classList.add("show");row.classList.add("open");row.scrollIntoView({behavior:"smooth",block:"nearest"});}
 }
 function filt(arr,q){
   if(!arr||!arr.length)return[];
