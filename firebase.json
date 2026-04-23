@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "pricelist-qr-codes",
+    "target": "pricelist-qr-codes",
     "public": ".",
     "ignore": [
       "firebase.json",

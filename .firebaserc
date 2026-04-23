@@ -1,5 +1,14 @@
 {
   "projects": {
     "default": "pricelist-qr-codes"
+  },
+  "targets": {
+    "pricelist-qr-codes": {
+      "hosting": {
+        "pricelist-qr-codes": [
+          "pricelist-qr-codes"
+        ]
+      }
+    }
   }
 }
