@@ -400,7 +400,7 @@ display: block;
 }
 .inp {
 width: 100%;
-background: #1c1c1c !important;
+background: #ffffff !important;
 border: 1.5px solid var(--border);
 border-radius: var(--r-sm);
 color: var(--text) !important;
@@ -411,25 +411,26 @@ font-weight: 600;
 padding: 11px 14px;
 outline: none;
 -webkit-appearance: none;
-transition: border-color 0.15s;
+transition: border-color 0.15s, box-shadow 0.15s;
+box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
-.inp:focus { border-color: var(--red); }
-.inp::placeholder { color: #3a3a3a !important; -webkit-text-fill-color: #3a3a3a !important; font-weight: 400; }
-.inp:disabled { opacity: 0.4; cursor: not-allowed; }
+.inp:focus { border-color: var(--red); box-shadow: 0 0 0 3px var(--red-dim); }
+.inp::placeholder { color: var(--text4) !important; -webkit-text-fill-color: var(--text4) !important; font-weight: 400; }
+.inp:disabled { opacity: 0.5; cursor: not-allowed; background: var(--bg3) !important; }
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
 -webkit-text-fill-color: var(--text) !important;
--webkit-box-shadow: 0 0 0 1000px #1c1c1c inset !important;
+-webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
 }
 select.inp {
 appearance: none;
-background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’ viewBox=‘0 0 12 8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%23666’ stroke-width=‘1.8’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”) !important;
+background-image: url(“data:image/svg+xml,%3Csvg xmlns=’http://www.w3.org/2000/svg’ width=’12’ height=’8’ viewBox=’0 0 12 8’%3E%3Cpath d=’M1 1l5 5 5-5’ stroke=’%23a89890’ stroke-width=’1.8’ fill=’none’ stroke-linecap=’round’/%3E%3C/svg%3E”) !important;
 background-repeat: no-repeat !important;
 background-position: right 14px center !important;
 padding-right: 40px;
 }
-select.inp option { background: #1c1c1c; color: var(--text); }
+select.inp option { background: #ffffff; color: var(--text); }
 .inp-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
 /* ═══════════════════════════════════════════
@@ -581,11 +582,13 @@ transition: transform 0.2s;
 TREATMENT + COMPONENT CARDS
 ═══════════════════════════════════════════ */
 .tx-card {
-background: #141414;
+background: #ffffff;
 border: 1px solid var(--border);
+border-left: 3px solid var(--red-dim);
 border-radius: var(--r-md);
 margin: 8px 0;
 padding: 13px;
+box-shadow: var(--shadow-sm);
 }
 .tx-head {
 display: flex;
@@ -604,12 +607,12 @@ font-weight: 800;
 letter-spacing: 0.12em;
 text-transform: uppercase;
 }
-.tx-badge.curtains    { background: rgba(41,128,185,0.15); color: #64b5f6; border: 1px solid rgba(41,128,185,0.3); }
-.tx-badge.roman_blinds{ background: rgba(39,174,96,0.12);  color: #81c784; border: 1px solid rgba(39,174,96,0.3); }
-.tx-badge.blinds      { background: var(--amber-dim);      color: var(--amber); border: 1px solid rgba(212,164,90,0.3); }
+.tx-badge.curtains    { background: rgba(41,128,185,0.10); color: #1a6bbf; border: 1px solid rgba(41,128,185,0.25); }
+.tx-badge.roman_blinds{ background: rgba(39,174,96,0.10);  color: #1e7d47; border: 1px solid rgba(39,174,96,0.25); }
+.tx-badge.blinds      { background: var(--amber-dim);      color: #8a5a00; border: 1px solid rgba(176,125,42,0.3); }
 
 .comp-card {
-background: #0d0d0d;
+background: var(--bg2);
 border: 1px solid var(--border);
 border-radius: var(--r-sm);
 padding: 12px;
@@ -629,9 +632,9 @@ text-transform: uppercase;
 padding: 4px 10px;
 border-radius: 5px;
 }
-.layer-tag.main  { background: rgba(41,128,185,0.15); color: #64b5f6; }
-.layer-tag.sheer { background: rgba(39,174,96,0.12); color: #81c784; }
-.layer-tag.blind { background: var(--amber-dim); color: var(--amber); }
+.layer-tag.main  { background: rgba(41,128,185,0.10); color: #1a6bbf; }
+.layer-tag.sheer { background: rgba(39,174,96,0.10); color: #1e7d47; }
+.layer-tag.blind { background: var(--amber-dim); color: #8a5a00; }
 .comp-del-btn {
 background: transparent;
 border: none;
@@ -655,7 +658,7 @@ display: flex;
 align-items: center;
 gap: 8px;
 margin-top: 9px;
-background: #080808;
+background: var(--bg3);
 border: 1px solid var(--border);
 border-radius: var(--r-sm);
 padding: 8px 12px;
@@ -688,7 +691,7 @@ text-align: right;
 .mrp-unit { font-size: 10px; color: var(--text3); font-weight: 600; white-space: nowrap; }
 
 .calc-box {
-background: #080808;
+background: var(--bg3);
 border: 1px solid var(--border);
 border-radius: var(--r-sm);
 padding: 9px 11px;
@@ -724,7 +727,7 @@ NEXT ACTION FLOW
 .next-wrap {
 margin-top: 10px;
 padding: 11px;
-background: #0c0c0c;
+background: var(--bg2);
 border-radius: var(--r-sm);
 border: 1px dashed var(--border2);
 }
@@ -749,9 +752,9 @@ transition: transform 0.1s;
 letter-spacing: 0.04em;
 }
 .nab:active { transform: scale(0.95); }
-.nab.main  { background: #1a4a80; color: #fff; border: 1px solid #2a6abf; }
-.nab.sheer { background: #1a6640; color: #fff; border: 1px solid var(--green); }
-.nab.blind { background: #5a3d00; color: #fff; border: 1px solid var(--amber); }
+.nab.main  { background: rgba(41,128,185,0.12); color: #1a6bbf; border: 1px solid rgba(41,128,185,0.3); }
+.nab.sheer { background: rgba(39,174,96,0.12);  color: #1e7d47; border: 1px solid rgba(39,174,96,0.3); }
+.nab.blind { background: rgba(176,125,42,0.12); color: #8a5a00; border: 1px solid rgba(176,125,42,0.3); }
 .nab.win   { background: var(--bg3); color: var(--text2); border: 1px solid var(--border2); }
 .nab.room  { background: var(--bg3); color: var(--text2); border: 1px solid var(--border2); }
 .nab-done {
@@ -801,7 +804,7 @@ background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/20
 background-repeat: no-repeat;
 background-position: right 8px center;
 }
-.style-sel option { background: #1c1c1c; }
+.style-sel option { background: #ffffff; }
 .blind-toggle {
 display: flex;
 border-radius: var(--r-sm);
@@ -941,8 +944,8 @@ margin-top: 9px;
 .win-sub-lbl { font-size: 10px; font-weight: 800; color: var(--text3); letter-spacing: 0.12em; text-transform: uppercase; }
 .win-sub-val { font-size: 14px; font-weight: 900; color: var(--red); }
 .room-sub-footer {
-background: #120808;
-border-top: 2px solid #2a1010;
+background: var(--bg2);
+border-top: 2px solid var(--border);
 padding: 12px 17px;
 display: flex;
 justify-content: space-between;
@@ -1147,20 +1150,20 @@ outline: none;
 transition: border-color 0.15s;
 }
 .ac-inp:focus { border-color: var(--red); }
-.ac-inp::placeholder { color: #3a3a3a !important; -webkit-text-fill-color: #3a3a3a !important; font-weight: 400; }
+.ac-inp::placeholder { color: var(--text4) !important; -webkit-text-fill-color: var(--text4) !important; font-weight: 400; }
 .ac-inp:disabled { opacity: 0.35; cursor: not-allowed; }
 .ac-dropdown {
 display: none;
 position: absolute;
 top: calc(100% + 4px);
 left: 0; right: 0;
-background: #1e1e1e;
-border: 1px solid var(--border2);
+background: #ffffff;
+border: 1px solid var(--border);
 border-radius: var(--r-md);
 max-height: 200px;
 overflow-y: auto;
 z-index: 600;
-box-shadow: var(--shadow-md);
+box-shadow: 0 8px 24px rgba(0,0,0,0.10);
 }
 .ac-dropdown.open { display: block; }
 .ac-item {
@@ -1292,8 +1295,8 @@ transition: all 0.15s;
 MANUAL ENTRY FORM
 ═══════════════════════════════════════════ */
 .manual-form {
-background: #0d0d0d;
-border: 1.5px solid var(--border2);
+background: var(--bg2);
+border: 1.5px solid var(--border);
 border-radius: var(--r-sm);
 padding: 12px;
 margin-top: 6px;
@@ -2567,7 +2570,7 @@ function renderComp(c,ri,wi,ti,ci,win,t) {
         +'</div></div>';
     } else {
       html+='<div class="btn-row" style="margin-top:4px">'
-        +'<button class="btn sm" style="flex:2;background:#141414;border:1.5px dashed var(--border2);color:#aaa;box-shadow:none" onclick="openProductModal('+ri+','+wi+','+ti+','+ci+')">🔍 Search Product</button>'
+        +'<button class="btn sm" style="flex:2;background:var(--bg3);border:1.5px dashed var(--border2);color:var(--text3);box-shadow:none" onclick="openProductModal('+ri+','+wi+','+ti+','+ci+')">🔍 Search Product</button>'
         +'<button class="btn ghost sm" style="flex:1;margin-top:0" onclick="toggleManualEntry('+ri+','+wi+','+ti+','+ci+')">✎ Manual</button>'
         +'</div>';
     }
@@ -3046,7 +3049,7 @@ function renderSum() {
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
       +'<span style="font-size:12px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#f39c12">Total Discount</span>'
       +'<span style="font-size:16px;font-weight:800;color:#f39c12">-'+fmt(totalDisc)+'</span></div>'
-      +'<div style="border-top:1px solid #333;padding-top:10px;text-align:center">'
+      +'<div style="border-top:1px solid #ddd;padding-top:10px;text-align:center">'
       +'<div class="grand-lbl">Your Price</div>'
       +'<div class="grand-val">'+Number(Math.round(gt)).toLocaleString('en-IN')+'</div>'
       +'</div><div class="grand-sub">After discounts · inclusive of all charges</div></div>';
@@ -3087,7 +3090,7 @@ function _buildPrintMeasure() {
   h+='<div style="font-size:7pt;font-weight:800;letter-spacing:2pt;text-transform:uppercase;color:#999;margin-bottom:3mm">ROOM MEASUREMENTS</div>';
   q.rooms.forEach(function(room){
     h+='<div style="break-inside:avoid;margin-bottom:4mm">'
-      +'<div style="background:#000;color:#fff;padding:2mm 3mm;font-size:10pt;font-weight:900;margin-bottom:0">'+esc(room.name)+'</div>';
+      +'<div style="background:#2c2c2c;color:#fff;padding:2mm 3mm;font-size:10pt;font-weight:900;margin-bottom:0">'+esc(room.name)+'</div>';
     room.windows.forEach(function(win,wi){
       var hasProduct=win.treatments.some(function(tx){ return tx.components.some(function(c){ return !!c.product; }); });
       h+='<div style="display:grid;grid-template-columns:40mm 1fr;gap:2mm;padding:2mm 3mm;border-bottom:0.5pt solid #eee;break-inside:avoid">';
@@ -3159,7 +3162,7 @@ function _buildPrintSelect() {
   h+='<div style="font-size:7pt;font-weight:800;letter-spacing:2pt;text-transform:uppercase;color:#999;margin-bottom:3mm">SELECTIONS</div>';
   q.rooms.forEach(function(room){
     h+='<div style="break-inside:avoid;margin-bottom:4mm">'
-      +'<div style="background:#000;color:#fff;padding:2mm 3mm;font-size:10pt;font-weight:900;margin-bottom:0">'+esc(room.name)+'</div>';
+      +'<div style="background:#2c2c2c;color:#fff;padding:2mm 3mm;font-size:10pt;font-weight:900;margin-bottom:0">'+esc(room.name)+'</div>';
     // Group windows by selection fingerprint
     var groups={}, order=[];
     room.windows.forEach(function(win,wi){
@@ -3198,7 +3201,7 @@ function _buildPrintQuote() {
   q.rooms.forEach(function(room){
     var rt=roomTotal(room);
     h+='<div style="break-inside:avoid;margin-bottom:4mm">'
-      +'<div style="background:#000;color:#fff;padding:2mm 3mm;font-size:10pt;font-weight:900;display:flex;justify-content:space-between">'
+      +'<div style="background:#2c2c2c;color:#fff;padding:2mm 3mm;font-size:10pt;font-weight:900;display:flex;justify-content:space-between">'
       +'<span>'+esc(room.name)+'</span><span>'+fmt(rt)+'</span></div>';
     room.windows.forEach(function(win,wi){
       var wt=0;
@@ -3256,15 +3259,15 @@ function _buildPrintQuote() {
   });
   // Grand total
   if(totalDisc>0){
-    h+='<div style="background:#000;color:#fff;border-radius:2mm;padding:3.5mm;margin:3mm 0;break-inside:avoid">'
+    h+='<div style="background:#2c2c2c;color:#fff;border-radius:2mm;padding:3.5mm;margin:3mm 0;break-inside:avoid">'
       +'<div style="display:flex;justify-content:space-between;margin-bottom:1.5mm"><span style="font-size:7pt;color:#bbb">MRP Total</span><span style="font-size:14pt;font-weight:800;text-decoration:line-through;color:#666">'+fmt(grandGr)+'</span></div>'
       +'<div style="display:flex;justify-content:space-between;margin-bottom:1.5mm"><span style="font-size:7pt;color:#f39c12">Total Discount</span><span style="font-size:12pt;font-weight:800;color:#f39c12">–'+fmt(totalDisc)+'</span></div>'
-      +'<div style="border-top:1px solid #333;padding-top:2mm;text-align:center">'
+      +'<div style="border-top:1px solid #ddd;padding-top:2mm;text-align:center">'
       +'<div style="font-size:7pt;color:#bbb;margin-bottom:1mm">YOUR PRICE</div>'
       +'<div style="font-size:22pt;font-weight:900;color:#fff">'+Number(Math.round(grandNt)).toLocaleString('en-IN')+'</div>'
       +'</div></div>';
   } else {
-    h+='<div style="background:#000;color:#fff;border-radius:2mm;padding:3.5mm;margin:3mm 0;text-align:center;break-inside:avoid">'
+    h+='<div style="background:#2c2c2c;color:#fff;border-radius:2mm;padding:3.5mm;margin:3mm 0;text-align:center;break-inside:avoid">'
       +'<div style="font-size:7pt;color:#bbb;margin-bottom:1mm">GRAND TOTAL (MRP)</div>'
       +'<div style="font-size:22pt;font-weight:900;color:#fff">'+Number(Math.round(grandNt)).toLocaleString('en-IN')+'</div>'
       +'</div>';
