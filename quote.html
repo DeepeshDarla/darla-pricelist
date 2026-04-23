@@ -1175,7 +1175,7 @@ cursor: pointer;
 border-bottom: 1px solid var(--border);
 }
 .ac-item:last-child { border-bottom: none; }
-.ac-item:active { background: var(--red); }
+.ac-item:active { background: var(--red); color: #fff; }
 .ac-item mark { background: transparent; color: var(--red); font-weight: 900; }
 
 /* Search results */
@@ -1289,7 +1289,7 @@ color: var(--text3);
 cursor: pointer;
 transition: all 0.15s;
 }
-.pill.on { background: #2a0a0a; border-color: var(--red); color: var(--text); }
+.pill.on { background: var(--red); border-color: var(--red); color: #fff; }
 
 /* ═══════════════════════════════════════════
 MANUAL ENTRY FORM
@@ -1740,8 +1740,8 @@ var CATS = {
                 mrpUnit:"unit", hierarchy:["brand","category","product"] },
   beds:       { label:"Beds",       icon:"🛏️", inputs:["Brand","Model","Size"],
                 mrpUnit:"unit", hierarchy:["brand","model","size"] },
-  flooring:   { label:"Flooring",   icon:"&#128305;", inputs:["Brand","Model","Size"],
-                mrpUnit:"unit", hierarchy:["brand","model","size"] }
+  flooring:   { label:"Flooring",   icon:"&#128305;", inputs:["Category","Brand","Catalog"],
+                mrpUnit:"unit", hierarchy:["category","brand","catalog"] }
 };
 
 // ═══════════════════════════════════════════════════════════
