@@ -13,7 +13,7 @@ var CATEGORIES = {
   "Wallpapers":    "wallpapers",
   "Motors":        "motors",
   "Beds":          "beds",
-  "Flooring":      "sleepwell",    // tab renamed; RTDB path stays "sleepwell"
+  "Flooring":      "flooring",
   "Rods & Tracks": "rods"          // new tab + new RTDB path
 };
 
@@ -126,7 +126,7 @@ function syncCategoryData(node, headers, rows) {
 
     // ── by_brand 3-level hierarchy ──
     // For most categories the first level is Brand.
-    // For Flooring (sleepwell) and Rods, Category is the first level.
+    // For Flooring and Rods, Category is the first level.
     var brand = getVal(r, "brand");
     var bKey, cKey, sKey, cLabel, sLabel;
 
@@ -166,7 +166,7 @@ function syncCategoryData(node, headers, rows) {
       sKey   = sk(getVal(r, "size")) || "_";
       sLabel = getVal(r, "size");
 
-    } else if (node === "sleepwell") {
+    } else if (node === "flooring") {
       // Flooring: Category → Brand → Catalog  (Item is a record field, not a path level)
       var catVal = getVal(r, "category");
       brand  = catVal;
@@ -281,7 +281,7 @@ function nuclearResetAndSync() {
   Logger.log("=== WIPING FIREBASE ===");
   var toDelete = [
     "fabric","hangers","blinds","wallpapers","motors","beds",
-    "sleepwell","rods",
+    "flooring","sleepwell","rods",
     "mattress","mattresses","by_code","by_brand","meta","test"
   ];
   toDelete.forEach(function(cat) {
