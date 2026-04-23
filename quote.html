@@ -81,6 +81,7 @@ min-height: 100vh;
 #main-content {
 position: relative;
 overflow: hidden;
+overflow-x: clip;
 }
 
 /* ═══════════════════════════════════════════
@@ -607,9 +608,9 @@ font-weight: 800;
 letter-spacing: 0.12em;
 text-transform: uppercase;
 }
-.tx-badge.curtains    { background: rgba(41,128,185,0.10); color: #1a6bbf; border: 1px solid rgba(41,128,185,0.25); }
-.tx-badge.roman_blinds{ background: rgba(39,174,96,0.10);  color: #1e7d47; border: 1px solid rgba(39,174,96,0.25); }
-.tx-badge.blinds      { background: var(--amber-dim);      color: #8a5a00; border: 1px solid rgba(176,125,42,0.3); }
+.tx-badge.curtains    { background: rgba(192,57,43,0.10);  color: #b03224; border: 1px solid rgba(192,57,43,0.25); }
+.tx-badge.roman_blinds{ background: rgba(160,115,45,0.10); color: #8b6020; border: 1px solid rgba(160,115,45,0.25); }
+.tx-badge.blinds      { background: rgba(100,90,80,0.10);  color: #5e4f42; border: 1px solid rgba(100,90,80,0.25); }
 
 .comp-card {
 background: var(--bg2);
@@ -632,9 +633,9 @@ text-transform: uppercase;
 padding: 4px 10px;
 border-radius: 5px;
 }
-.layer-tag.main  { background: rgba(41,128,185,0.10); color: #1a6bbf; }
-.layer-tag.sheer { background: rgba(39,174,96,0.10); color: #1e7d47; }
-.layer-tag.blind { background: var(--amber-dim); color: #8a5a00; }
+.layer-tag.main  { background: rgba(192,57,43,0.10);  color: #b03224; }
+.layer-tag.sheer { background: rgba(160,115,45,0.10); color: #8b6020; }
+.layer-tag.blind { background: rgba(100,90,80,0.10);  color: #5e4f42; }
 .comp-del-btn {
 background: transparent;
 border: none;
@@ -2906,37 +2907,33 @@ function _compCalcRows(win, c, tx) {
   var h = '';
   var disc = c.discount || 0;
   if(tx.type==='curtains') {
-    var panelLine = cc.numPanels+'panels×'+cc.panelLen+'m = '+cc.fabricQty+'m';
-    h += '<div style="font-size:11px;color:var(--text3);margin:3px 0 5px">'+panelLine+'</div>';
+    h += '<div style="font-size:11px;color:var(--text3);margin:3px 0 5px">'+cc.numPanels+' panels × '+cc.panelLen+'m = '+cc.fabricQty+'m</div>';
     (cc.lines||[]).forEach(function(ln){
       h += '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:2px 0;border-bottom:1px dotted var(--border)">'
-        +'<span style="font-size:11px;color:var(--text3)">'+esc(ln.lbl)+'</span>'
-        +'<span style="font-size:11px;color:var(--text2)">'+esc(String(ln.qty))+' × '+fmt(ln.rate)+'</span>'
-        +'<span style="font-size:12px;font-weight:700;color:var(--text);min-width:60px;text-align:right">'+fmt(ln.amt)+'</span>'
+        +'<div style="flex:1;min-width:0"><span style="font-size:11px;color:var(--text3)">'+esc(ln.lbl)+'</span>'
+        +'<span style="font-size:10px;color:var(--text4);margin-left:5px">'+esc(String(ln.qty))+' × '+fmt(ln.rate)+'</span></div>'
+        +'<span style="font-size:12px;font-weight:700;color:var(--text);flex-shrink:0;padding-left:8px">'+fmt(ln.amt)+'</span>'
         +'</div>';
     });
   } else if(tx.type==='roman_blinds') {
-    var rpLine = cc.panels+'panels×'+cc.panelLen+'m = '+cc.fabricQty+'m';
-    h += '<div style="font-size:11px;color:var(--text3);margin:3px 0 5px">'+rpLine+'</div>';
-    [{lbl:'Mechanism',s:cc.sqft+'sqft',a:cc.matCost},
-     {lbl:'Fabric',s:cc.fabricQty+'m×'+fmt(c.product.mrp),a:cc.fabCost},
+    h += '<div style="font-size:11px;color:var(--text3);margin:3px 0 5px">'+cc.sqft+' sqft</div>';
+    [{lbl:'Mechanism',s:cc.sqft+' sqft',a:cc.matCost},
+     {lbl:'Fabric',s:cc.fabricQty+'m × '+fmt(c.product.mrp),a:cc.fabCost},
      {lbl:'Lining',s:cc.fabricQty+'m',a:cc.lining},
-     {lbl:'Installation',s:'per win',a:cc.installation},
-     {lbl:'Stitching',s:'per win',a:cc.stitching}
+     {lbl:'Installation',s:'per window',a:cc.installation},
+     {lbl:'Stitching',s:'per window',a:cc.stitching}
     ].forEach(function(ln){
       h += '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:2px 0;border-bottom:1px dotted var(--border)">'
-        +'<span style="font-size:11px;color:var(--text3)">'+esc(ln.lbl)+'</span>'
-        +'<span style="font-size:11px;color:var(--text2)">'+esc(String(ln.s))+'</span>'
-        +'<span style="font-size:12px;font-weight:700;color:var(--text);min-width:60px;text-align:right">'+fmt(ln.a)+'</span>'
+        +'<div style="flex:1;min-width:0"><span style="font-size:11px;color:var(--text3)">'+esc(ln.lbl)+'</span>'
+        +'<span style="font-size:10px;color:var(--text4);margin-left:5px">'+esc(String(ln.s))+'</span></div>'
+        +'<span style="font-size:12px;font-weight:700;color:var(--text);flex-shrink:0;padding-left:8px">'+fmt(ln.a)+'</span>'
         +'</div>';
     });
   } else {
-    h += '<div style="display:flex;justify-content:space-between;padding:2px 0">'
-      +'<span style="font-size:11px;color:var(--text3)">Area</span>'
-      +'<span style="font-size:12px;font-weight:700;color:var(--text)">'+cc.sqft+' sqft</span></div>'
-      +'<div style="display:flex;justify-content:space-between;padding:2px 0">'
-      +'<span style="font-size:11px;color:var(--text3)">'+fmt(cc.sqft)+' × '+fmt(c.product.mrp)+'</span>'
-      +'<span style="font-size:12px;font-weight:700;color:var(--text)">'+fmt(cc.unitTotal)+'</span></div>';
+    h += '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:2px 0">'
+      +'<div style="flex:1;min-width:0"><span style="font-size:11px;color:var(--text3)">Area</span>'
+      +'<span style="font-size:10px;color:var(--text4);margin-left:5px">'+cc.sqft+' sqft × '+fmt(c.product.mrp)+'</span></div>'
+      +'<span style="font-size:12px;font-weight:700;color:var(--text);flex-shrink:0;padding-left:8px">'+fmt(cc.unitTotal)+'</span></div>';
   }
   if((parseInt(win.qty)||1)>1) {
     h += '<div style="display:flex;justify-content:space-between;padding:2px 0;margin-top:2px;border-top:1px solid var(--border)">'
