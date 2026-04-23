@@ -752,9 +752,9 @@ transition: transform 0.1s;
 letter-spacing: 0.04em;
 }
 .nab:active { transform: scale(0.95); }
-.nab.main  { background: rgba(41,128,185,0.12); color: #1a6bbf; border: 1px solid rgba(41,128,185,0.3); }
-.nab.sheer { background: rgba(39,174,96,0.12);  color: #1e7d47; border: 1px solid rgba(39,174,96,0.3); }
-.nab.blind { background: rgba(176,125,42,0.12); color: #8a5a00; border: 1px solid rgba(176,125,42,0.3); }
+.nab.main  { background: rgba(192,57,43,0.10);  color: #b03224; border: 1px solid rgba(192,57,43,0.25); }
+.nab.sheer { background: rgba(160,115,45,0.10); color: #8b6020; border: 1px solid rgba(160,115,45,0.25); }
+.nab.blind { background: rgba(100,90,80,0.10);  color: #5e4f42; border: 1px solid rgba(100,90,80,0.25); }
 .nab.win   { background: var(--bg3); color: var(--text2); border: 1px solid var(--border2); }
 .nab.room  { background: var(--bg3); color: var(--text2); border: 1px solid var(--border2); }
 .nab-done {
@@ -1543,7 +1543,7 @@ border-bottom: 1.5pt solid #000;
     <div class="form-card accent-red">
       <div class="inp-row">
         <div class="field"><label class="field-label">Salesman 1 (Primary)</label><input class="inp" id="cSales1" placeholder="Primary" type="text" autocapitalize="words"></div>
-        <div class="field"><label class="field-label">Salesman 2</label><input class="inp" id="cSales2" placeholder="Optional" type="text" autocapitalize="words"></div>
+        <div class="field"><label class="field-label">Salesman 2</label><select class="inp" id="cSales2"><option value="">— None —</option></select></div>
       </div>
     </div>
     <button class="btn" onclick="startQuote()">Start Quote →</button>
@@ -1571,9 +1571,9 @@ border-bottom: 1.5pt solid #000;
 <div id="screen-summary" class="screen">
   <div class="page-wrap" id="sumContent"></div>
   <div class="btm-bar" id="sumBar">
-    <button class="btn ghost" style="margin-top:0;flex:1;font-size:11px;padding:0 6px" onclick="printMode('measure')" title="Measurements only">📏<br><span style="font-size:9px">Measure</span></button>
-    <button class="btn ghost" style="margin-top:0;flex:1;font-size:11px;padding:0 6px;border-color:var(--blue-dim);color:var(--blue)" onclick="printMode('select')" title="Selections only">🎨<br><span style="font-size:9px">Select</span></button>
-    <button class="btn ghost" style="margin-top:0;flex:1;font-size:11px;padding:0 6px;border-color:var(--green-dim);color:var(--green)" onclick="printMode('quote')" title="Full quote with prices">💰<br><span style="font-size:9px">Quote</span></button>
+    <button class="btn ghost" style="margin-top:0;flex:1;font-size:11px;padding:0 6px" onclick="showPrintPicker('measure')" title="Measurements only">📏<br><span style="font-size:9px">Measure</span></button>
+    <button class="btn ghost" style="margin-top:0;flex:1;font-size:11px;padding:0 6px" onclick="showPrintPicker('select')" title="Selections only">🎨<br><span style="font-size:9px">Select</span></button>
+    <button class="btn ghost" style="margin-top:0;flex:1;font-size:11px;padding:0 6px" onclick="showPrintPicker('quote')" title="Full quote with prices">💰<br><span style="font-size:9px">Quote</span></button>
     <button class="btn" style="margin-top:0;flex:2;font-size:13px" onclick="saveAndExit()">✦ Save &amp; Exit</button>
   </div>
 </div>
@@ -1583,6 +1583,11 @@ border-bottom: 1.5pt solid #000;
   <div class="search-bar-wrap no-print">
     <input class="inp" id="qSearch" placeholder="Search name, mobile, quote ID…" oninput="filterQ()" autocomplete="off" style="margin-top:0;flex:1">
     <button class="btn ghost sm" onclick="document.getElementById('qSearch').value='';filterQ()">Clear</button>
+  </div>
+  <div id="adminFilterRow" class="search-bar-wrap no-print" style="display:none;padding-top:0;border-top:none">
+    <select class="inp" id="qSalesFilter" onchange="filterQ()" style="margin-top:0;flex:1">
+      <option value="">All Salesmen</option>
+    </select>
   </div>
   <div style="padding:12px 14px 120px"><div id="qList"></div></div>
 </div>
@@ -2014,6 +2019,16 @@ function buildStaffDrop() {
     var o=document.createElement('option'); o.value=s.name; o.textContent=s.name; el.appendChild(o);
   });
 }
+function buildSales2Drop(excludeName) {
+  var el=document.getElementById('cSales2'); if(!el||el.tagName!=='SELECT') return;
+  var cur=el.value;
+  el.innerHTML='<option value="">— None —</option>';
+  STAFF.forEach(function(s){
+    if(s.name===excludeName) return;
+    var o=document.createElement('option'); o.value=s.name; o.textContent=s.name; el.appendChild(o);
+  });
+  el.value=cur;
+}
 
 function loadStaff() {
   // Seed from localStorage cache for instant display
@@ -2093,9 +2108,10 @@ function skipLogin() {
 function clearForm() {
   APP.quote=blankQ();
   localStorage.removeItem('darla_draft');
-  ['cName','cMobile','cArch','cAddr','cSales1','cSales2'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
+  ['cName','cMobile','cArch','cAddr','cSales1'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
   var s1=document.getElementById('cSales1');
   if(s1&&APP.staff&&APP.staff.name) s1.value=APP.staff.name;
+  buildSales2Drop(APP.staff?APP.staff.name:'');
 }
 function goToCustomer() {
   setNavForCustomer();
@@ -2532,10 +2548,7 @@ function renderTx(t,ri,wi,ti,win) {
     } else {
       html+='<div class="nab-done">✓ '+(allowSheer&&hs?'Main & Sheer added':'Main fabric added')+'</div>';
     }
-    html+='<div class="next-row" style="margin-top:7px">'
-      +'<button class="nab win" onclick="openWinModal('+ri+')">+ Window</button>'
-      +'<button class="nab room" onclick="openRoomModal()">+ Room</button>'
-      +'</div></div>';
+    html+='</div>';
   }
   return html+'</div>';
 }
@@ -3085,38 +3098,35 @@ function _printCust(q) {
 }
 
 // ── PRINT MODE 1: MEASUREMENTS ONLY ────────────────────────────────────────
-function _buildPrintMeasure() {
-  var q=APP.quote, h=_printHdr(q)+_printCust(q);
+function _buildPrintMeasure(roomFilter) {
+  var q=APP.quote, rooms=_filteredRooms(roomFilter), h=_printHdr(q)+_printCust(q);
   h+='<div style="font-size:7pt;font-weight:800;letter-spacing:2pt;text-transform:uppercase;color:#999;margin-bottom:3mm">ROOM MEASUREMENTS</div>';
-  q.rooms.forEach(function(room){
-    h+='<div style="break-inside:avoid;margin-bottom:4mm">'
-      +'<div style="background:#2c2c2c;color:#fff;padding:2mm 3mm;font-size:10pt;font-weight:900;margin-bottom:0">'+esc(room.name)+'</div>';
+  rooms.forEach(function(room){
+    h+='<div style="break-inside:avoid;margin-bottom:5mm">'
+      +'<div style="background:#2c2c2c;color:#fff;padding:2.5mm 4mm;font-size:10pt;font-weight:900;border-radius:1mm 1mm 0 0">'+esc(room.name)+'</div>';
     room.windows.forEach(function(win,wi){
       var hasProduct=win.treatments.some(function(tx){ return tx.components.some(function(c){ return !!c.product; }); });
-      h+='<div style="display:grid;grid-template-columns:40mm 1fr;gap:2mm;padding:2mm 3mm;border-bottom:0.5pt solid #eee;break-inside:avoid">';
-      // Left: name + dims
-      h+='<div style="border-right:0.5pt dashed #ccc;padding-right:2mm">'
-        +'<div style="font-size:8pt;font-weight:800;color:#000">W'+(wi+1)+' '+esc(win.name)+'</div>'
-        +'<div style="font-size:9pt;font-weight:700;color:#000;margin:0.5mm 0">'+win.width+'" × '+win.height+'"</div>'
-        +'<div style="font-size:7pt;color:#555">Qty: '+win.qty+'</div>'
+      var isLast=wi===room.windows.length-1;
+      h+='<div style="padding:3mm 4mm;border:0.5pt solid #e0dbd3;border-top:none;break-inside:avoid'+(isLast?';border-radius:0 0 1mm 1mm':'')+'">'
+        // Window name + dims on one row
+        +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1.5mm">'
+        +'<span style="font-size:9pt;font-weight:900;color:#000">W'+(wi+1)+' – '+esc(win.name)+'</span>'
+        +'<span style="font-size:8pt;color:#555;white-space:nowrap;margin-left:4mm">'+win.width+'" W × '+win.height+'" H &nbsp;·&nbsp; Qty: '+win.qty+'</span>'
         +'</div>';
-      // Right: panels / sqft per treatment
-      h+='<div>';
+      // Treatment lines — stacked, indented
       win.treatments.forEach(function(tx){
         tx.components.forEach(function(c){
           if(!c.product) return;
           var cc=calcComp(win,Object.assign({},c,{treatmentType:tx.type}));
-          var txLbl=tx.type==='curtains'?'Curtains':tx.type==='roman_blinds'?'Roman Blinds':'Blinds';
-          var lyr=c.layer==='blind'?'BLIND':c.layer.toUpperCase();
-          if(tx.type==='blinds'){
-            h+='<div style="font-size:7pt;color:#555;margin-bottom:0.5mm"><b>'+txLbl+'</b> · '+cc.sqft+' sqft</div>';
-          } else {
-            h+='<div style="font-size:7pt;color:#555;margin-bottom:0.5mm"><b>'+lyr+'</b> · '+cc.numPanels+' panels × '+cc.panelLen+'m = '+cc.fabricQty+'m</div>';
-          }
+          var lyrLabel=c.layer==='blind'?'Blind':c.layer==='sheer'?'Sheer':'Main';
+          var detail=tx.type==='blinds'
+            ? cc.sqft+' sqft'
+            : cc.numPanels+' panels × '+cc.panelLen+'m = '+cc.fabricQty+'m';
+          h+='<div style="font-size:8pt;color:#444;padding-left:5mm;margin-bottom:0.8mm">▸ <b>'+lyrLabel+':</b> '+detail+'</div>';
         });
       });
-      if(!hasProduct) h+='<div style="font-size:7pt;color:#bbb;font-style:italic">No selection yet</div>';
-      h+='</div></div>';
+      if(!hasProduct) h+='<div style="font-size:7.5pt;color:#bbb;font-style:italic;padding-left:5mm">No selection yet</div>';
+      h+='</div>';
     });
     h+='</div>';
   });
@@ -3157,10 +3167,10 @@ function _selectionHTML(win) {
   });
   return h;
 }
-function _buildPrintSelect() {
-  var q=APP.quote, h=_printHdr(q)+_printCust(q);
+function _buildPrintSelect(roomFilter) {
+  var q=APP.quote, rooms=_filteredRooms(roomFilter), h=_printHdr(q)+_printCust(q);
   h+='<div style="font-size:7pt;font-weight:800;letter-spacing:2pt;text-transform:uppercase;color:#999;margin-bottom:3mm">SELECTIONS</div>';
-  q.rooms.forEach(function(room){
+  rooms.forEach(function(room){
     h+='<div style="break-inside:avoid;margin-bottom:4mm">'
       +'<div style="background:#2c2c2c;color:#fff;padding:2mm 3mm;font-size:10pt;font-weight:900;margin-bottom:0">'+esc(room.name)+'</div>';
     // Group windows by selection fingerprint
@@ -3194,11 +3204,11 @@ function _buildPrintSelect() {
 }
 
 // ── PRINT MODE 3: FULL QUOTE ────────────────────────────────────────────────
-function _buildPrintQuote() {
-  var q=APP.quote, h=_printHdr(q)+_printCust(q);
+function _buildPrintQuote(roomFilter) {
+  var q=APP.quote, rooms=_filteredRooms(roomFilter), h=_printHdr(q)+_printCust(q);
   h+='<div style="font-size:7pt;font-weight:800;letter-spacing:2pt;text-transform:uppercase;color:#999;margin-bottom:3mm">QUOTATION</div>';
-  var grandGr=grandGross(), grandNt=grandTotal(), totalDisc=grandGr-grandNt;
-  q.rooms.forEach(function(room){
+  var grandGr=_grandGrossFiltered(rooms), grandNt=_grandNetFiltered(rooms), totalDisc=grandGr-grandNt;
+  rooms.forEach(function(room){
     var rt=roomTotal(room);
     h+='<div style="break-inside:avoid;margin-bottom:4mm">'
       +'<div style="background:#2c2c2c;color:#fff;padding:2mm 3mm;font-size:10pt;font-weight:900;display:flex;justify-content:space-between">'
@@ -3278,33 +3288,117 @@ function _buildPrintQuote() {
   return h;
 }
 
-function printMode(mode) {
+// ── Room picker — shown before print when multiple rooms ──
+function showPrintPicker(mode) {
+  var rooms=APP.quote.rooms||[];
+  if(rooms.length<=1){ printMode(mode,null); return; }
+  var overlay=document.getElementById('printPickerOverlay');
+  if(!overlay){ overlay=document.createElement('div'); overlay.id='printPickerOverlay'; document.body.appendChild(overlay); }
+  var h='<div style="position:fixed;inset:0;z-index:970;background:rgba(0,0,0,0.45);display:flex;align-items:flex-end;justify-content:center">'
+    +'<div style="background:#fff;width:100%;max-width:480px;border-radius:18px 18px 0 0;padding:22px 20px 36px;max-height:80vh;overflow-y:auto">'
+    +'<div style="font-size:15px;font-weight:900;color:#1c1612;margin-bottom:3px">Select Rooms to Print</div>'
+    +'<div style="font-size:12px;color:#a89890;margin-bottom:16px">Uncheck any rooms you don\'t need</div>'
+    +'<label style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:2px solid #e0dbd3;cursor:pointer;font-weight:800;font-size:14px;color:#1c1612">'
+    +'<input type="checkbox" id="ppAll" onchange="ppToggleAll()" checked style="width:18px;height:18px;accent-color:#c0392b;flex-shrink:0"> All Rooms</label>';
+  rooms.forEach(function(r,i){
+    h+='<label style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:0.5px solid #f0ece8;cursor:pointer;font-size:14px;color:#1c1612;font-weight:600">'
+      +'<input type="checkbox" class="pp-room" data-i="'+i+'" onchange="ppUpdate()" checked style="width:18px;height:18px;accent-color:#c0392b;flex-shrink:0">'+esc(r.name)+'</label>';
+  });
+  h+='<div style="display:flex;gap:10px;margin-top:20px">'
+    +'<button onclick="closePrintPicker()" style="flex:1;padding:13px;background:#faf8f5;border:1.5px solid #e0dbd3;border-radius:12px;font-size:14px;font-weight:700;color:#6b5e52;cursor:pointer">Cancel</button>'
+    +'<button id="ppPrintBtn" onclick="doPrintPick(\''+mode+'\')" style="flex:2;padding:13px;background:#c0392b;border:none;border-radius:12px;font-size:14px;font-weight:800;color:#fff;cursor:pointer">Print — '+rooms.length+' rooms</button>'
+    +'</div></div></div>';
+  overlay.innerHTML=h;
+  overlay.style.cssText='display:block;position:fixed;inset:0;z-index:970';
+}
+function ppToggleAll() {
+  var all=document.getElementById('ppAll');
+  document.querySelectorAll('.pp-room').forEach(function(cb){ cb.checked=all.checked; });
+  ppUpdate();
+}
+function ppUpdate() {
+  var checked=document.querySelectorAll('.pp-room:checked').length;
+  var total=document.querySelectorAll('.pp-room').length;
+  var all=document.getElementById('ppAll'); if(all) all.checked=checked===total;
+  var btn=document.getElementById('ppPrintBtn');
+  if(btn) btn.textContent='Print — '+checked+' room'+(checked!==1?'s':'');
+}
+function closePrintPicker() {
+  var o=document.getElementById('printPickerOverlay');
+  if(o){ o.style.display='none'; o.innerHTML=''; }
+}
+function doPrintPick(mode) {
+  var cbs=Array.from(document.querySelectorAll('.pp-room'));
+  var sel=cbs.filter(function(cb){ return cb.checked; }).map(function(cb){ return parseInt(cb.dataset.i); });
+  closePrintPicker();
+  printMode(mode, sel.length===APP.quote.rooms.length?null:sel);
+}
+
+function printMode(mode, roomFilter) {
   try {
     var html;
-    if(mode==='measure') html=_buildPrintMeasure();
-    else if(mode==='select') html=_buildPrintSelect();
-    else html=_buildPrintQuote();
+    if(mode==='measure') html=_buildPrintMeasure(roomFilter);
+    else if(mode==='select') html=_buildPrintSelect(roomFilter);
+    else html=_buildPrintQuote(roomFilter);
     var pd=document.getElementById('printDoc');
     if(!pd){ pd=document.createElement('div'); pd.id='printDoc'; document.body.appendChild(pd); }
-    // Toolbar: close + print — hidden during actual print via CSS
     var modeLabel=mode==='measure'?'📏 Measurements':mode==='select'?'🎨 Selections':'💰 Quote';
-    pd.innerHTML='<div id="printToolbar" style="position:sticky;top:0;z-index:10;background:#fff;border-bottom:2px solid #eee;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">'
-      +'<button onclick="closePrintDoc()" style="background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;color:#333">✕ Close</button>'
-      +'<span style="font-size:13px;font-weight:800;color:#333">'+modeLabel+'</span>'
-      +'<button onclick="window.print()" style="background:#c0392b;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer">🖨 Print</button>'
+    var q=APP.quote;
+    var url=window.location.origin+window.location.pathname+'?load='+q.id;
+    var waMsg='Hi '+q.customer.name+' 👋\n\nYour quotation from *Darla Sales & Agencies* is ready!\n\n'
+      +'📋 *Quote No:* '+q.id+'\n'
+      +'💰 *Amount:* ₹'+Number(Math.round(grandTotal())).toLocaleString('en-IN')+'\n'
+      +'📅 *Date:* '+q.date+'\n\n'
+      +'Your Sales Executive: '+q.staff+(q.staff2?', '+q.staff2:'')+'\n\n'
+      +'---\n*Darla Sales & Agencies*\n1516/2 Shivarampet, Mysore – 570001\n📞 0821-4287353\nGSTIN: 29AADFD9424C1ZK\n\n🔗 View Quote: '+url;
+    var waUrl='https://wa.me/?text='+encodeURIComponent(waMsg);
+    pd.innerHTML=
+      '<div id="printToolbar" style="position:sticky;top:0;z-index:10;background:#fff;border-bottom:2px solid #eee;padding:8px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
+      +'<button onclick="closePrintDoc()" style="background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;color:#333">✕ Close</button>'
+      +'<span style="font-size:13px;font-weight:800;color:#333;flex:1">'+modeLabel+'</span>'
+      +'<label style="font-size:12px;font-weight:600;color:#6b5e52;display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="pgSize" value="A5" checked onchange="setPrintSize(this.value)" style="accent-color:#c0392b"> A5</label>'
+      +'<label style="font-size:12px;font-weight:600;color:#6b5e52;display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="pgSize" value="A4" onchange="setPrintSize(this.value)" style="accent-color:#c0392b"> A4</label>'
+      +'<a href="'+waUrl+'" target="_blank" rel="noopener" style="background:#25d366;color:#fff;border:none;border-radius:8px;padding:7px 11px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none">&#x1F4F2; WhatsApp</a>'
+      +'<button onclick="window.print()" style="background:#c0392b;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer">🖨 Print</button>'
       +'</div>'
       +'<div style="padding:5mm 5mm 10mm">'+html+'</div>';
-    // Show as full-screen overlay
     pd.style.cssText='display:block!important;position:fixed;inset:0;z-index:950;background:#fff;overflow-y:auto;-webkit-overflow-scrolling:touch;color:#000;font-family:-apple-system,BlinkMacSystemFont,sans-serif';
     document.body.setAttribute('data-pmode',mode);
+    setPrintSize('A5');
   } catch(e) {
     showToast('Error: '+e.message);
   }
+}
+function setPrintSize(size) {
+  var st=document.getElementById('_pgSizeStyle');
+  if(!st){ st=document.createElement('style'); st.id='_pgSizeStyle'; document.head.appendChild(st); }
+  st.textContent=size==='A4'?'@page{size:A4 portrait;margin:12mm 16mm}':'@page{size:A5 portrait;margin:9mm 11mm}';
 }
 function closePrintDoc() {
   var pd=document.getElementById('printDoc');
   if(pd){ pd.style.cssText=''; pd.innerHTML=''; }
   document.body.removeAttribute('data-pmode');
+}
+function _filteredRooms(roomFilter) {
+  var rooms=APP.quote.rooms||[];
+  return roomFilter?rooms.filter(function(_,i){ return roomFilter.indexOf(i)!==-1; }):rooms;
+}
+function _grandNetFiltered(rooms) {
+  var t=0; rooms.forEach(function(r){ t+=roomTotal(r); }); return t;
+}
+function _grandGrossFiltered(rooms) {
+  var t=0;
+  rooms.forEach(function(r){
+    r.windows.forEach(function(win){
+      win.treatments.forEach(function(tx){
+        tx.components.forEach(function(c){
+          if(!c.product) return;
+          t+=(calcComp(win,Object.assign({},c,{treatmentType:tx.type})).total)||0;
+        });
+      });
+    });
+  });
+  return t;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -3365,8 +3459,9 @@ function applyQ(q) {
   document.getElementById('cMobile').value=q.customer.mobile||'';
   document.getElementById('cArch').value=q.customer.arch||'';
   document.getElementById('cAddr').value=q.customer.addr||'';
-  var s1=document.getElementById('cSales1'),s2=document.getElementById('cSales2');
-  if(s1) s1.value=q.staff||''; if(s2) s2.value=q.staff2||'';
+  var s1=document.getElementById('cSales1'); if(s1) s1.value=q.staff||'';
+  buildSales2Drop(q.staff||'');
+  var s2=document.getElementById('cSales2'); if(s2) s2.value=q.staff2||'';
   setNavForBuilder();
   goTo('screen-builder');
 }
@@ -3384,6 +3479,19 @@ var _qFiltered=[], _qAll=[], _qListListener=null;
 
 function renderQList() {
   setNavForQuotes();
+  // Admin filter row
+  var afr=document.getElementById('adminFilterRow');
+  var sff=document.getElementById('qSalesFilter');
+  if(afr&&sff){
+    var isAdmin=APP.staff&&APP.staff.role==='admin';
+    afr.style.display=isAdmin?'':'none';
+    if(isAdmin){
+      var curSF=sff.value;
+      sff.innerHTML='<option value="">All Salesmen</option>';
+      STAFF.forEach(function(s){ var o=document.createElement('option'); o.value=s.name; o.textContent=s.name; sff.appendChild(o); });
+      if(curSF) sff.value=curSF;
+    }
+  }
   // Show local cache immediately
   var local=getList();
   local.sort(function(a,b){ return(parseInt(b.id.replace(/\D/g,''))||0)-(parseInt(a.id.replace(/\D/g,''))||0); });
@@ -3430,16 +3538,25 @@ function renderQList() {
 
 function filterQ() {
   var q=(document.getElementById('qSearch').value||'').trim().toLowerCase();
-  _qFiltered=q?_qAll.filter(function(e){
+  var sfEl=document.getElementById('qSalesFilter');
+  var sf=sfEl?sfEl.value||'':'';
+  var list=_qAll;
+  if(q) list=list.filter(function(e){
     return['name','mobile','id','staff','staff2','arch'].some(function(k){
       return(e[k]||'').toLowerCase().indexOf(q)!==-1;
     });
-  }):_qAll;
+  });
+  if(sf) list=list.filter(function(e){ return e.staff===sf||e.staff2===sf; });
+  _qFiltered=list;
   drawQList(_qFiltered,false);
 }
 function drawQList(list,loading) {
   var el=document.getElementById('qList'); if(!el) return;
   if(loading){ el.innerHTML='<div class="loading-state"><span class="spin"></span>Loading quotes…</div>'; return; }
+  if(APP.staff&&APP.staff.role!=='admin'){
+    var me=APP.staff.name;
+    list=list.filter(function(q){ return q.staff===me||q.staff2===me; });
+  }
   if(!list.length){ el.innerHTML='<div class="q-empty"><div class="ico">📄</div>No quotes found</div>'; return; }
   var h='';
   list.forEach(function(q,i){
