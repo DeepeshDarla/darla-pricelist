@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<meta name="theme-color" content="#0f0f0f">
+<meta name="theme-color" content="#faf8f5">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Darla — Quote Builder</title>
@@ -14,42 +14,42 @@
    DESIGN TOKENS
 ═══════════════════════════════════════════ */
 :root {
-  --bg:       #0f0f0f;
-  --bg2:      #151515;
-  --bg3:      #1c1c1c;
-  --bg4:      #242424;
-  --card:     #1a1a1a;
-  --card2:    #222;
-  --border:   #2a2a2a;
-  --border2:  #333;
-  --border3:  #3a3a3a;
+  --bg:       #faf8f5;
+  --bg2:      #f5f2ee;
+  --bg3:      #ede9e3;
+  --bg4:      #e6e1d9;
+  --card:     #ffffff;
+  --card2:    #f5f2ee;
+  --border:   #e0dbd3;
+  --border2:  #d4cec6;
+  --border3:  #c8c1b8;
 
   --red:      #c0392b;
   --red2:     #e74c3c;
-  --red-dim:  rgba(192,57,43,0.15);
-  --red-glow: rgba(192,57,43,0.3);
+  --red-dim:  rgba(192,57,43,0.10);
+  --red-glow: rgba(192,57,43,0.2);
 
   --blue:     #2980b9;
-  --blue-dim: rgba(41,128,185,0.15);
+  --blue-dim: rgba(41,128,185,0.10);
   --green:    #27ae60;
-  --green-dim:rgba(39,174,96,0.15);
-  --amber:    #d4a45a;
-  --amber-dim:rgba(212,164,90,0.15);
+  --green-dim:rgba(39,174,96,0.10);
+  --amber:    #b07d2a;
+  --amber-dim:rgba(176,125,42,0.10);
   --purple:   #8e44ad;
 
-  --text:     #f0f0f0;
-  --text2:    #b0b0b0;
-  --text3:    #777;
-  --text4:    #444;
+  --text:     #1c1612;
+  --text2:    #6b5e52;
+  --text3:    #a89890;
+  --text4:    #c8bdb5;
 
   --r-sm:  8px;
   --r-md:  12px;
   --r-lg:  16px;
   --r-xl:  22px;
 
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.35);
-  --shadow-md: 0 4px 20px rgba(0,0,0,0.5);
-  --shadow-lg: 0 8px 40px rgba(0,0,0,0.6);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.07);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.09);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
 
   --safe-bot: env(safe-area-inset-bottom, 0px);
 }
@@ -87,7 +87,7 @@ overflow: hidden;
 TOP NAV BAR
 ═══════════════════════════════════════════ */
 #top-nav {
-background: rgba(15,15,15,0.96);
+background: rgba(250,248,245,0.96);
 border-bottom: 1px solid var(--border);
 backdrop-filter: blur(20px);
 -webkit-backdrop-filter: blur(20px);
@@ -197,7 +197,7 @@ LOGIN SCREEN — iOS lock-screen style
   z-index: 900;
   display: none;
   flex-direction: column;
-  background: #0a0a0a;
+  background: #faf8f5;
   overflow: hidden;
 }
 #screen-login.active { display: flex; }
@@ -215,7 +215,7 @@ LOGIN SCREEN — iOS lock-screen style
   align-items: center;
   justify-content: flex-end;
   padding: 48px 24px 20px;
-  background: radial-gradient(ellipse at 50% -10%, #2a0808 0%, #0a0a0a 70%);
+  background: radial-gradient(ellipse at 50% -10%, #f5ddd8 0%, #faf8f5 70%);
 }
 .login-logo {
   width: 130px;
@@ -235,7 +235,7 @@ LOGIN SCREEN — iOS lock-screen style
 .ls-staff-name {
   font-size: 30px;
   font-weight: 700;
-  color: #fff;
+  color: #1c1612;
   min-height: 40px;
   text-align: center;
   letter-spacing: -0.5px;
@@ -251,8 +251,8 @@ LOGIN SCREEN — iOS lock-screen style
   width: 100%;
   max-width: 280px;
   margin-bottom: 0;
-  background: rgba(255,255,255,0.07) !important;
-  border: 1.5px solid rgba(255,255,255,0.13);
+  background: #ffffff !important;
+  border: 1.5px solid var(--border);
   border-radius: 14px;
   color: var(--text) !important;
   font-size: 15px;
@@ -266,7 +266,7 @@ LOGIN SCREEN — iOS lock-screen style
   transition: border-color 0.15s;
 }
 .staff-select:focus { border-color: var(--red); }
-.staff-select option { background: #1c1c1c; }
+.staff-select option { background: #ffffff; }
 
 .ls-dots {
   display: flex;
@@ -277,15 +277,15 @@ LOGIN SCREEN — iOS lock-screen style
   width: 13px;
   height: 13px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.12);
-  border: 2px solid rgba(255,255,255,0.2);
+  background: var(--border);
+  border: 2px solid var(--border2);
   transition: all 0.12s;
 }
 .pin-dot.filled {
-  background: #fff;
-  border-color: #fff;
+  background: var(--red);
+  border-color: var(--red);
   transform: scale(1.15);
-  box-shadow: 0 0 10px rgba(255,255,255,0.4);
+  box-shadow: 0 0 10px var(--red-glow);
 }
 .pin-dot.error {
   background: var(--red2);
@@ -294,8 +294,8 @@ LOGIN SCREEN — iOS lock-screen style
 }
 
 .ls-bottom {
-  background: #111;
-  border-top: 1px solid #1c1c1c;
+  background: #ffffff;
+  border-top: 1px solid var(--border);
   padding: 14px 20px calc(14px + env(safe-area-inset-bottom,0px));
 }
 .pin-error { font-size: 13px; color: var(--red2); min-height: 18px; font-weight: 600; text-align: center; margin-bottom: 6px; }
@@ -310,8 +310,8 @@ LOGIN SCREEN — iOS lock-screen style
 }
 .pin-key {
   height: 66px;
-  background: #1c1c1c;
-  border: 1px solid #2a2a2a;
+  background: var(--bg3);
+  border: 1px solid var(--border);
   border-radius: 14px;
   font-size: 26px;
   font-weight: 500;
@@ -826,7 +826,7 @@ BOTTOM ACTION BAR
 .btm-bar {
 position: fixed;
 bottom: 0; left: 0; right: 0;
-background: rgba(15,15,15,0.97);
+background: rgba(250,248,245,0.97);
 border-top: 1px solid var(--border);
 padding: 12px 16px;
 padding-bottom: calc(12px + var(--safe-bot));
@@ -978,7 +978,7 @@ QUOTES LIST SCREEN
 position: sticky;
 top: 0;
 z-index: 50;
-background: rgba(15,15,15,0.97);
+background: rgba(250,248,245,0.97);
 border-bottom: 1px solid var(--border);
 padding: 10px 14px;
 backdrop-filter: blur(20px);
@@ -1033,9 +1033,9 @@ padding: 3px 8px;
 border-radius: 5px;
 }
 .q-tag-staff  { background: var(--bg3); color: var(--text3); }
-.q-tag-rooms  { background: #111; color: var(--text4); }
-.q-tag-cloud  { background: #0a2418; color: #81c784; letter-spacing: 0.08em; text-transform: uppercase; }
-.q-tag-load   { background: #251b07; color: var(--amber); letter-spacing: 0.08em; text-transform: uppercase; }
+.q-tag-rooms  { background: var(--bg3); color: var(--text3); }
+.q-tag-cloud  { background: rgba(39,174,96,0.10); color: #1e7d47; letter-spacing: 0.08em; text-transform: uppercase; }
+.q-tag-load   { background: rgba(176,125,42,0.10); color: var(--amber); letter-spacing: 0.08em; text-transform: uppercase; }
 .q-status {
 font-size: 9px;
 font-weight: 800;
@@ -1211,7 +1211,7 @@ margin-top: 6px;
 }
 .result-expand {
 display: none;
-background: #111;
+background: var(--bg2);
 border-top: 1px solid var(--border);
 padding: 12px 14px;
 }
@@ -1303,7 +1303,7 @@ margin-top: 6px;
 DISCOUNT INPUT
 ═══════════════════════════════════════════ */
 .disc-inp {
-background: #0a0a0a;
+background: var(--bg);
 border: 1px solid var(--border);
 border-radius: var(--r-sm);
 color: var(--text) !important;
@@ -3068,16 +3068,16 @@ function _printHdr(q) {
     +'</div>';
 }
 function _printCust(q) {
-  return '<div class="sum-cust" style="display:grid;grid-template-columns:1fr 1fr;gap:5mm;padding:4mm 0;margin-bottom:4mm;border-bottom:0.75pt solid #ddd">'
-    +'<div class="cust-print-col"><h4 style="font-size:7pt;font-weight:800;letter-spacing:1.5pt;text-transform:uppercase;color:#aaa;margin-bottom:1.5mm">Customer</h4>'
-    +'<div class="cname" style="font-size:14pt;font-weight:900;color:#000;margin-bottom:1mm">'+esc(q.customer.name)+'</div>'
-    +'<div class="cval" style="font-size:9pt;color:#333">'+esc(q.customer.mobile)+'</div>'
-    +(q.customer.addr?'<div class="cval" style="font-size:8pt;color:#666">'+esc(q.customer.addr)+'</div>':'')
+  return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:5mm;padding:4mm 0;margin-bottom:4mm;border-bottom:0.75pt solid #ddd;background:#fff">'
+    +'<div><h4 style="font-size:7pt;font-weight:800;letter-spacing:1.5pt;text-transform:uppercase;color:#aaa;margin-bottom:1.5mm">Customer</h4>'
+    +'<div style="font-size:14pt;font-weight:900;color:#000;margin-bottom:1mm">'+esc(q.customer.name)+'</div>'
+    +'<div style="font-size:9pt;color:#333">'+esc(q.customer.mobile)+'</div>'
+    +(q.customer.addr?'<div style="font-size:8pt;color:#666">'+esc(q.customer.addr)+'</div>':'')
     +'</div>'
-    +'<div class="cust-print-col" style="text-align:right"><h4 style="font-size:7pt;font-weight:800;letter-spacing:1.5pt;text-transform:uppercase;color:#aaa;margin-bottom:1.5mm">Sales</h4>'
-    +(q.customer.arch?'<div class="cval" style="font-size:8pt;color:#555">Arch: '+esc(q.customer.arch)+'</div>':'')
-    +'<div class="cval" style="font-size:9pt;color:#333">'+esc(q.staff||'')+'</div>'
-    +(q.staff2?'<div class="cval" style="font-size:9pt;color:#333">'+esc(q.staff2)+'</div>':'')
+    +'<div style="text-align:right"><h4 style="font-size:7pt;font-weight:800;letter-spacing:1.5pt;text-transform:uppercase;color:#aaa;margin-bottom:1.5mm">Sales</h4>'
+    +(q.customer.arch?'<div style="font-size:8pt;color:#555">Arch: '+esc(q.customer.arch)+'</div>':'')
+    +'<div style="font-size:9pt;color:#333">'+esc(q.staff||'')+'</div>'
+    +(q.staff2?'<div style="font-size:9pt;color:#333">'+esc(q.staff2)+'</div>':'')
     +'</div></div>';
 }
 
@@ -3292,7 +3292,7 @@ function printMode(mode) {
       +'</div>'
       +'<div style="padding:5mm 5mm 10mm">'+html+'</div>';
     // Show as full-screen overlay
-    pd.style.cssText='display:block!important;position:fixed;inset:0;z-index:800;background:#fff;overflow-y:auto;-webkit-overflow-scrolling:touch;color:#000;font-family:-apple-system,BlinkMacSystemFont,sans-serif';
+    pd.style.cssText='display:block!important;position:fixed;inset:0;z-index:950;background:#fff;overflow-y:auto;-webkit-overflow-scrolling:touch;color:#000;font-family:-apple-system,BlinkMacSystemFont,sans-serif';
     document.body.setAttribute('data-pmode',mode);
   } catch(e) {
     showToast('Error: '+e.message);
