@@ -3794,13 +3794,13 @@ function _renderSelPostSave(editing){
     +'<div class="post-save-title">Selection '+(editing?'updated':'saved')+'</div>'
     +'<div class="post-save-sub">'+selCatLabel(_selCategory)+'</div>'
     +'<div class="post-save-actions">';
+  h+='<button class="btn sm" style="width:100%" onclick="startAddSel()">+ Add Another Selection</button>';
+  h+='<button class="btn sm" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--border)" onclick="openRoomModal()">+ Add Room</button>';
   if(isCurtainsMain){
-    h+='<button class="btn sm" style="background:var(--bg2);color:var(--text);border:1px solid var(--border)" onclick="startSelWithCat(\'curtains_sheer\')">+ Add Sheer Curtains</button>';
+    h+='<button class="btn ghost sm" onclick="startSelWithCat(\'curtains_sheer\')">+ Add Sheer Curtains</button>';
   }
   h+='<button class="btn ghost sm" onclick="_editAreaIdx=-1;goTo(\'screen-add-area\')">+ Add Measurement</button>'
-    +'<button class="btn ghost sm" onclick="startAddSel()">+ Add Another Selection</button>'
-    +'<button class="btn sm" onclick="goTo(\'screen-summary\')">View Summary</button>'
-    +'<button class="btn ghost sm" style="font-size:12px" onclick="openRoomModal()">+ Add Room</button>'
+    +'<button class="btn ghost sm" style="font-size:12px;color:var(--text3)" onclick="goTo(\'screen-summary\')">View Summary →</button>'
     +'</div></div>';
   document.getElementById('addSelWrap').innerHTML=h;
 }
@@ -4223,7 +4223,7 @@ function renderSum() {
   if(q.customer.arch) h+='<div style="font-size:13px;color:var(--text2);margin-bottom:4px"><span style="color:var(--text3);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px">Designer</span> '+esc(q.customer.arch)+'</div>';
   h+='<div style="font-size:13px;color:var(--text2);margin-bottom:2px"><span style="color:var(--text3);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px">Salesman</span> '+esc(q.staff||'—')+(q.staff2?' &amp; '+esc(q.staff2):'')+'</div>';
   h+='<div style="font-size:12px;color:var(--text3)">'+esc(q.date)+'</div></div>';
-  q.rooms.forEach(function(room){
+  q.rooms.forEach(function(room, ri){
     var rt=roomTotal(room);
     h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;margin-bottom:14px">';
     h+='<div style="background:var(--red);padding:10px 16px;display:flex;justify-content:space-between;align-items:center">'
@@ -4266,33 +4266,69 @@ function renderSum() {
         +'<span style="font-size:14px;font-weight:900;color:var(--red)">'+fmt(result.total)+'</span></div></div>';
       return sh;
     }
-    // Area-linked selections
-    (room.areas||[]).forEach(function(area){
-      var areaSelections=(room.selections||[]).filter(function(sel){ return (sel.areaIds||[]).indexOf(area.id)!==-1; });
-      h+='<div style="border-top:1px solid var(--border);padding:12px 14px">';
-      h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
-        +'<span class="type-badge '+area.type+'">'+areaTypeName(area.type)+'</span>'
-        +'<div style="flex:1"><div style="font-size:15px;font-weight:800;color:var(--text)">'+esc(area.name)+'</div>'
-        +'<div style="font-size:12px;color:var(--text3)">'+area.width+'" W × '+area.height+'" H · Qty '+area.qty+'</div></div>'
-        +'<button class="btn ghost sm" style="font-size:11px;padding:4px 8px;margin:0" onclick="addSelForArea(\''+area.id+'\')">+ Selection</button>'
-        +'</div>';
-      if(areaSelections.length){
-        areaSelections.forEach(function(sel){ h+=renderSelCard(sel, area); });
+    if(!(room.areas||[]).length){
+      // Case A — no measurements: simple product list
+      h+='<div style="padding:12px 14px">';
+      if((room.selections||[]).length){
+        (room.selections||[]).forEach(function(sel, si){
+          h+='<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:8px">';
+          h+='<div style="font-size:10px;font-weight:900;color:var(--text3);letter-spacing:1.5px;margin-bottom:8px">'+selCatLabel(sel.category).toUpperCase()+'</div>';
+          (sel.products||[]).forEach(function(p, pi){
+            if(p.mode==='option'&&!p.chosen) return;
+            var prod=p.product||{};
+            var pname=[prod.brand,prod.catalog,prod.s_no].filter(Boolean).join(' / ')||(prod.manualName||'—');
+            h+='<div style="font-size:14px;font-weight:900;color:var(--text);margin-bottom:8px">'+esc(pname)+'</div>';
+            var isFabric=sel.category==='curtains_main'||sel.category==='curtains_sheer'||sel.category==='roman_blind';
+            if(isFabric){
+              var wCm=parseFloat(p.widthCm||prod.width)||0;
+              var mrp=parseFloat(prod.mrp)||0;
+              h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px">'
+                +'<div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:2px">Width (cm)</label>'
+                +'<input class="inp" type="number" value="'+esc(String(wCm||''))+'" placeholder="e.g. 280" style="padding:6px;font-size:13px;font-weight:700" '
+                +'onchange="APP.quote.rooms['+ri+'].selections['+si+'].products['+pi+'].widthCm=parseFloat(this.value)||0;APP.quote.rooms['+ri+'].selections['+si+'].products['+pi+'].product.width=this.value;saveDraft();renderSum()"></div>'
+                +'<div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:2px">MRP (₹/m)</label>'
+                +'<input class="inp" type="number" value="'+esc(String(mrp||''))+'" placeholder="0" style="padding:6px;font-size:13px;font-weight:700" '
+                +'onchange="APP.quote.rooms['+ri+'].selections['+si+'].products['+pi+'].product.mrp=parseFloat(this.value)||0;saveDraft();renderSum()"></div>'
+                +'</div>';
+            }
+          });
+          h+='</div>';
+        });
       } else {
-        h+='<div style="font-size:12px;color:var(--text3);padding:6px 0">No selections added yet.</div>';
+        h+='<div style="font-size:13px;color:var(--text3);padding:8px 0">No selections added yet.</div>';
       }
+      h+='<button class="btn ghost" style="width:100%;margin-top:8px" onclick="_activeRoom='+ri+';_editAreaIdx=-1;goTo(\'screen-add-area\')">+ Add Measurements</button>';
       h+='</div>';
-    });
-    // Standalone selections (no area linked, or linked area deleted)
-    var standalones=(room.selections||[]).filter(function(sel){
-      if(!(sel.areaIds||[]).length) return true;
-      return (sel.areaIds||[]).every(function(id){ return !(room.areas||[]).find(function(a){ return a.id===id; }); });
-    });
-    if(standalones.length){
-      h+='<div style="border-top:1px solid var(--border);padding:12px 14px">';
-      h+='<div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">General Selections</div>';
-      standalones.forEach(function(sel){ h+=renderSelCard(sel, null); });
-      h+='</div>';
+    } else {
+      // Case B — has measurements: full calc view
+      // Area-linked selections
+      (room.areas||[]).forEach(function(area){
+        var areaSelections=(room.selections||[]).filter(function(sel){ return (sel.areaIds||[]).indexOf(area.id)!==-1; });
+        h+='<div style="border-top:1px solid var(--border);padding:12px 14px">';
+        h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+          +'<span class="type-badge '+area.type+'">'+areaTypeName(area.type)+'</span>'
+          +'<div style="flex:1"><div style="font-size:15px;font-weight:800;color:var(--text)">'+esc(area.name)+'</div>'
+          +'<div style="font-size:12px;color:var(--text3)">'+area.width+'" W × '+area.height+'" H · Qty '+area.qty+'</div></div>'
+          +'<button class="btn ghost sm" style="font-size:11px;padding:4px 8px;margin:0" onclick="addSelForArea(\''+area.id+'\')">+ Selection</button>'
+          +'</div>';
+        if(areaSelections.length){
+          areaSelections.forEach(function(sel){ h+=renderSelCard(sel, area); });
+        } else {
+          h+='<div style="font-size:12px;color:var(--text3);padding:6px 0">No selections added yet.</div>';
+        }
+        h+='</div>';
+      });
+      // Standalone selections (no area linked, or linked area deleted)
+      var standalones=(room.selections||[]).filter(function(sel){
+        if(!(sel.areaIds||[]).length) return true;
+        return (sel.areaIds||[]).every(function(id){ return !(room.areas||[]).find(function(a){ return a.id===id; }); });
+      });
+      if(standalones.length){
+        h+='<div style="border-top:1px solid var(--border);padding:12px 14px">';
+        h+='<div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">General Selections</div>';
+        standalones.forEach(function(sel){ h+=renderSelCard(sel, null); });
+        h+='</div>';
+      }
     }
     if(rt>0) h+='<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg3);border-top:1px solid var(--border);padding:10px 16px">'
       +'<span style="font-size:12px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">'+esc(room.name)+' Sub-total</span>'
