@@ -1779,7 +1779,7 @@ body > *:not(#printDoc) { display: none !important; }
 print-color-adjust: exact !important;
 color-adjust: exact !important;
 }
-html, body { background: #fff !important; color: #000 !important; font-size: 9pt; margin: 0; padding: 0; }
+html, body { background: #fff !important; color: #000 !important; font-size: 10pt; margin: 0; padding: 0; }
 
 /* Header classes used by _printHdr() */
 .print-hdr {
@@ -1791,10 +1791,10 @@ margin-bottom: 4mm;
 border-bottom: 1.5pt solid #000;
 }
 .print-brand .name { font-size: 20pt; font-weight: 900; color: #c0392b; letter-spacing: -0.5pt; }
-.print-brand .tag  { font-size: 7pt; letter-spacing: 2pt; text-transform: uppercase; color: #888; margin-top: 1mm; }
+.print-brand .tag  { font-size: 8pt; letter-spacing: 2pt; text-transform: uppercase; color: #444; margin-top: 1mm; }
 .print-qinfo { text-align: right; }
 .print-qinfo .qid  { font-size: 13pt; font-weight: 900; }
-.print-qinfo .date { font-size: 8pt; color: #777; margin-top: 1mm; }
+.print-qinfo .date { font-size: 8.5pt; color: #444; margin-top: 1mm; }
 }
 </style>
 
@@ -2359,8 +2359,8 @@ function calcMattress(area, fp) {
 }
 
 function calcTracks(area, sel) {
-  var qty = parseInt(area.qty)||1;
-  var trackWidth = parseFloat(area.width)||0;
+  var qty = parseInt(sel._hwQty||area.qty)||1;
+  var trackWidth = parseFloat(sel._hwWidth||area.width)||0;
   var installRate = sel.rates && sel.rates.installRate != null ? sel.rates.installRate : P.trackInstall;
   var installCost = Math.round(qty * installRate);
   // If product attached: price per foot
@@ -3136,7 +3136,7 @@ function renderBld() {
   }
   APP.quote.rooms.forEach(function(room,ri){
     var ac=(room.areas||[]).length, sc=(room.selections||[]).length, rt=roomTotal(room);
-    html+='<div class="room-ov-card">'
+    html+='<div class="room-ov-card" id="r_'+ri+'">'
       +'<div class="room-ov-hdr">'
       +'<span class="room-ov-name">'+esc(room.name)+'</span>'
       +(rt>0?'<span class="room-ov-total">'+fmt(rt)+'</span>':'')
@@ -4303,6 +4303,11 @@ function loadById(id) {
     }).catch(function(){ showToast('Not found — check connection'); });
 }
 function applyQ(q) {
+  // Migrate old v1 rooms (windows[] → areas[]/selections[])
+  (q.rooms||[]).forEach(function(r){
+    if(!r.areas) r.areas=[];
+    if(!r.selections) r.selections=[];
+  });
   APP.quote=q; saveDraft();
   document.getElementById('cName').value=q.customer.name||'';
   document.getElementById('cMobile').value=q.customer.mobile||'';
