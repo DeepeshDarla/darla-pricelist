@@ -2480,6 +2480,7 @@ var _selSheerProducts = [];  // product entries for optional sheer layer
 var _selSheerStitch   = '';
 var _selProductTarget = 'main'; // 'main'|'sheer' — controls which array selectProduct() pushes to
 var _nextProdMode = 'component'; // 'component'|'option' — mode for the next product to be added
+var _nextProdRole = 'main';     // 'main'|'border'|'option' — label shown in product row header
 
 // Local-only draft save (always called first for speed)
 function saveDraftLocal() {
@@ -3509,12 +3510,12 @@ function copyFabricFromExisting(srcProd){
 function removeSelProd(i){ _selProducts.splice(i,1); renderAddSelection(); }
 function setSelRate(k,v,def){ var n=parseFloat(v); _selRates[k]=(isNaN(n)||n===def)?null:n; }
 function addManualSelProduct(){
-  _selProducts.push({product:{brand:'',catalog:'',s_no:'',mrp:0},mode:_nextProdMode,chosen:false,discount:0,notes:'',_manual:true});
-  _nextProdMode='component';
+  _selProducts.push({product:{brand:'',catalog:'',s_no:'',mrp:0},mode:_nextProdMode,role:_nextProdRole,chosen:false,discount:0,notes:'',_manual:true});
+  _nextProdMode='component'; _nextProdRole='main';
   renderAddSelection();
 }
-function addBorderFabric(){ _nextProdMode='component'; _selProductTarget='main'; openProductModal(); }
-function addOptionProduct(){ _nextProdMode='option'; _selProductTarget='main'; openProductModal(); }
+function addBorderFabric(){ _nextProdMode='component'; _nextProdRole='border'; _selProductTarget='main'; openProductModal(); }
+function addOptionProduct(){ _nextProdMode='option'; _nextProdRole='option'; _selProductTarget='main'; openProductModal(); }
 function fabricPhotoKey(prod){
   return [prod.brand,prod.catalog,prod.s_no].filter(Boolean).join('_').replace(/[\\/:.#[\]*?]/g,'_')||'';
 }
@@ -3556,7 +3557,7 @@ function selStep3(){ _selStep=3; renderAddSelection(); }
 function resetSelForm(){
   _selCategory=''; _selProducts=[]; _selStitch=''; _selStitchStyle='regular'; _selFabricSplit=[];
   _selBoxSqft=''; _selRollSqft=''; _selTrackType=''; _selRates={}; _selLining='none'; _selAreaIds=[]; _selRemarks=''; _editSelIdx=-1;
-  _selSheerEnabled=false; _selSheerProducts=[]; _selSheerStitch=''; _selProductTarget='main'; _nextProdMode='component';
+  _selSheerEnabled=false; _selSheerProducts=[]; _selSheerStitch=''; _selProductTarget='main'; _nextProdMode='component'; _nextProdRole='main';
 }
 function _renderSelProdRows(){
   if(!_selProducts.length) return '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">No products added yet</div>';
@@ -3564,7 +3565,10 @@ function _renderSelProdRows(){
     var prod=p.product||{};
     var isOption=p.mode==='option';
     var isFabricCat=_selCategory==='curtains_main'||_selCategory==='curtains_sheer';
-    var h='<div class="prod-row"'+(isOption?' style="opacity:0.85;border-left:3px solid var(--border2)"':'')+'>';
+    var role=p.role||(isOption?'option':'main');
+    var roleLabel=role==='border'?'BORDER / MIX MATCH':role==='option'?'ALTERNATIVE SELECTION':'';
+    var h=(roleLabel?'<div style="font-size:10px;font-weight:900;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-top:14px;margin-bottom:4px;padding-left:2px">'+roleLabel+'</div>':'')
+      +'<div class="prod-row"'+(isOption?' style="border-left:3px solid var(--border2)"':'')+'>';
     if(p._manual&&!prod.mrp){
       h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
         +'<div style="font-size:11px;color:var(--text3);font-weight:700">MANUAL ENTRY</div>'
@@ -4271,9 +4275,9 @@ function selectProduct(idx) {
   if(_selCategory==='flooring'&&r.box_sqft) _selBoxSqft=String(r.box_sqft);
   if(_selCategory==='wallpaper'&&r.roll_sqft) _selRollSqft=String(r.roll_sqft);
   var _wCm=parseFloat(gv(r,'width'))||0;
-  var entry={product:prod,mode:_nextProdMode,chosen:false,discount:0,notes:'',
+  var entry={product:prod,mode:_nextProdMode,role:_nextProdRole,chosen:false,discount:0,notes:'',
     widthType:_wCm>280?'wider':'standard', widthCm:_wCm, rotationAllowed:null};
-  _nextProdMode='component';
+  _nextProdMode='component'; _nextProdRole='main';
   if(_selProductTarget==='sheer') _selSheerProducts.push(entry);
   else {
     _selProducts.push(entry);
