@@ -2479,6 +2479,7 @@ var _selSheerEnabled  = false;
 var _selSheerProducts = [];  // product entries for optional sheer layer
 var _selSheerStitch   = '';
 var _selProductTarget = 'main'; // 'main'|'sheer' — controls which array selectProduct() pushes to
+var _nextProdMode = 'component'; // 'component'|'option' — mode for the next product to be added
 
 // Local-only draft save (always called first for speed)
 function saveDraftLocal() {
@@ -3489,7 +3490,7 @@ function setSelProdChosen(i,v){ if(_selProducts[i]) _selProducts[i].chosen=v; }
 function setSelProdDisc(i,v){ if(_selProducts[i]) _selProducts[i].discount=parseFloat(v)||0; }
 function setSelProdNotes(i,v){ if(_selProducts[i]) _selProducts[i].notes=v; }
 function setSelProdWidthType(i,v){ if(_selProducts[i]){ _selProducts[i].widthType=v; _selProducts[i].rotationAllowed=null; } renderAddSelection(); }
-function setSelProdWidthCm(i,v){ if(_selProducts[i]){ _selProducts[i].widthCm=parseFloat(v)||0; _selProducts[i].rotationAllowed=null; } renderAddSelection(); }
+function setSelProdWidthCm(i,v){ if(_selProducts[i]){ var cm=parseFloat(v)||0; _selProducts[i].widthCm=cm; _selProducts[i].rotationAllowed=null; if(cm>0&&cm<150) _selProducts[i].widthType='standard'; else if(cm>=280) _selProducts[i].widthType='wider'; } renderAddSelection(); }
 function setSelProdRotation(i,v){ if(_selProducts[i]) _selProducts[i].rotationAllowed=v; renderAddSelection(); }
 function _activeAreaForSel(){
   var room=APP.quote.rooms[_activeRoom]; if(!room) return null;
@@ -3508,8 +3509,40 @@ function copyFabricFromExisting(srcProd){
 function removeSelProd(i){ _selProducts.splice(i,1); renderAddSelection(); }
 function setSelRate(k,v,def){ var n=parseFloat(v); _selRates[k]=(isNaN(n)||n===def)?null:n; }
 function addManualSelProduct(){
-  _selProducts.push({product:{brand:'',catalog:'',s_no:'',mrp:0},mode:'component',chosen:false,discount:0,notes:'',_manual:true});
+  _selProducts.push({product:{brand:'',catalog:'',s_no:'',mrp:0},mode:_nextProdMode,chosen:false,discount:0,notes:'',_manual:true});
+  _nextProdMode='component';
   renderAddSelection();
+}
+function addBorderFabric(){ _nextProdMode='component'; _selProductTarget='main'; openProductModal(); }
+function addOptionProduct(){ _nextProdMode='option'; _selProductTarget='main'; openProductModal(); }
+function fabricPhotoKey(prod){
+  return [prod.brand,prod.catalog,prod.s_no].filter(Boolean).join('_').replace(/[\\/:.#[\]*?]/g,'_')||'';
+}
+function saveFabricPhoto(key,dataUrl){
+  try{ DB.collection('fabricPhotos').doc(key).set({dataUrl:dataUrl,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}); }catch(e){}
+}
+function loadFabricPhoto(prod,callback){
+  var key=fabricPhotoKey(prod); if(!key) return;
+  DB.collection('fabricPhotos').doc(key).get().then(function(doc){ if(doc.exists&&doc.data().dataUrl) callback(doc.data().dataUrl); }).catch(function(){});
+}
+function handleFabricPhoto(evt,i){
+  var file=evt.target.files[0]; if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      var maxW=480, scale=Math.min(1,maxW/img.width);
+      var canvas=document.createElement('canvas');
+      canvas.width=img.width*scale; canvas.height=img.height*scale;
+      canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+      var dataUrl=canvas.toDataURL('image/jpeg',0.65);
+      if(i<0){ _selSheerProducts[Math.abs(i)-1].photo=dataUrl; }
+      else { _selProducts[i].photo=dataUrl; var key=fabricPhotoKey(_selProducts[i].product||{}); if(key) saveFabricPhoto(key,dataUrl); }
+      renderAddSelection();
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 function selStep2(){
   if(!_selCategory){ showToast('Select a category'); return; }
@@ -3523,15 +3556,19 @@ function selStep3(){ _selStep=3; renderAddSelection(); }
 function resetSelForm(){
   _selCategory=''; _selProducts=[]; _selStitch=''; _selStitchStyle='regular'; _selFabricSplit=[];
   _selBoxSqft=''; _selRollSqft=''; _selTrackType=''; _selRates={}; _selLining='none'; _selAreaIds=[]; _selRemarks=''; _editSelIdx=-1;
-  _selSheerEnabled=false; _selSheerProducts=[]; _selSheerStitch=''; _selProductTarget='main';
+  _selSheerEnabled=false; _selSheerProducts=[]; _selSheerStitch=''; _selProductTarget='main'; _nextProdMode='component';
 }
 function _renderSelProdRows(){
   if(!_selProducts.length) return '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">No products added yet</div>';
   return _selProducts.map(function(p,i){
     var prod=p.product||{};
-    var h='<div class="prod-row">';
+    var isOption=p.mode==='option';
+    var isFabricCat=_selCategory==='curtains_main'||_selCategory==='curtains_sheer';
+    var h='<div class="prod-row"'+(isOption?' style="opacity:0.85;border-left:3px solid var(--border2)"':'')+'>';
     if(p._manual&&!prod.mrp){
-      h+='<div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:6px">MANUAL ENTRY</div>'
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+        +'<div style="font-size:11px;color:var(--text3);font-weight:700">MANUAL ENTRY</div>'
+        +'<button class="icon-btn danger" onclick="removeSelProd('+i+')">🗑</button></div>'
         +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">'
         +'<input class="inp" style="grid-column:1/-1;font-size:12px;padding:7px" placeholder="Product / Brand name *" onchange="_selProducts['+i+'].product.catalog=this.value;_selProducts['+i+'].product.manualName=this.value">'
         +'<input class="inp" type="number" style="font-size:12px;padding:7px" placeholder="MRP (₹) *" inputmode="decimal" onchange="_selProducts['+i+'].product.mrp=parseFloat(this.value)||0">'
@@ -3540,17 +3577,25 @@ function _renderSelProdRows(){
     } else {
       var nameParts=[prod.brand,prod.catalog,prod.s_no].filter(Boolean);
       var pname=nameParts.join(' / ')||(prod.manualName||'—');
-      var isFabricCat=_selCategory==='curtains_main'||_selCategory==='curtains_sheer';
       var wCm2=p.widthCm||parseFloat(prod.width)||0;
-      h+='<div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:8px">'
-        +'<div style="flex:1"><div style="font-size:13px;font-weight:800;color:var(--text)">'+esc(pname)+'</div>'
-        +'<div style="display:grid;grid-template-columns:'+(isFabricCat?'1fr 1fr':'1fr')+';gap:8px;margin-top:6px">'
-        +'<div><label style="font-size:10px;color:var(--text3)">MRP (₹)</label>'
-        +'<input class="inp" type="number" value="'+esc(String(prod.mrp||0))+'" style="padding:6px;font-size:13px;font-weight:700;margin-top:2px" '
+      // Header: name + option badge + delete
+      h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px">'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">'
+        +'<div style="font-size:13px;font-weight:900;color:var(--text)">'+esc(pname)+'</div>'
+        +(isOption?'<span style="font-size:10px;font-weight:800;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);border-radius:4px;padding:2px 7px;flex-shrink:0">OPTION 2</span>':'')
+        +(isOption?'<label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2);cursor:pointer"><input type="checkbox"'+(p.chosen?' checked':'')+' onchange="setSelProdChosen('+i+',this.checked)"> Mark as chosen</label>':'')
+        +'</div>'
+        // MRP + Width inputs — more prominent
+        +'<div style="display:grid;grid-template-columns:'+(isFabricCat?'1fr 1fr':'1fr')+';gap:8px">'
+        +'<div><label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:3px">MRP (₹/m)</label>'
+        +'<input class="inp" type="number" value="'+esc(String(prod.mrp||0))+'" '
+        +'style="padding:9px;font-size:16px;font-weight:900;border:2px solid var(--border2)" '
         +'onchange="_selProducts['+i+'].product.mrp=parseFloat(this.value)||0" onclick="this.select()"></div>'
         +(isFabricCat
-          ?'<div><label style="font-size:10px;color:var(--text3)">Fabric Width (cm)</label>'
-            +'<input class="inp" type="number" value="'+esc(String(wCm2||''))+'" placeholder="e.g. 280" style="padding:6px;font-size:13px;font-weight:700;margin-top:2px" '
+          ?'<div><label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:3px">Width (cm)</label>'
+            +'<input class="inp" type="number" value="'+esc(String(wCm2||''))+'" placeholder="e.g. 280" '
+            +'style="padding:9px;font-size:16px;font-weight:900;border:2px solid var(--border2)" '
             +'onchange="setSelProdWidthCm('+i+',this.value)" onclick="this.select()"></div>'
           :'')
         +'</div>'
@@ -3560,29 +3605,38 @@ function _renderSelProdRows(){
             +'<button class="mode-btn'+(p.widthType==='wider'?' on':'')+'" style="flex:1;font-size:11px" onclick="setSelProdWidthType('+i+',\'wider\')">Wider Width</button>'
             +'</div>'
           :'')
-        +'</div><button class="icon-btn danger" style="align-self:flex-start" onclick="removeSelProd('+i+')">🗑</button></div>';
+        +'</div>'
+        +'<button class="icon-btn danger" style="align-self:flex-start;flex-shrink:0" onclick="removeSelProd('+i+')">🗑</button></div>';
     }
-    h+='<div class="mode-toggle">'
-      +'<button class="mode-btn'+(p.mode!=='option'?' on':'')+'" onclick="setSelProdMode('+i+',\'component\')">Component</button>'
-      +'<button class="mode-btn'+(p.mode==='option'?' on':'')+'" onclick="setSelProdMode('+i+',\'option\')">Option</button>'
-      +'</div>';
-    if(p.mode==='option') h+='<label style="display:flex;align-items:center;gap:8px;margin-top:6px;font-size:12px;color:var(--text2);cursor:pointer"><input type="checkbox"'+(p.chosen?' checked':'')+' onchange="setSelProdChosen('+i+',this.checked)"> Mark as chosen</label>';
-    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'
-      +'<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:2px">Material Discount %</label>'
-      +'<input class="inp" type="number" min="0" max="100" value="'+esc(String(p.discount||0))+'" style="padding:7px;font-size:12px" onchange="setSelProdDisc('+i+',this.value)" onclick="this.select()"></div>'
-      +'<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:2px">Notes (e.g. lining)</label>'
-      +'<input class="inp" value="'+esc(p.notes||'')+'" style="padding:7px;font-size:12px" placeholder="lining / notes" onchange="setSelProdNotes('+i+',this.value)"></div>'
-      +'</div>';
+    // Notes (textarea, full width)
+    h+='<div style="margin-top:8px">'
+      +'<label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:3px">Notes</label>'
+      +'<textarea class="inp" rows="2" style="padding:8px;font-size:13px;resize:vertical;width:100%;box-sizing:border-box;min-height:56px" '
+      +'placeholder="e.g. border details, lining instructions..." '
+      +'onchange="setSelProdNotes('+i+',this.value)">'+esc(p.notes||'')+'</textarea></div>';
+    // Photo section
+    var pid='pp_'+i;
+    h+='<div style="margin-top:8px;display:flex;align-items:center;gap:10px">';
+    if(p.photo){
+      h+='<img src="'+esc(p.photo)+'" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--border);flex-shrink:0">'
+        +'<div style="display:flex;flex-direction:column;gap:4px">'
+        +'<button class="btn ghost sm" style="font-size:11px" onclick="document.getElementById(\''+pid+'\').click()">Replace Photo</button>'
+        +'<button class="btn ghost sm" style="font-size:11px;color:var(--danger)" onclick="_selProducts['+i+'].photo=\'\';renderAddSelection()">Remove</button>'
+        +'</div>';
+    } else {
+      h+='<button class="btn ghost sm" style="font-size:12px" onclick="document.getElementById(\''+pid+'\').click()">📷 Add Photo</button>';
+    }
+    h+='<input type="file" id="'+pid+'" accept="image/*" capture="environment" style="display:none" onchange="handleFabricPhoto(event,'+i+')">';
+    h+='</div>';
     // Wider width height validation (curtains only)
-    if((_selCategory==='curtains_main'||_selCategory==='curtains_sheer')&&!p._manual){
+    if(isFabricCat&&!p._manual){
       var wCm=p.widthCm||parseFloat(prod.width)||0;
-      // Wider width: height validation
       if(p.widthType==='wider'&&wCm>0){
         var area=_activeAreaForSel();
         var fabricWIn=wCm/2.54;
         var areaH=area?parseFloat(area.height)||0:0;
         if(areaH>0&&areaH>fabricWIn){
-          h+='<div style="background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.3);border-radius:var(--r-sm);padding:10px;margin-top:4px">';
+          h+='<div style="background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.3);border-radius:var(--r-sm);padding:10px;margin-top:8px">';
           h+='<div style="font-size:12px;font-weight:700;color:#e74c3c;margin-bottom:6px">⚠ Height ('+areaH+'") exceeds fabric width ('+wCm+'cm = '+fabricWIn.toFixed(0)+'"). </div>';
           if(p.rotationAllowed===null){
             h+='<div style="display:flex;gap:6px">'
@@ -3602,11 +3656,10 @@ function _renderSelProdRows(){
           }
           h+='</div>';
         } else if(areaH>0){
-          h+='<div style="font-size:11px;color:#27ae60">✓ Height OK – using panels × 1.5m</div>';
+          h+='<div style="font-size:11px;color:#27ae60;margin-top:6px">✓ Height OK – using panels × 1.5m</div>';
         }
       }
     }
-    if(p._manual) h+='<button class="icon-btn danger" style="margin-top:8px;width:100%" onclick="removeSelProd('+i+')">Remove</button>';
     h+='</div>';
     return h;
   }).join('');
@@ -3690,8 +3743,12 @@ function renderAddSelection(){
         }
       }
       h+='<div class="btn-row" style="margin-top:10px">'
-        +'<button class="btn" style="flex:2" onclick="_selProductTarget=\'main\';openProductModal()">🔍 Search Product</button>'
-        +'<button class="btn ghost" style="flex:1" onclick="addManualSelProduct()">✎ Manual</button></div>';
+        +'<button class="btn" style="flex:2" onclick="_selProductTarget=\'main\';_nextProdMode=\'component\';openProductModal()">🔍 Search Product</button>'
+        +'<button class="btn ghost" style="flex:1" onclick="_nextProdMode=\'component\';addManualSelProduct()">✎ Manual</button></div>';
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'
+        +'<button class="btn ghost sm" onclick="addBorderFabric()">+ Border/Mix Fabric</button>'
+        +'<button class="btn ghost sm" onclick="addOptionProduct()">+ Add Option 2</button>'
+        +'</div>';
     }
     // Sheer toggle + sheer section (curtains_main only)
     if(_selCategory==='curtains_main'){
@@ -4197,10 +4254,15 @@ function selectProduct(idx) {
   };
   if(_selCategory==='flooring'&&r.box_sqft) _selBoxSqft=String(r.box_sqft);
   if(_selCategory==='wallpaper'&&r.roll_sqft) _selRollSqft=String(r.roll_sqft);
-  var entry={product:prod,mode:'component',chosen:false,discount:0,notes:'',
+  var entry={product:prod,mode:_nextProdMode,chosen:false,discount:0,notes:'',
     widthType:'standard', widthCm:parseFloat(gv(r,'width'))||0, rotationAllowed:null};
+  _nextProdMode='component';
   if(_selProductTarget==='sheer') _selSheerProducts.push(entry);
-  else _selProducts.push(entry);
+  else {
+    _selProducts.push(entry);
+    var _pidx=_selProducts.length-1;
+    loadFabricPhoto(prod,function(dataUrl){ if(_selProducts[_pidx]) { _selProducts[_pidx].photo=dataUrl; renderAddSelection(); } });
+  }
   closeProductModal();
   renderAddSelection();
   showToast('Product added ✓');
