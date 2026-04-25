@@ -3203,9 +3203,9 @@ function renderBld() {
       html+='<div style="margin-bottom:10px">';
       // Measurements
       areas.forEach(function(area){
-        html+='<div style="display:flex;align-items:baseline;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">'
-          +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+esc(area.name)+'</span>'
-          +'<span style="font-size:12px;color:var(--text3)">'+area.width+'" × '+area.height+'" · Qty '+area.qty+'</span>'
+        html+='<div style="padding:6px 0;border-bottom:1px solid var(--border)">'
+          +'<div style="font-size:13px;font-weight:700;color:var(--text)">'+esc(area.name)+'</div>'
+          +'<div style="font-size:12px;color:var(--text3);margin-top:2px">'+area.width+'" W × '+area.height+'" H · Qty '+area.qty+'</div>'
           +'</div>';
       });
       // Selections
