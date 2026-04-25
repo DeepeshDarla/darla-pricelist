@@ -1878,15 +1878,14 @@ border-bottom: 1.5pt solid #000;
 <!-- SCREEN: CUSTOMER -->
 <div id="screen-customer" class="screen">
   <div class="page-wrap">
-    <div class="section-label">Find Existing Customer</div>
-    <div class="form-card" style="padding:14px">
-      <input class="inp" id="custSearch" placeholder="Search by name or mobile number…" type="search" autocomplete="off" oninput="searchCustomers(this.value)" style="margin-bottom:0">
-      <div id="custSearchResults"></div>
-    </div>
     <div class="section-label">Customer Details</div>
     <div class="form-card accent-blue">
+      <div class="field">
+        <label class="field-label">Mobile Number *</label>
+        <input class="inp" id="cMobile" placeholder="10-digit number" type="tel" maxlength="10" inputmode="numeric" oninput="lookupCustomerByMobile(this.value)">
+        <div id="custSearchResults"></div>
+      </div>
       <div class="field"><label class="field-label">Customer Name *</label><input class="inp" id="cName" placeholder="Full name" type="text" autocapitalize="words"></div>
-      <div class="field"><label class="field-label">Mobile Number *</label><input class="inp" id="cMobile" placeholder="10-digit number" type="tel" maxlength="10" inputmode="numeric"></div>
       <div class="inp-row">
         <div class="field"><label class="field-label">Architect / Designer</label><input class="inp" id="cArch" placeholder="Optional" type="text" autocapitalize="words"></div>
         <div class="field"><label class="field-label">Address / Project</label><input class="inp" id="cAddr" placeholder="Optional" type="text"></div>
@@ -2820,7 +2819,6 @@ function clearForm() {
   var s1=document.getElementById('cSales1');
   if(s1&&APP.staff&&APP.staff.name) s1.value=APP.staff.name;
   buildSales2Drop(APP.staff?APP.staff.name:'');
-  var cs=document.getElementById('custSearch'); if(cs) cs.value='';
   var cr=document.getElementById('custSearchResults'); if(cr) cr.innerHTML='';
   _custResults=[];
 }
@@ -2830,59 +2828,52 @@ function goToCustomer() {
 }
 
 // ── Customer DB search & upsert ──────────────────────────────
-function searchCustomers(q) {
+function lookupCustomerByMobile(mobile) {
   clearTimeout(_custSearchTimer);
-  q = (q||'').trim();
+  mobile = (mobile||'').trim();
   var resultsEl = document.getElementById('custSearchResults');
-  if(q.length < 2){ resultsEl.innerHTML=''; _custResults=[]; return; }
+  APP.quote.customerId = null; _custResults = [];
+  if(mobile.length < 10){ resultsEl.innerHTML=''; return; }
   _custSearchTimer = setTimeout(function(){
-    resultsEl.innerHTML='<div style="padding:10px;font-size:13px;color:var(--text3)">Searching…</div>';
-    _custResults=[];
-    var ref = DB.collection('customers');
-    var isNum = /^\d+$/.test(q);
-    var prom = isNum
-      ? ref.where('mobile','>=',q).where('mobile','<=',q+'').limit(6).get()
-      : ref.where('nameLower','>=',q.toLowerCase()).where('nameLower','<=',q.toLowerCase()+'').limit(8).get();
-    prom.then(function(snap){
-      if(snap.empty){
-        resultsEl.innerHTML='<div style="padding:10px;font-size:13px;color:var(--text3)">No existing customer — a new record will be created.</div>';
-        return;
-      }
-      snap.forEach(function(doc){ _custResults.push(Object.assign({id:doc.id},doc.data())); });
-      var h='<div style="margin-top:8px;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden">';
-      _custResults.forEach(function(c,i){
-        h+='<div style="padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;background:var(--bg)" onclick="selectCustomer('+i+')">'
-          +'<div style="font-size:14px;font-weight:700;color:var(--text)">'+esc(c.name)+'</div>'
-          +'<div style="font-size:12px;color:var(--text3)">'+esc(c.mobile)+(c.addr?' &nbsp;·&nbsp; '+esc(c.addr):'')+'</div>'
-          +'</div>';
-      });
-      h+='</div>';
-      resultsEl.innerHTML=h;
-    }).catch(function(){ resultsEl.innerHTML=''; });
-  }, 350);
+    DB.collection('customers').where('mobile','==',mobile).limit(10).get()
+      .then(function(snap){
+        resultsEl.innerHTML='';
+        if(snap.empty) return; // new customer — leave form blank
+        snap.forEach(function(doc){ _custResults.push(Object.assign({id:doc.id},doc.data())); });
+        if(_custResults.length===1){ selectCustomer(0); return; }
+        // Multiple names on same number — show picker
+        var h='<div style="margin-top:8px;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden">'
+          +'<div style="padding:7px 12px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;background:var(--bg2)">Select customer</div>';
+        _custResults.forEach(function(c,i){
+          h+='<div style="padding:12px 14px;border-top:1px solid var(--border);cursor:pointer;background:var(--bg)" onclick="selectCustomer('+i+')">'
+            +'<div style="font-size:14px;font-weight:700;color:var(--text)">'+esc(c.name)+'</div>'
+            +(c.addr?'<div style="font-size:12px;color:var(--text3)">'+esc(c.addr)+'</div>':'')
+            +'</div>';
+        });
+        h+='</div>';
+        resultsEl.innerHTML=h;
+      }).catch(function(){ resultsEl.innerHTML=''; });
+  }, 400);
 }
 
 function selectCustomer(i) {
   var c=_custResults[i]; if(!c) return;
   document.getElementById('cName').value=c.name||'';
-  document.getElementById('cMobile').value=c.mobile||'';
   document.getElementById('cArch').value=c.arch||'';
   document.getElementById('cAddr').value=c.addr||'';
   APP.quote.customerId=c.id;
-  var cs=document.getElementById('custSearch'); if(cs) cs.value='';
   document.getElementById('custSearchResults').innerHTML=
     '<div style="margin-top:8px;padding:10px 14px;background:rgba(29,161,84,0.08);border:1px solid rgba(29,161,84,0.3);border-radius:var(--r-md);display:flex;align-items:center;gap:10px">'
-    +'<span style="font-size:18px">✓</span>'
-    +'<div style="flex:1"><div style="font-size:13px;font-weight:700;color:#1da154">'+esc(c.name)+' selected</div>'
-    +'<div style="font-size:11px;color:var(--text3)">Form filled — edit below if needed</div></div>'
+    +'<span style="font-size:16px">✓</span>'
+    +'<div style="flex:1"><div style="font-size:13px;font-weight:700;color:#1da154">'+esc(c.name)+' loaded</div>'
+    +'<div style="font-size:11px;color:var(--text3)">Edit any field below if needed</div></div>'
     +'<button style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:4px;background:var(--bg);cursor:pointer" onclick="clearCustomerSelection()">✕</button>'
     +'</div>';
 }
 
 function clearCustomerSelection() {
   APP.quote.customerId=null;
-  ['cName','cMobile','cArch','cAddr'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
-  var cs=document.getElementById('custSearch'); if(cs){ cs.value=''; cs.focus(); }
+  ['cName','cArch','cAddr'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
   document.getElementById('custSearchResults').innerHTML='';
   _custResults=[];
 }
@@ -2900,22 +2891,14 @@ function _upsertCustomer(customer, existingId) {
       .catch(function(){});
     return;
   }
-  // No existing ID — check if mobile already has a record
-  DB.collection('customers').where('mobile','==',customer.mobile).limit(1).get()
-    .then(function(snap){
-      if(!snap.empty){
-        var ref=snap.docs[0].ref;
-        ref.update(data);
-        APP.quote.customerId=snap.docs[0].id;
-      } else {
-        data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
-        data.createdBy=APP.staff?APP.staff.name:'';
-        DB.collection('customers').add(data).then(function(ref){
-          APP.quote.customerId=ref.id;
-          saveDraftLocal();
-        });
-      }
-    }).catch(function(){});
+  // No prior record selected — create a new customer document
+  // (multiple customers can legitimately share a mobile number)
+  data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+  data.createdBy=APP.staff?APP.staff.name:'';
+  DB.collection('customers').add(data).then(function(ref){
+    APP.quote.customerId=ref.id;
+    saveDraftLocal();
+  }).catch(function(){});
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -5306,7 +5289,6 @@ function applyQ(q) {
     if(!r.selections) r.selections=[];
   });
   APP.quote=q; APP.quote.customerId=q.customerId||null; saveDraft();
-  var cs=document.getElementById('custSearch'); if(cs) cs.value='';
   var cr=document.getElementById('custSearchResults'); if(cr) cr.innerHTML='';
   _custResults=[];
   document.getElementById('cName').value=q.customer.name||'';
