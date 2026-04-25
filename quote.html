@@ -4403,11 +4403,12 @@ function _renderSelPostSave(editing){
   h+='<button class="btn sm" style="width:100%" onclick="startAddSel()">+ Add Another Selection</button>';
   h+='<button class="btn sm" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--border)" onclick="openRoomModal()">+ Add Room</button>';
   if(isCurtainsMain){
-    // Only show "Add Sheer" if none of the saved areas already have a curtains_sheer selection
-    var sheerAlreadySaved=_lastSavedAreaIds.length>0&&room&&(room.selections||[]).some(function(s){
+    // Hide "Add Sheer" when: sheer was saved inline just now, OR a curtains_sheer sel already covers the same areas
+    var sheerJustSaved=_selSheerEnabled&&_selSheerProducts.length>0;
+    var sheerExistsForAreas=_lastSavedAreaIds.length>0&&room&&(room.selections||[]).some(function(s){
       return s.category==='curtains_sheer'&&(s.areaIds||[]).some(function(id){ return _lastSavedAreaIds.indexOf(id)!==-1; });
     });
-    if(!sheerAlreadySaved){
+    if(!sheerJustSaved&&!sheerExistsForAreas){
       h+='<button class="btn ghost sm" onclick="startSelWithCat(\'curtains_sheer\')">+ Add Sheer Curtains</button>';
     }
   }
