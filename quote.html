@@ -3439,12 +3439,9 @@ function _renderAreaPostSave(area,isNew){
     +'<div class="post-save-title">'+esc(area.name)+' '+(isNew?'added':'updated')+'</div>'
     +'<div class="post-save-sub">'+area.width+'" W × '+area.height+'" H · Qty '+area.qty+'</div>'
     +'<div class="post-save-actions">';
-  if(area.type==='curtains'&&isNew){
-    h+='<button class="btn ghost sm" onclick="openAddHardware(\''+area.id+'\')">+ Add Hardware (Tracks/Rods)</button>';
-  }
-  h+='<button class="btn ghost sm" onclick="_editAreaIdx=-1;renderAddArea()">+ Add Another Measurement</button>'
-    +'<button class="btn sm" onclick="goTo(\'screen-room-selections\')">+ Add Selections</button>'
-    +'<button class="btn ghost sm" style="font-size:12px" onclick="openRoomModal()">+ Add Room</button>'
+  h+='<button class="btn sm" style="width:100%" onclick="_editAreaIdx=-1;renderAddArea()">+ Add Another Measurement</button>'
+    +'<button class="btn sm" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--border)" onclick="goTo(\'screen-room-selections\')">+ Add Selections</button>'
+    +'<button class="btn ghost sm" onclick="openRoomModal()">+ Add Room</button>'
     +'</div></div>';
   document.getElementById('addAreaWrap').innerHTML=h;
 }
