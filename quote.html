@@ -3755,59 +3755,62 @@ function renderAddSelection(){
           h+='</div>';
         }
       }
-      h+='<div class="btn-row" style="margin-top:10px">'
-        +'<button class="btn" style="flex:2" onclick="_selProductTarget=\'main\';_nextProdMode=\'component\';openProductModal()">🔍 Search Product</button>'
-        +'<button class="btn ghost" style="flex:1" onclick="_nextProdMode=\'component\';addManualSelProduct()">✎ Manual</button></div>';
-      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'
-        +'<button class="btn ghost sm" onclick="addBorderFabric()">+ Border/Mix Fabric</button>'
-        +'<button class="btn ghost sm" onclick="addOptionProduct()">+ Add Option 2</button>'
-        +'</div>';
-    }
-    // Sheer toggle + sheer section (curtains_main only)
-    if(_selCategory==='curtains_main'){
-      h+='<div style="margin-top:14px">';
-      if(!_selSheerEnabled){
-        h+='<button class="btn ghost" style="width:100%;font-size:12px" onclick="_selSheerEnabled=true;renderAddSelection()">+ Add Sheer (optional)</button>';
+      if(!_selProducts.length){
+        // No product yet — show primary search/manual buttons
+        h+='<div class="btn-row" style="margin-top:10px">'
+          +'<button class="btn" style="flex:2" onclick="_selProductTarget=\'main\';_nextProdMode=\'component\';openProductModal()">🔍 Search Product</button>'
+          +'<button class="btn ghost" style="flex:1" onclick="_nextProdMode=\'component\';addManualSelProduct()">✎ Manual</button></div>';
       } else {
-        h+='<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;margin-top:4px">';
-        h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
-        h+='<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Sheer Fabric</div>';
-        h+='<button class="btn ghost sm" style="font-size:11px;color:var(--danger)" onclick="_selSheerEnabled=false;_selSheerProducts=[];_selSheerStitch=\'\';renderAddSelection()">─ Remove Sheer</button>';
-        h+='</div>';
-        // Sheer product rows
-        if(!_selSheerProducts.length){
-          h+='<div style="text-align:center;padding:12px 0;color:var(--text3);font-size:13px">No sheer product added yet</div>';
-        } else {
-          _selSheerProducts.forEach(function(p,i){
-            var prod=p.product||{};
-            var pname=[prod.brand,prod.catalog,prod.s_no].filter(Boolean).join(' / ')||(prod.manualName||'—');
-            var wCm=p.widthCm||parseFloat(prod.width)||0;
-            h+='<div class="prod-row" style="margin-bottom:8px">'
-              +'<div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:8px">'
-              +'<div style="flex:1"><div style="font-size:13px;font-weight:800;color:var(--text)">'+esc(pname)+'</div>'
-              +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">'
-              +'<div><label style="font-size:10px;color:var(--text3)">MRP (₹)</label>'
-              +'<input class="inp" type="number" value="'+esc(String(prod.mrp||0))+'" style="padding:6px;font-size:13px;font-weight:700;margin-top:2px" onchange="_selSheerProducts['+i+'].product.mrp=parseFloat(this.value)||0" onclick="this.select()"></div>'
-              +'<div><label style="font-size:10px;color:var(--text3)">Fabric Width (cm)</label>'
-              +'<input class="inp" type="number" value="'+esc(String(wCm||''))+'" placeholder="e.g. 280" style="padding:6px;font-size:13px;font-weight:700;margin-top:2px" onchange="_selSheerProducts['+i+'].widthCm=parseFloat(this.value)||0" onclick="this.select()"></div>'
-              +'</div></div>'
-              +'<button class="icon-btn danger" style="align-self:flex-start" onclick="_selSheerProducts.splice('+i+',1);renderAddSelection()">🗑</button></div>'
-              +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">'
-              +'<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:2px">Material Discount %</label>'
-              +'<input class="inp" type="number" min="0" max="100" value="'+esc(String(p.discount||0))+'" style="padding:7px;font-size:12px" onchange="_selSheerProducts['+i+'].discount=parseFloat(this.value)||0" onclick="this.select()"></div>'
-              +'</div></div>';
-          });
+        // Product selected — show action buttons only
+        h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">'
+          +'<button class="btn ghost" style="padding:12px 8px;font-size:13px;font-weight:700" onclick="addBorderFabric()">+ Border/Mix Fabric</button>'
+          +'<button class="btn ghost" style="padding:12px 8px;font-size:13px;font-weight:700" onclick="addOptionProduct()">+ Alternative Selection</button>'
+          +'</div>';
+        // Sheer button / panel (curtains_main only) — shown right here when products exist
+        if(_selCategory==='curtains_main'){
+          h+='<div style="margin-top:10px">';
+          if(!_selSheerEnabled){
+            h+='<button class="btn ghost" style="width:100%;padding:14px;font-size:14px;font-weight:700" onclick="_selSheerEnabled=true;renderAddSelection()">+ Add Sheer (optional)</button>';
+          } else {
+            h+='<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px">';
+            h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
+            h+='<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Sheer Fabric</div>';
+            h+='<button class="btn ghost sm" style="font-size:11px;color:var(--danger)" onclick="_selSheerEnabled=false;_selSheerProducts=[];_selSheerStitch=\'\';renderAddSelection()">─ Remove Sheer</button>';
+            h+='</div>';
+            if(!_selSheerProducts.length){
+              h+='<div style="text-align:center;padding:12px 0;color:var(--text3);font-size:13px">No sheer product added yet</div>';
+            } else {
+              _selSheerProducts.forEach(function(p,i){
+                var prod=p.product||{};
+                var pname=[prod.brand,prod.catalog,prod.s_no].filter(Boolean).join(' / ')||(prod.manualName||'—');
+                var wCm=p.widthCm||parseFloat(prod.width)||0;
+                h+='<div class="prod-row" style="margin-bottom:8px">'
+                  +'<div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:8px">'
+                  +'<div style="flex:1"><div style="font-size:13px;font-weight:800;color:var(--text)">'+esc(pname)+'</div>'
+                  +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">'
+                  +'<div><label style="font-size:11px;font-weight:700;color:var(--text2)">MRP (₹/m)</label>'
+                  +'<input class="inp" type="number" value="'+esc(String(prod.mrp||0))+'" style="padding:8px;font-size:15px;font-weight:900;border:2px solid var(--border2);margin-top:2px" onchange="_selSheerProducts['+i+'].product.mrp=parseFloat(this.value)||0" onclick="this.select()"></div>'
+                  +'<div><label style="font-size:11px;font-weight:700;color:var(--text2)">Width (cm)</label>'
+                  +'<input class="inp" type="number" value="'+esc(String(wCm||''))+'" placeholder="e.g. 280" style="padding:8px;font-size:15px;font-weight:900;border:2px solid var(--border2);margin-top:2px" onchange="_selSheerProducts['+i+'].widthCm=parseFloat(this.value)||0" onclick="this.select()"></div>'
+                  +'</div></div>'
+                  +'<button class="icon-btn danger" style="align-self:flex-start" onclick="_selSheerProducts.splice('+i+',1);renderAddSelection()">🗑</button></div></div>';
+              });
+            }
+            h+='<div style="margin-top:8px"><label class="field-label" style="font-size:11px;margin-bottom:6px;display:block">Stitch Pattern</label><div class="stitch-pills">';
+            ['pleated','eyelet','ripple','pinch','eliza','plain'].forEach(function(s){
+              h+='<button class="stitch-pill'+(_selSheerStitch===s?' on':'')+'" onclick="_selSheerStitch=\''+s+'\';renderAddSelection()">'+s.charAt(0).toUpperCase()+s.slice(1)+'</button>';
+            });
+            h+='</div></div>';
+            h+='<button class="btn" style="width:100%;margin-top:10px" onclick="_selProductTarget=\'sheer\';openProductModal()">🔍 Search Sheer Product</button>';
+            h+='</div>';
+          }
+          h+='</div>';
         }
-        // Sheer stitch pattern
-        h+='<div style="margin-top:8px"><label class="field-label" style="font-size:11px;margin-bottom:6px;display:block">Stitch Pattern</label><div class="stitch-pills">';
-        ['pleated','eyelet','ripple','pinch','eliza','plain'].forEach(function(s){
-          h+='<button class="stitch-pill'+(_selSheerStitch===s?' on':'')+'" onclick="_selSheerStitch=\''+s+'\';renderAddSelection()">'+s.charAt(0).toUpperCase()+s.slice(1)+'</button>';
-        });
-        h+='</div></div>';
-        h+='<button class="btn" style="width:100%;margin-top:10px" onclick="_selProductTarget=\'sheer\';openProductModal()">🔍 Search Sheer Product</button>';
-        h+='</div>';
       }
-      h+='</div>';
+    }
+    // Old sheer section removed — now rendered inline above when products exist
+    if(_selCategory==='curtains_main'&&_selProducts.length===0){
+      // Show sheer button even before main fabric if user comes via startSelWithCat
     }
     if(_selCategory==='curtains_main'||_selCategory==='curtains_sheer'){
       // Stitch pattern (label only, no rate impact)
