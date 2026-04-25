@@ -2262,7 +2262,7 @@ function getLiningRate(cat, type) {
 function calcCurtains(area, sel, fp) {
   var W = parseFloat(area.width)||0, H = parseFloat(area.height)||0, qty = parseInt(area.qty)||1;
   var widthType = fp.widthType || 'standard';
-  var widthCm = parseFloat(fp.widthCm || fp.product.width) || 0;
+  var widthCm = parseFloat(fp.widthCm || (fp.product&&fp.product.width)) || 0;
   var fabricWidthIn = widthCm > 0 ? widthCm / 2.54 : 0;
   var panels, fabricM;
   var rotationUsed = false;
@@ -2419,12 +2419,14 @@ function calcAreaFabricM(area, sels) {
   (sels||[]).forEach(function(sel){
     if ((sel.areaIds||[]).indexOf(area.id)===-1) return;
     var fp2=fabricProd(sel), cat=sel.category, c;
-    if (!fp2) return;
-    if (cat==='curtains_main'||cat==='curtains_sheer') c=calcCurtains(area,sel,fp2);
-    else if (cat==='roman_blind') c=calcRomanBlind(area,sel,fp2);
-    else if (cat==='headboard') c=calcHeadboard(area,sel,fp2);
-    else if (cat==='blind') c=calcBlind(area,fp2);
-    else return;
+    if (!fp2||!fp2.product) return;
+    try {
+      if (cat==='curtains_main'||cat==='curtains_sheer') c=calcCurtains(area,sel,fp2);
+      else if (cat==='roman_blind') c=calcRomanBlind(area,sel,fp2);
+      else if (cat==='headboard') c=calcHeadboard(area,sel,fp2);
+      else if (cat==='blind') c=calcBlind(area,fp2);
+      else return;
+    } catch(e){ return; }
     if (c&&c.fabricM) totalM+=parseFloat(c.fabricM)||0;
     if (c&&c.panels) totalPanels+=parseInt(c.panels)||0;
   });
