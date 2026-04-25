@@ -3808,8 +3808,8 @@ function _renderRomanLayerSection(layer){
   var _rf=_roomExistingFabrics();
   if(_rf.main||_rf.sheer){
     h+='<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Use existing room fabric:</div>';
-    if(_rf.main){ var _mp=_rf.main.product||{}; h+='<button class="btn ghost sm" style="width:100%;margin-bottom:4px;text-align:left;font-size:12px" onclick="_selRomanLayerTarget='+(layer||1)+';copyFabricFromExisting('+JSON.stringify(_rf.main).replace(/'/g,'&#39;')+','+(layer||1)+')">📋 Main: '+esc([_mp.brand,_mp.catalog].filter(Boolean).join(' ')||'Main Fabric')+'</button>'; }
-    if(_rf.sheer){ var _sp=_rf.sheer.product||{}; h+='<button class="btn ghost sm" style="width:100%;margin-bottom:4px;text-align:left;font-size:12px" onclick="_selRomanLayerTarget='+(layer||1)+';copyFabricFromExisting('+JSON.stringify(_rf.sheer).replace(/'/g,'&#39;')+','+(layer||1)+')">📋 Sheer: '+esc([_sp.brand,_sp.catalog].filter(Boolean).join(' ')||'Sheer Fabric')+'</button>'; }
+    if(_rf.main){ var _mp=_rf.main.product||{}; h+='<button class="btn ghost sm" style="width:100%;margin-bottom:4px;text-align:left;font-size:12px" data-src="'+esc(JSON.stringify(_rf.main))+'" onclick="_selRomanLayerTarget='+(layer||1)+';copyFabricFromExisting(JSON.parse(this.dataset.src),'+(layer||1)+')">📋 Main: '+esc([_mp.brand,_mp.catalog].filter(Boolean).join(' ')||'Main Fabric')+'</button>'; }
+    if(_rf.sheer){ var _sp=_rf.sheer.product||{}; h+='<button class="btn ghost sm" style="width:100%;margin-bottom:4px;text-align:left;font-size:12px" data-src="'+esc(JSON.stringify(_rf.sheer))+'" onclick="_selRomanLayerTarget='+(layer||1)+';copyFabricFromExisting(JSON.parse(this.dataset.src),'+(layer||1)+')">📋 Sheer: '+esc([_sp.brand,_sp.catalog].filter(Boolean).join(' ')||'Sheer Fabric')+'</button>'; }
     h+='</div>';
   }
   if(layerProds.length){
