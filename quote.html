@@ -2413,6 +2413,23 @@ function calcOthers(sel) {
   return { total: Math.round(total) };
 }
 
+// Total fabric metres required for an area across all linked selections
+function calcAreaFabricM(area, sels) {
+  var total = 0;
+  (sels||[]).forEach(function(sel){
+    if ((sel.areaIds||[]).indexOf(area.id)===-1) return;
+    var fp2=fabricProd(sel), cat=sel.category, c;
+    if (!fp2) return;
+    if (cat==='curtains_main'||cat==='curtains_sheer') c=calcCurtains(area,sel,fp2);
+    else if (cat==='roman_blind') c=calcRomanBlind(area,sel,fp2);
+    else if (cat==='headboard') c=calcHeadboard(area,sel,fp2);
+    else if (cat==='blind') c=calcBlind(area,fp2);
+    else return;
+    if (c&&c.fabricM) total+=parseFloat(c.fabricM)||0;
+  });
+  return total ? Math.round(total*100)/100 : 0;
+}
+
 // ── Dispatch: cost of a selection applied to one area ──
 function calcSelForArea(sel, area) {
   var ap = activeProds(sel);
@@ -3206,9 +3223,11 @@ function renderBld() {
       html+='<div style="margin-bottom:10px">';
       // Measurements
       areas.forEach(function(area){
+        var reqM=calcAreaFabricM(area,sels);
         html+='<div style="padding:6px 0;border-bottom:1px solid var(--border)">'
           +'<div style="font-size:13px;font-weight:700;color:var(--text)">'+esc(area.name)+'</div>'
-          +'<div style="font-size:12px;color:var(--text3);margin-top:2px">'+area.width+'" W × '+area.height+'" H · Qty '+area.qty+'</div>'
+          +'<div style="font-size:12px;color:var(--text3);margin-top:2px">'+area.width+'" W × '+area.height+'" H · Qty '+area.qty
+          +(reqM?' &nbsp;|&nbsp; <span style="color:var(--red);font-weight:700">Req: '+reqM+' m</span>':'')+'</div>'
           +'</div>';
       });
       // Selections
