@@ -3490,7 +3490,7 @@ function setSelProdChosen(i,v){ if(_selProducts[i]) _selProducts[i].chosen=v; }
 function setSelProdDisc(i,v){ if(_selProducts[i]) _selProducts[i].discount=parseFloat(v)||0; }
 function setSelProdNotes(i,v){ if(_selProducts[i]) _selProducts[i].notes=v; }
 function setSelProdWidthType(i,v){ if(_selProducts[i]){ _selProducts[i].widthType=v; _selProducts[i].rotationAllowed=null; } renderAddSelection(); }
-function setSelProdWidthCm(i,v){ if(_selProducts[i]){ var cm=parseFloat(v)||0; _selProducts[i].widthCm=cm; _selProducts[i].rotationAllowed=null; if(cm>0&&cm<150) _selProducts[i].widthType='standard'; else if(cm>=280) _selProducts[i].widthType='wider'; } renderAddSelection(); }
+function setSelProdWidthCm(i,v){ if(_selProducts[i]){ var cm=parseFloat(v)||0; _selProducts[i].widthCm=cm; _selProducts[i].rotationAllowed=null; if(cm>280) _selProducts[i].widthType='wider'; else _selProducts[i].widthType='standard'; } renderAddSelection(); }
 function setSelProdRotation(i,v){ if(_selProducts[i]) _selProducts[i].rotationAllowed=v; renderAddSelection(); }
 function _activeAreaForSel(){
   var room=APP.quote.rooms[_activeRoom]; if(!room) return null;
@@ -3708,9 +3708,22 @@ function renderAddSelection(){
     });
     h+='</div><button class="btn" style="width:100%;margin-top:20px" onclick="selStep2()"'+(_selCategory?'':' disabled')+'>Next →</button>';
   } else if(_selStep===2){
-    h+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">'
+    h+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'
       +'<span class="type-badge '+_selCategory+'">'+selCatLabel(_selCategory==='curtains_main'||_selCategory==='curtains_sheer'?'curtains_main':_selCategory)+'</span>'
       +'<button class="btn ghost sm" style="font-size:11px;margin-top:0" onclick="_selStep=1;renderAddSelection()">← Change</button></div>';
+    // Show linked measurement info
+    var _rm2=APP.quote.rooms[_activeRoom];
+    var _linkedAreas=_rm2?(_rm2.areas||[]).filter(function(a){ return _selAreaIds.indexOf(a.id)!==-1; }):[];
+    if(_linkedAreas.length){
+      h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:14px">';
+      _linkedAreas.forEach(function(a){
+        h+='<div style="display:flex;justify-content:space-between;align-items:baseline;padding:3px 0">'
+          +'<span style="font-size:13px;font-weight:800;color:var(--text)">'+esc(a.name)+'</span>'
+          +'<span style="font-size:12px;color:var(--text3)">'+a.width+'" W × '+a.height+'" H · Qty '+a.qty+'</span>'
+          +'</div>';
+      });
+      h+='</div>';
+    }
     if(_selCategory==='curtains_main'){
       h+='<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Main Fabric</div>';
     }
@@ -4254,8 +4267,9 @@ function selectProduct(idx) {
   };
   if(_selCategory==='flooring'&&r.box_sqft) _selBoxSqft=String(r.box_sqft);
   if(_selCategory==='wallpaper'&&r.roll_sqft) _selRollSqft=String(r.roll_sqft);
+  var _wCm=parseFloat(gv(r,'width'))||0;
   var entry={product:prod,mode:_nextProdMode,chosen:false,discount:0,notes:'',
-    widthType:'standard', widthCm:parseFloat(gv(r,'width'))||0, rotationAllowed:null};
+    widthType:_wCm>280?'wider':'standard', widthCm:_wCm, rotationAllowed:null};
   _nextProdMode='component';
   if(_selProductTarget==='sheer') _selSheerProducts.push(entry);
   else {
