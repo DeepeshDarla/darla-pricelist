@@ -2481,6 +2481,7 @@ var _selSheerStitch   = '';
 var _selProductTarget = 'main'; // 'main'|'sheer' — controls which array selectProduct() pushes to
 var _nextProdMode = 'component'; // 'component'|'option' — mode for the next product to be added
 var _nextProdRole = 'main';     // 'main'|'border'|'option' — label shown in product row header
+var _replaceSelProdIdx = -1;    // index of product to replace (-1 = add new)
 
 // Local-only draft save (always called first for speed)
 function saveDraftLocal() {
@@ -3516,6 +3517,7 @@ function addManualSelProduct(){
 }
 function addBorderFabric(){ _nextProdMode='component'; _nextProdRole='border'; _selProductTarget='main'; openProductModal(); }
 function addOptionProduct(){ _nextProdMode='option'; _nextProdRole='option'; _selProductTarget='main'; openProductModal(); }
+function changeSelProduct(i){ _replaceSelProdIdx=i; _selProductTarget='main'; openProductModal(); }
 function fabricPhotoKey(prod){
   return [prod.brand,prod.catalog,prod.s_no].filter(Boolean).join('_').replace(/[\\/:.#[\]*?]/g,'_')||'';
 }
@@ -3557,7 +3559,7 @@ function selStep3(){ _selStep=3; renderAddSelection(); }
 function resetSelForm(){
   _selCategory=''; _selProducts=[]; _selStitch=''; _selStitchStyle='regular'; _selFabricSplit=[];
   _selBoxSqft=''; _selRollSqft=''; _selTrackType=''; _selRates={}; _selLining='none'; _selAreaIds=[]; _selRemarks=''; _editSelIdx=-1;
-  _selSheerEnabled=false; _selSheerProducts=[]; _selSheerStitch=''; _selProductTarget='main'; _nextProdMode='component'; _nextProdRole='main';
+  _selSheerEnabled=false; _selSheerProducts=[]; _selSheerStitch=''; _selProductTarget='main'; _nextProdMode='component'; _nextProdRole='main'; _replaceSelProdIdx=-1;
 }
 function _renderSelProdRows(){
   if(!_selProducts.length) return '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">No products added yet</div>';
@@ -3645,7 +3647,7 @@ function _renderSelProdRows(){
           if(p.rotationAllowed===null){
             h+='<div style="display:flex;gap:6px">'
               +'<button class="btn sm" style="flex:1;margin:0;font-size:11px" onclick="setSelProdRotation('+i+',\'ask\')">Proceed Anyway</button>'
-              +'<button class="btn ghost sm" style="flex:1;margin:0;font-size:11px" onclick="setSelProdWidthType('+i+',\'standard\')">Change to Standard</button>'
+              +'<button class="btn ghost sm" style="flex:1;margin:0;font-size:11px" onclick="changeSelProduct('+i+')">Change Selection</button>'
               +'</div>';
           } else if(p.rotationAllowed==='ask'){
             h+='<div style="font-size:12px;color:var(--text2);margin-bottom:6px">Can we rotate the fabric?</div>'
@@ -4278,8 +4280,15 @@ function selectProduct(idx) {
   var entry={product:prod,mode:_nextProdMode,role:_nextProdRole,chosen:false,discount:0,notes:'',
     widthType:_wCm>280?'wider':'standard', widthCm:_wCm, rotationAllowed:null};
   _nextProdMode='component'; _nextProdRole='main';
-  if(_selProductTarget==='sheer') _selSheerProducts.push(entry);
-  else {
+  if(_selProductTarget==='sheer'){
+    _selSheerProducts.push(entry);
+  } else if(_replaceSelProdIdx>=0){
+    var _ri=_replaceSelProdIdx; _replaceSelProdIdx=-1;
+    entry.role=(_selProducts[_ri]||{}).role||'main';
+    entry.mode=(_selProducts[_ri]||{}).mode||'component';
+    _selProducts[_ri]=entry;
+    loadFabricPhoto(prod,function(dataUrl){ if(_selProducts[_ri]) { _selProducts[_ri].photo=dataUrl; renderAddSelection(); } });
+  } else {
     _selProducts.push(entry);
     var _pidx=_selProducts.length-1;
     loadFabricPhoto(prod,function(dataUrl){ if(_selProducts[_pidx]) { _selProducts[_pidx].photo=dataUrl; renderAddSelection(); } });
