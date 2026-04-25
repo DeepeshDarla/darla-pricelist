@@ -2520,6 +2520,7 @@ var _nextProdRole = 'main';     // 'main'|'border'|'option' — label shown in p
 var _replaceSelProdIdx = -1;    // index of product to replace (-1 = add new)
 var _selRomanType = '';          // 'single'|'double' for roman_blind
 var _selRomanLayerTarget = 1;   // 1|2 — which layer the next product search goes into
+var _selAreaLocked = false;     // true when area was pre-set from area card; hides checklist
 
 // Local-only draft save (always called first for speed)
 function saveDraftLocal() {
@@ -3359,7 +3360,7 @@ function renderMeasurements() {
   document.getElementById('measurementsWrap').innerHTML=html;
 }
 function openEditArea(ai){ _editAreaIdx=ai; goTo('screen-add-area'); }
-function addSelForArea(areaId){ resetSelForm(); _selAreaIds=[areaId]; _selStep=1; goTo('screen-add-selection'); }
+function addSelForArea(areaId){ resetSelForm(); _selAreaIds=[areaId]; _selAreaLocked=true; _selStep=1; goTo('screen-add-selection'); }
 function deleteArea(ri,ai){
   var room=APP.quote.rooms[ri]; if(!room) return;
   var areaId=(room.areas[ai]||{}).id;
@@ -3658,7 +3659,7 @@ function resetSelForm(){
   _selCategory=''; _selProducts=[]; _selStitch=''; _selStitchStyle='regular'; _selFabricSplit=[];
   _selBoxSqft=''; _selRollSqft=''; _selTrackType=''; _selRates={}; _selLining='none'; _selAreaIds=[]; _selRemarks=''; _editSelIdx=-1;
   _selSheerEnabled=false; _selSheerProducts=[]; _selSheerStitch=''; _selProductTarget='main'; _nextProdMode='component'; _nextProdRole='main'; _replaceSelProdIdx=-1;
-  _selRomanType=''; _selRomanLayerTarget=1;
+  _selRomanType=''; _selRomanLayerTarget=1; _selAreaLocked=false;
 }
 function _renderSelProdRows(){
   if(!_selProducts.length) return '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">No products added yet</div>';
@@ -4045,7 +4046,15 @@ function renderAddSelection(){
       h+=_renderRatesPanel();
       var _roomChk=APP.quote.rooms[_activeRoom];
       var _compat=(_roomChk&&_roomChk.areas||[]).filter(function(a){ return isCompatibleArea(a,_selCategory); });
-      if(_compat.length){
+      if(_selAreaLocked){
+        var _la=(_roomChk&&_roomChk.areas||[]).find(function(a){ return a.id===_selAreaIds[0]; });
+        if(_la) h+='<div style="margin-top:16px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);display:flex;align-items:center;gap:10px">'
+          +'<span style="font-size:18px">📌</span>'
+          +'<div><div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Applying to</div>'
+          +'<div style="font-size:14px;font-weight:800;color:var(--text)">'+esc(_la.name)+'</div>'
+          +'<div style="font-size:11px;color:var(--text3)">'+_la.width+'" × '+_la.height+'" · Qty '+_la.qty+'</div>'
+          +'</div></div>';
+      } else if(_compat.length){
         h+='<div style="margin-top:20px"><div class="field-label" style="margin-bottom:8px">Apply to Measurements</div>';
         _compat.forEach(function(area){
           var checked=_selAreaIds.indexOf(area.id)!==-1;
@@ -4167,7 +4176,15 @@ function renderAddSelection(){
     h+=_renderRatesPanel();
     var _roomChk5=APP.quote.rooms[_activeRoom];
     var _compat5=(_roomChk5&&_roomChk5.areas||[]).filter(function(a){ return isCompatibleArea(a,_selCategory); });
-    if(_compat5.length){
+    if(_selAreaLocked){
+      var _la5=(_roomChk5&&_roomChk5.areas||[]).find(function(a){ return a.id===_selAreaIds[0]; });
+      if(_la5) h+='<div style="margin-top:16px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);display:flex;align-items:center;gap:10px">'
+        +'<span style="font-size:18px">📌</span>'
+        +'<div><div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Applying to</div>'
+        +'<div style="font-size:14px;font-weight:800;color:var(--text)">'+esc(_la5.name)+'</div>'
+        +'<div style="font-size:11px;color:var(--text3)">'+_la5.width+'" × '+_la5.height+'" · Qty '+_la5.qty+'</div>'
+        +'</div></div>';
+    } else if(_compat5.length){
       h+='<div style="margin-top:20px"><div class="field-label" style="margin-bottom:8px">Apply to Measurements</div>';
       _compat5.forEach(function(area){
         var checked=_selAreaIds.indexOf(area.id)!==-1;
@@ -4227,8 +4244,7 @@ function _areaTypeToCat(type){
 }
 function addSelForAreaQuick(areaId,cat){
   resetSelForm();
-  _selCategory=cat;
-  _selAreaIds=[areaId];
+  _selCategory=cat; _selAreaIds=[areaId]; _selAreaLocked=true;
   _selStep=(cat==='curtains_main'?2:2);
   goTo('screen-add-selection');
 }
