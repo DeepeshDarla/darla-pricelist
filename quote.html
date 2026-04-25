@@ -4337,6 +4337,10 @@ function saveSelection(){
   var room=APP.quote.rooms[_activeRoom]; if(!room) return;
   var rem=_selRemarks;
   if(!_selCategory){ showToast('Select a category'); return; }
+  // Auto-link to all compatible areas if none explicitly chosen
+  if(!_selAreaIds.length && !_selAreaLocked){
+    _selAreaIds=(room.areas||[]).filter(function(a){ return isCompatibleArea(a,_selCategory); }).map(function(a){ return a.id; });
+  }
   var sel={
     id:'s_'+Date.now(), category:_selCategory,
     products:_selProducts.map(function(p){ return Object.assign({},p,{product:Object.assign({},p.product||{})}); }),
