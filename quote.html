@@ -3192,24 +3192,34 @@ function renderBld() {
     document.getElementById('roomsWrap').innerHTML=html; return;
   }
   APP.quote.rooms.forEach(function(room,ri){
-    var areas=room.areas||[], ac=areas.length, sc=(room.selections||[]).length, rt=roomTotal(room);
+    var areas=room.areas||[], sels=room.selections||[], ac=areas.length, sc=sels.length, rt=roomTotal(room);
     html+='<div class="room-ov-card" id="r_'+ri+'">'
       +'<div class="room-ov-hdr">'
       +'<span class="room-ov-name">'+esc(room.name)+'</span>'
       +(rt>0?'<span class="room-ov-total">'+fmt(rt)+'</span>':'')
       +'</div>'
       +'<div class="room-ov-body">';
-    if(ac){
+    if(ac||sc){
       html+='<div style="margin-bottom:10px">';
+      // Measurements
       areas.forEach(function(area){
         html+='<div style="display:flex;align-items:baseline;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">'
           +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+esc(area.name)+'</span>'
           +'<span style="font-size:12px;color:var(--text3)">'+area.width+'" × '+area.height+'" · Qty '+area.qty+'</span>'
           +'</div>';
       });
+      // Selections
+      sels.forEach(function(sel){
+        var fp=activeProds(sel)[0];
+        var pname=fp?(function(){ var p=fp.product||{}; return [p.brand,p.catalog].filter(Boolean).join(' ')||(p.manualName||''); })():'';
+        html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">'
+          +'<span class="type-badge '+sel.category+'" style="font-size:10px">'+selCatLabel(sel.category)+'</span>'
+          +(pname?'<span style="font-size:12px;color:var(--text2);flex:1;margin-left:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(pname)+'</span>':'')
+          +'</div>';
+      });
       html+='</div>';
     } else {
-      html+='<div class="room-ov-meta" style="margin-bottom:8px">No measurements yet · '+sc+' selection'+(sc!==1?'s':'')+'</div>';
+      html+='<div class="room-ov-meta" style="margin-bottom:8px">No measurements or selections yet</div>';
     }
     html+='<div class="room-ov-actions">'
       +'<button class="room-ov-btn" onclick="_activeRoom='+ri+';goTo(\'screen-room-measurements\')">📐 Measurements</button>'
