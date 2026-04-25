@@ -4059,6 +4059,17 @@ function startSelWithCat(cat){
   _selStep=2;
   goTo('screen-add-selection');
 }
+function _areaTypeToCat(type){
+  return {curtains:'curtains_main',roman_blinds:'roman_blind',blinds:'blind',
+          headboard:'headboard',mattress:'mattress',flooring:'flooring',wallpaper:'wallpaper'}[type]||null;
+}
+function addSelForAreaQuick(areaId,cat){
+  resetSelForm();
+  _selCategory=cat;
+  _selAreaIds=[areaId];
+  _selStep=(cat==='curtains_main'?2:2);
+  goTo('screen-add-selection');
+}
 function _renderSelPostSave(editing){
   var isCurtainsMain=_selCategory==='curtains_main';
   var subLabel=(function(){
@@ -4070,10 +4081,32 @@ function _renderSelPostSave(editing){
     if(hasSheer) return 'Curtains – Main & Sheer';
     return 'Curtains – Main';
   })();
+  // Find areas in this room with no selection linked
+  var room=APP.quote.rooms[_activeRoom];
+  var uncovered=[];
+  if(room&&!editing){
+    (room.areas||[]).forEach(function(area){
+      var hasAny=(room.selections||[]).some(function(s){ return (s.areaIds||[]).indexOf(area.id)!==-1; });
+      if(!hasAny){ var cat=_areaTypeToCat(area.type); if(cat) uncovered.push({area:area,cat:cat}); }
+    });
+  }
   var h='<div class="post-save-card"><div class="post-save-icon">✅</div>'
     +'<div class="post-save-title">Selection '+(editing?'updated':'saved')+'</div>'
-    +'<div class="post-save-sub">'+subLabel+'</div>'
-    +'<div class="post-save-actions">';
+    +'<div class="post-save-sub">'+subLabel+'</div>';
+  // Uncovered areas nudge
+  if(uncovered.length){
+    h+='<div style="margin:12px 0;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm)">';
+    h+='<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">No selection yet</div>';
+    uncovered.forEach(function(u){
+      h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">'
+        +'<div><div style="font-size:13px;font-weight:700;color:var(--text)">'+esc(u.area.name)+'</div>'
+        +'<div style="font-size:11px;color:var(--text3)">'+u.area.width+'" × '+u.area.height+'" · '+selCatLabel(u.cat)+'</div></div>'
+        +'<button class="btn sm" style="margin:0;padding:6px 12px;font-size:12px" onclick="addSelForAreaQuick(\''+u.area.id+'\',\''+u.cat+'\')">+ Add</button>'
+        +'</div>';
+    });
+    h+='</div>';
+  }
+  h+='<div class="post-save-actions">';
   h+='<button class="btn sm" style="width:100%" onclick="startAddSel()">+ Add Another Selection</button>';
   h+='<button class="btn sm" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--border)" onclick="openRoomModal()">+ Add Room</button>';
   if(isCurtainsMain){
