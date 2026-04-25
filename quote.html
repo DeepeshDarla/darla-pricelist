@@ -4403,10 +4403,20 @@ function _renderSelPostSave(editing){
   h+='<button class="btn sm" style="width:100%" onclick="startAddSel()">+ Add Another Selection</button>';
   h+='<button class="btn sm" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--border)" onclick="openRoomModal()">+ Add Room</button>';
   if(isCurtainsMain){
-    h+='<button class="btn ghost sm" onclick="startSelWithCat(\'curtains_sheer\')">+ Add Sheer Curtains</button>';
+    // Only show "Add Sheer" if none of the saved areas already have a curtains_sheer selection
+    var sheerAlreadySaved=_lastSavedAreaIds.length>0&&room&&(room.selections||[]).some(function(s){
+      return s.category==='curtains_sheer'&&(s.areaIds||[]).some(function(id){ return _lastSavedAreaIds.indexOf(id)!==-1; });
+    });
+    if(!sheerAlreadySaved){
+      h+='<button class="btn ghost sm" onclick="startSelWithCat(\'curtains_sheer\')">+ Add Sheer Curtains</button>';
+    }
   }
-  h+='<button class="btn ghost sm" onclick="_editAreaIdx=-1;goTo(\'screen-add-area\')">+ Add Measurement</button>'
-    +'<button class="btn ghost sm" style="font-size:12px;color:var(--text3)" onclick="goTo(\'screen-summary\')">View Summary →</button>'
+  // Only show "Add Measurement" if the room has no areas yet
+  var hasAreas=room&&(room.areas||[]).length>0;
+  if(!hasAreas){
+    h+='<button class="btn ghost sm" onclick="_editAreaIdx=-1;goTo(\'screen-add-area\')">+ Add Measurement</button>';
+  }
+  h+='<button class="btn ghost sm" style="font-size:12px;color:var(--text3)" onclick="goTo(\'screen-summary\')">View Summary →</button>'
     +'</div></div>';
   document.getElementById('addSelWrap').innerHTML=h;
 }
