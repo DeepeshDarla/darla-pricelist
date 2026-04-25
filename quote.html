@@ -2518,6 +2518,8 @@ var _selProductTarget = 'main'; // 'main'|'sheer' — controls which array selec
 var _nextProdMode = 'component'; // 'component'|'option' — mode for the next product to be added
 var _nextProdRole = 'main';     // 'main'|'border'|'option' — label shown in product row header
 var _replaceSelProdIdx = -1;    // index of product to replace (-1 = add new)
+var _selRomanType = '';          // 'single'|'double' for roman_blind
+var _selRomanLayerTarget = 1;   // 1|2 — which layer the next product search goes into
 
 // Local-only draft save (always called first for speed)
 function saveDraftLocal() {
@@ -2569,22 +2571,35 @@ function _saveToFirestore(finalSave) {
 // Start real-time sync for a quote (onSnapshot → update local state)
 function startQuoteSync(quoteId) {
   stopQuoteSync();
+  var _firstSnap = true;
   _quoteListener = DB.collection('quotes').doc(quoteId).onSnapshot(function(snap) {
     if(!snap.exists) return;
-    if(Date.now() - _lastSavedAt < 2500) return; // suppress own-write echo
     var remote = snap.data();
     if(!remote) return;
+    if(!_firstSnap && Date.now() - _lastSavedAt < 2500) return;
+    _firstSnap = false;
+    var remoteRooms = remote.rooms || [];
+    var localRooms  = APP.quote.rooms || [];
+    var useRemote = remoteRooms.length >= localRooms.length ||
+      remoteRooms.some(function(rr,i){
+        var lr = localRooms[i];
+        return !lr || (rr.areas||[]).length > (lr.areas||[]).length || (rr.selections||[]).length > (lr.selections||[]).length;
+      });
     APP.quote = Object.assign(APP.quote, {
-      rooms:    remote.rooms    || APP.quote.rooms,
+      rooms:    useRemote ? remoteRooms : localRooms,
       status:   remote.status   || APP.quote.status,
       customer: remote.customer || APP.quote.customer,
       staff:    remote.staff    || APP.quote.staff,
       staff2:   remote.staff2   || APP.quote.staff2
     });
     saveDraftLocal();
-    var tt = grandTotal();
-    var totEl = document.getElementById('bldTotal');
-    if(totEl) totEl.textContent = tt ? fmt(tt) : '₹0';
+    var bldScreen = document.getElementById('screen-builder');
+    if(bldScreen && bldScreen.classList.contains('active')) renderBld();
+    else {
+      var tt = grandTotal();
+      var totEl = document.getElementById('bldTotal');
+      if(totEl) totEl.textContent = tt ? fmt(tt) : '₹0';
+    }
   }, function(err){ console.warn('[Quote sync]', err); });
 }
 
@@ -3382,7 +3397,9 @@ function openEditSel(si){
   _selLining=sel.lining||'none';
   _selAreaIds=(sel.areaIds||[]).slice();
   _selRemarks=sel.remarks||'';
-  _selStep=1;
+  _selRomanType=sel.romanType||'';
+  _selRomanLayerTarget=1;
+  _selStep=2;
   goTo('screen-add-selection');
 }
 function deleteSelection(ri,si){
@@ -3548,14 +3565,23 @@ function _roomExistingFabrics(){
   var ss=(room.selections||[]).find(function(s){ return s.category==='curtains_sheer'&&(s.products||[]).length; });
   return { main:ms?activeProds(ms)[0]:null, sheer:ss?activeProds(ss)[0]:null };
 }
-function copyFabricFromExisting(srcProd){
-  _selProducts=[Object.assign({},srcProd,{widthType:'standard',rotationAllowed:null})];
+function copyFabricFromExisting(srcProd, layer){
+  var entry=Object.assign({},srcProd,{widthType:'standard',rotationAllowed:null});
+  if(_selCategory==='roman_blind'&&_selRomanType==='double'&&layer) entry.romanLayer=layer;
+  if(_selCategory==='roman_blind'&&_selRomanType==='double'){
+    _selProducts=_selProducts.filter(function(p){ return p.romanLayer!==(layer||_selRomanLayerTarget); });
+    _selProducts.push(entry);
+  } else {
+    _selProducts=[entry];
+  }
   renderAddSelection();
 }
 function removeSelProd(i){ _selProducts.splice(i,1); renderAddSelection(); }
 function setSelRate(k,v,def){ var n=parseFloat(v); _selRates[k]=(isNaN(n)||n===def)?null:n; }
 function addManualSelProduct(){
-  _selProducts.push({product:{brand:'',catalog:'',s_no:'',mrp:0},mode:_nextProdMode,role:_nextProdRole,chosen:false,discount:0,notes:'',_manual:true});
+  var entry={product:{brand:'',catalog:'',s_no:'',mrp:0},mode:_nextProdMode,role:_nextProdRole,chosen:false,discount:0,notes:'',_manual:true};
+  if(_selCategory==='roman_blind'&&_selRomanType==='double') entry.romanLayer=_selRomanLayerTarget;
+  _selProducts.push(entry);
   _nextProdMode='component'; _nextProdRole='main';
   renderAddSelection();
 }
@@ -3604,6 +3630,7 @@ function resetSelForm(){
   _selCategory=''; _selProducts=[]; _selStitch=''; _selStitchStyle='regular'; _selFabricSplit=[];
   _selBoxSqft=''; _selRollSqft=''; _selTrackType=''; _selRates={}; _selLining='none'; _selAreaIds=[]; _selRemarks=''; _editSelIdx=-1;
   _selSheerEnabled=false; _selSheerProducts=[]; _selSheerStitch=''; _selProductTarget='main'; _nextProdMode='component'; _nextProdRole='main'; _replaceSelProdIdx=-1;
+  _selRomanType=''; _selRomanLayerTarget=1;
 }
 function _renderSelProdRows(){
   if(!_selProducts.length) return '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">No products added yet</div>';
@@ -3658,12 +3685,36 @@ function _renderSelProdRows(){
         +'</div>'
         +'<button class="icon-btn danger" style="align-self:flex-start;flex-shrink:0" onclick="removeSelProd('+i+')">🗑</button></div>';
     }
-    // Notes (textarea, full width)
-    h+='<div style="margin-top:8px">'
-      +'<label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:3px">Notes</label>'
-      +'<textarea class="inp" rows="2" style="padding:8px;font-size:13px;resize:vertical;width:100%;box-sizing:border-box;min-height:56px" '
-      +'placeholder="e.g. border details, lining instructions..." '
-      +'onchange="setSelProdNotes('+i+',this.value)">'+esc(p.notes||'')+'</textarea></div>';
+    // Fabric Details toggle + collapsible panel
+    h+='<div style="margin-top:6px;margin-bottom:4px">'
+      +'<button style="font-size:10px;font-weight:700;padding:2px 8px;border:1px solid var(--border2);border-radius:4px;background:var(--bg3);color:var(--text3);cursor:pointer" '
+      +'onclick="_selProducts['+i+']._showDetails=!_selProducts['+i+']._showDetails;renderAddSelection()">'
+      +(p._showDetails?'Details ▲':'Details ▾')+'</button></div>';
+    if(p._showDetails){
+      var fd=p.fabricDetails||{};
+      h+='<div style="margin-bottom:8px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm)">';
+      h+='<div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Fabric Details</div>';
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+      [['composition','Composition','e.g. 100% Polyester'],['color','Colour / Shade','e.g. Off White'],
+       ['weave','Weave / Texture','e.g. Jacquard'],['finish','Finish','e.g. Matt, Sheen']].forEach(function(f){
+        var val=fd[f[0]]||'';
+        h+='<div><label style="font-size:10px;font-weight:700;color:var(--text3);display:block;margin-bottom:2px">'+f[1]+'</label>'
+          +'<input class="inp" style="padding:6px;font-size:12px" value="'+esc(val)+'" placeholder="'+esc(f[2])+'" '
+          +'onchange="if(!_selProducts['+i+'].fabricDetails)_selProducts['+i+'].fabricDetails={};_selProducts['+i+'].fabricDetails[\''+f[0]+'\']=this.value"></div>';
+      });
+      h+='</div>';
+      h+='<div style="margin-top:8px"><label style="font-size:10px;font-weight:700;color:var(--text3);display:block;margin-bottom:2px">Other Details</label>'
+        +'<input class="inp" style="padding:6px;font-size:12px;width:100%" value="'+esc(fd.other||'')+'" placeholder="Any other fabric info..." '
+        +'onchange="if(!_selProducts['+i+'].fabricDetails)_selProducts['+i+'].fabricDetails={};_selProducts['+i+'].fabricDetails.other=this.value"></div>';
+      h+='</div>';
+    }
+    // Discount + Notes row
+    h+='<div style="display:grid;grid-template-columns:100px 1fr;gap:8px;margin-top:4px">'
+      +'<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:2px">Discount %</label>'
+      +'<input class="inp" type="number" min="0" max="100" value="'+esc(String(p.discount||0))+'" style="padding:7px;font-size:12px" onchange="setSelProdDisc('+i+',this.value)" onclick="this.select()"></div>'
+      +'<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:2px">Notes</label>'
+      +'<input class="inp" value="'+esc(p.notes||'')+'" style="padding:7px;font-size:12px" placeholder="lining / border notes" onchange="setSelProdNotes('+i+',this.value)"></div>'
+      +'</div>';
     // Photo section
     var pid='pp_'+i;
     h+='<div style="margin-top:8px;display:flex;align-items:center;gap:10px">';
@@ -3744,6 +3795,69 @@ function _renderRatesPanel(){
   });
   return h+'</div></div>';
 }
+function _renderRomanLayerSection(layer){
+  var h='';
+  var layerProds=layer===null ? _selProducts : _selProducts.filter(function(p){ return p.romanLayer===layer; });
+  var layerIdxMap=layer===null ? _selProducts.map(function(_,i){return i;})
+    : _selProducts.map(function(p,i){return p.romanLayer===layer?i:-1;}).filter(function(i){return i>=0;});
+  var labelText=layer===null?'Fabric':(layer===1?'Layer 1 – Main':'Layer 2 – Sheer / Lining');
+  var borderColor=layer===2?'var(--border2)':'var(--border)';
+  var bgColor=layer===2?'var(--bg3)':'transparent';
+  h+='<div style="border:1px solid '+borderColor+';border-radius:var(--r-sm);padding:12px;margin-bottom:14px;background:'+bgColor+'">';
+  h+='<div style="font-size:11px;font-weight:900;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">'+labelText+'</div>';
+  var _rf=_roomExistingFabrics();
+  if(_rf.main||_rf.sheer){
+    h+='<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Use existing room fabric:</div>';
+    if(_rf.main){ var _mp=_rf.main.product||{}; h+='<button class="btn ghost sm" style="width:100%;margin-bottom:4px;text-align:left;font-size:12px" onclick="_selRomanLayerTarget='+(layer||1)+';copyFabricFromExisting('+JSON.stringify(_rf.main).replace(/'/g,'&#39;')+','+(layer||1)+')">📋 Main: '+esc([_mp.brand,_mp.catalog].filter(Boolean).join(' ')||'Main Fabric')+'</button>'; }
+    if(_rf.sheer){ var _sp=_rf.sheer.product||{}; h+='<button class="btn ghost sm" style="width:100%;margin-bottom:4px;text-align:left;font-size:12px" onclick="_selRomanLayerTarget='+(layer||1)+';copyFabricFromExisting('+JSON.stringify(_rf.sheer).replace(/'/g,'&#39;')+','+(layer||1)+')">📋 Sheer: '+esc([_sp.brand,_sp.catalog].filter(Boolean).join(' ')||'Sheer Fabric')+'</button>'; }
+    h+='</div>';
+  }
+  if(layerProds.length){
+    h+='<div>';
+    layerIdxMap.forEach(function(realIdx){ h+=_renderRomanSingleProdRow(realIdx); });
+    h+='</div>';
+  } else {
+    h+='<div style="text-align:center;padding:12px;color:var(--text3);font-size:13px">No fabric added yet</div>';
+  }
+  h+='<div class="btn-row" style="margin-top:8px">'
+    +'<button class="btn" style="flex:2;font-size:13px" onclick="_selRomanLayerTarget='+(layer||1)+';_selProductTarget=\'main\';_nextProdMode=\'component\';openProductModal()">🔍 Search</button>'
+    +'<button class="btn ghost" style="flex:1;font-size:13px" onclick="_selRomanLayerTarget='+(layer||1)+';addManualSelProduct()">✎ Manual</button>'
+    +'</div>';
+  if((layer===null||layer===1)&&layerProds.length>=1){
+    h+='<button class="btn ghost sm" style="width:100%;margin-top:6px;font-size:12px" onclick="_selRomanLayerTarget='+(layer||1)+';_selProductTarget=\'main\';_nextProdMode=\'component\';openProductModal()">+ Add Border / Mix Fabric</button>';
+  }
+  h+='</div>';
+  return h;
+}
+function _renderRomanSingleProdRow(i){
+  var p=_selProducts[i]; if(!p) return '';
+  var prod=p.product||{};
+  var h='<div class="prod-row" style="margin-bottom:8px">';
+  if(p._manual&&!prod.mrp){
+    h+='<div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:6px">MANUAL ENTRY</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">'
+      +'<input class="inp" style="grid-column:1/-1;font-size:12px;padding:7px" placeholder="Product / Brand name *" onchange="_selProducts['+i+'].product.catalog=this.value;_selProducts['+i+'].product.manualName=this.value">'
+      +'<input class="inp" type="number" style="font-size:12px;padding:7px" placeholder="MRP (₹) *" inputmode="decimal" onchange="_selProducts['+i+'].product.mrp=parseFloat(this.value)||0">'
+      +'<input class="inp" style="font-size:12px;padding:7px" placeholder="S.No / Code (opt)" onchange="_selProducts['+i+'].product.s_no=this.value">'
+      +'</div>';
+  } else {
+    var nameParts=[prod.brand,prod.catalog,prod.s_no].filter(Boolean);
+    var pname=nameParts.join(' / ')||(prod.manualName||'—');
+    h+='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">'
+      +'<div style="font-size:13px;font-weight:900;color:var(--text);flex:1;min-width:0">'+esc(pname)+'</div>'
+      +'<button class="icon-btn danger" onclick="removeSelProd('+i+')">🗑</button></div>';
+    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+      +'<div><label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:3px">MRP (₹/m)</label>'
+      +'<input class="inp" type="number" value="'+esc(String(prod.mrp||0))+'" style="padding:9px;font-size:16px;font-weight:900;border:2px solid var(--border2)" onchange="_selProducts['+i+'].product.mrp=parseFloat(this.value)||0" onclick="this.select()"></div>'
+      +'<div><label style="font-size:10px;color:var(--text3)">Width (cm)</label>'
+      +'<input class="inp" type="number" value="'+(p.widthCm||parseFloat(prod.width)||'')+'" placeholder="280" style="padding:8px;font-size:14px" onchange="_selProducts['+i+'].widthCm=parseFloat(this.value)||0" onclick="this.select()"></div>'
+      +'</div>';
+  }
+  h+='<div style="margin-top:6px"><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:2px">Notes</label>'
+    +'<input class="inp" value="'+esc(p.notes||'')+'" style="padding:7px;font-size:12px" placeholder="lining / notes" onchange="setSelProdNotes('+i+',this.value)"></div>';
+  h+='</div>';
+  return h;
+}
 function _selStepBar(){
   if(_selCategory!=='curtains_main') return '';
   var steps=['Fabrics','Sheer','Stitching','Tracks'];
@@ -3821,24 +3935,44 @@ function renderAddSelection(){
       if(!canNext) h+='<div style="text-align:center;font-size:12px;color:var(--text3);margin-top:8px">Add a fabric to continue</div>';
     } else {
       // ── STEP 2 (non-curtains): flat full form ──
-      h+=_renderSelProdRows();
-      if(_selCategory==='tracks_rods'){
+      if(_selCategory==='roman_blind'){
+        if(!_selRomanType){
+          h+='<div style="margin-bottom:20px">'
+            +'<div class="field-label" style="margin-bottom:12px">Roman Blind Type</div>'
+            +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+            +'<button class="btn ghost" style="padding:20px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;border:2px solid var(--border2)" '
+            +'onclick="_selRomanType=\'single\';renderAddSelection()">'
+            +'<span style="font-size:22px">🪟</span>'
+            +'<span style="font-size:13px;font-weight:900">Single Roman</span>'
+            +'<span style="font-size:11px;color:var(--text3);font-weight:400">One fabric layer<br>(add extra for border/mix)</span>'
+            +'</button>'
+            +'<button class="btn ghost" style="padding:20px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;border:2px solid var(--border2)" '
+            +'onclick="_selRomanType=\'double\';renderAddSelection()">'
+            +'<span style="font-size:22px">🪟🪟</span>'
+            +'<span style="font-size:13px;font-weight:900">Double Roman</span>'
+            +'<span style="font-size:11px;color:var(--text3);font-weight:400">Two layers: Main<br>+ Sheer / Lining</span>'
+            +'</button>'
+            +'</div></div>';
+        } else {
+          h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">'
+            +'<span style="font-size:11px;font-weight:800;padding:4px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:20px;color:var(--text2)">'
+            +(_selRomanType==='double'?'🪟🪟 Double Roman':'🪟 Single Roman')+'</span>'
+            +'<button class="btn ghost sm" style="font-size:11px;margin-top:0" '
+            +'onclick="_selRomanType=\'\';_selProducts=[];renderAddSelection()">Change Type</button>'
+            +'</div>';
+          if(_selRomanType==='single') h+=_renderRomanLayerSection(null);
+          else { h+=_renderRomanLayerSection(1); h+=_renderRomanLayerSection(2); }
+        }
+      } else if(_selCategory==='tracks_rods'){
+        h+=_renderSelProdRows();
         h+='<div class="field" style="margin-top:12px"><label class="field-label">Track Type</label><div class="track-pills">';
         TRACK_TYPES.forEach(function(t){ h+='<button class="track-pill'+(_selTrackType===t?' on':'')+'" onclick="setTrackType(\''+t.replace(/'/g,"\\'")+'\')">'+esc(t)+'</button>'; });
         h+='</div></div>';
       } else if(_selCategory==='others'){
+        h+=_renderSelProdRows();
         h+='<div class="btn-row" style="margin-top:10px"><button class="btn ghost" style="width:100%" onclick="addManualSelProduct()">+ Add Manual Item</button></div>';
       } else {
-        if(_selCategory==='roman_blind'&&!_selProducts.length){
-          var _rf=_roomExistingFabrics();
-          if(_rf.main||_rf.sheer){
-            h+='<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px;margin-top:10px">';
-            h+='<div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Use existing room fabric:</div>';
-            if(_rf.main){ var _mProd=_rf.main.product||{}; var _mName=[_mProd.brand,_mProd.catalog].filter(Boolean).join(' ')||'Main Fabric'; h+='<button class="btn ghost sm" style="width:100%;margin-bottom:6px;text-align:left" onclick="copyFabricFromExisting('+JSON.stringify(_rf.main).replace(/'/g,'&#39;')+')">📋 Main: '+esc(_mName)+'</button>'; }
-            if(_rf.sheer){ var _sProd=_rf.sheer.product||{}; var _sName=[_sProd.brand,_sProd.catalog].filter(Boolean).join(' ')||'Sheer Fabric'; h+='<button class="btn ghost sm" style="width:100%;text-align:left" onclick="copyFabricFromExisting('+JSON.stringify(_rf.sheer).replace(/'/g,'&#39;')+')">📋 Sheer: '+esc(_sName)+'</button>'; }
-            h+='</div>';
-          }
-        }
+        h+=_renderSelProdRows();
         if(!_selProducts.length){
           h+='<div class="btn-row" style="margin-top:10px">'
             +'<button class="btn" style="flex:2" onclick="_selProductTarget=\'main\';_nextProdMode=\'component\';openProductModal()">🔍 Search Product</button>'
@@ -4032,7 +4166,7 @@ function saveSelection(){
     boxSqft:_selBoxSqft?parseFloat(_selBoxSqft):null,
     rollSqft:_selRollSqft?parseFloat(_selRollSqft):null,
     trackType:_selTrackType, rates:Object.assign({},_selRates),
-    lining:_selLining
+    lining:_selLining, romanType:_selRomanType||undefined
   };
   var editing=_editSelIdx>=0;
   if(editing){ sel.id=(room.selections[_editSelIdx]||{}).id||sel.id; room.selections[_editSelIdx]=sel; }
@@ -4425,6 +4559,7 @@ function selectProduct(idx) {
   var _wCm=parseFloat(gv(r,'width'))||0;
   var entry={product:prod,mode:_nextProdMode,role:_nextProdRole,chosen:false,discount:0,notes:'',
     widthType:_wCm>280?'wider':'standard', widthCm:_wCm, rotationAllowed:null};
+  if(_selCategory==='roman_blind'&&_selRomanType==='double') entry.romanLayer=_selRomanLayerTarget;
   _nextProdMode='component'; _nextProdRole='main';
   if(_selProductTarget==='sheer'){
     _selSheerProducts.push(entry);
@@ -4973,17 +5108,20 @@ function saveAndExit() {
 }
 
 function loadById(id) {
-  // Check local cache first for instant load
   var local=getList().find(function(q){ return q.id===id; });
-  if(local&&local.draft){ applyQ(JSON.parse(local.draft)); showToast('Loaded: '+id); startQuoteSync(id); return; }
-  // Load from Firestore
-  showToast('Loading…');
+  if(local&&local.draft){ try{ applyQ(JSON.parse(local.draft)); }catch(e){} }
   DB.collection('quotes').doc(id).get()
     .then(function(snap){
       if(snap.exists){
-        var q=snap.data(); applyQ(q); saveToList(); showToast('Loaded: '+id); startQuoteSync(id);
-      } else { showToast('Not found: '+id); }
-    }).catch(function(){ showToast('Not found — check connection'); });
+        var q=snap.data(); applyQ(q); saveToList(); showToast('Loaded ✓ '+id); startQuoteSync(id);
+      } else {
+        if(!local) showToast('Not found: '+id);
+        else startQuoteSync(id);
+      }
+    }).catch(function(){
+      if(!local) showToast('Offline — could not load');
+      else { showToast('Offline — showing cached version'); startQuoteSync(id); }
+    });
 }
 function applyQ(q) {
   // Migrate old v1 rooms (windows[] → areas[]/selections[])
@@ -5126,17 +5264,21 @@ function drawQList(list,loading) {
 }
 function openQ(i) {
   var e=_qFiltered[i]; if(!e) return;
-  // Use local draft if available
-  if(e.draft){ try{ applyQ(JSON.parse(e.draft)); showToast('Opened: '+e.id); startQuoteSync(e.id); return; }catch(ex){} }
-  // Use embedded full doc from onSnapshot
-  if(e._fullDoc){ applyQ(e._fullDoc); saveToList(); showToast('Opened: '+e.id); startQuoteSync(e.id); return; }
-  // Fetch from Firestore
-  showToast('Loading…');
+  if(e.draft){ try{ applyQ(JSON.parse(e.draft)); }catch(ex){} }
+  else if(e._fullDoc){ applyQ(e._fullDoc); saveToList(); }
   DB.collection('quotes').doc(e.id).get()
     .then(function(snap){
-      if(snap.exists){ var q=snap.data(); e.draft=JSON.stringify(q); saveQEntry(e); applyQ(q); showToast('Loaded: '+e.id); startQuoteSync(e.id); }
-      else showToast('Not found: '+e.id);
-    }).catch(function(){ showToast('Error loading'); });
+      if(snap.exists){
+        var q=snap.data(); e.draft=JSON.stringify(q); saveQEntry(e);
+        applyQ(q); showToast('Opened ✓ '+e.id); startQuoteSync(e.id);
+      } else {
+        if(!e.draft&&!e._fullDoc) showToast('Not found: '+e.id);
+        else { showToast('Opened (cached): '+e.id); startQuoteSync(e.id); }
+      }
+    }).catch(function(){
+      if(!e.draft&&!e._fullDoc) showToast('Error loading');
+      else { showToast('Offline — showing cached version'); startQuoteSync(e.id); }
+    });
 }
 function saveQEntry(e) {
   var list=getList(), found=false;
