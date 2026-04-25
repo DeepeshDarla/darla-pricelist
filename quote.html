@@ -3243,7 +3243,7 @@ function renderBld() {
           +'<div style="font-size:13px;font-weight:700;color:var(--text)">'+esc(area.name)+'</div>'
           +'<div style="font-size:12px;color:var(--text3);margin-top:2px">'+area.width+'" W × '+area.height+'" H · Qty '+area.qty
           +(fab?' &nbsp;|&nbsp; Req: <input type="number" step="0.05" value="'+displayM+'" '
-            +'style="width:46px;font-size:12px;color:var(--text3);background:transparent;border:none;border-bottom:1px dashed var(--text3);padding:0 2px;text-align:center" '
+            +'style="width:50px;font-size:12px;font-family:inherit;color:var(--text3);background:transparent;border:none;border-bottom:1px dashed var(--text3);padding:0 2px;text-align:center;-webkit-appearance:none" '
             +'onchange="setAreaFabricOverride('+ri+','+ai+',this.value)" onclick="this.select()"> m'+breakdown:'')
           +'</div>'
           +'</div>';
