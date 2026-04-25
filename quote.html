@@ -4081,6 +4081,15 @@ function renderAddSelection(){
     // ── STEP 3 (curtains): Sheer ──
     h+=_selStepBar();
     h+='<button class="btn ghost sm" style="margin-bottom:16px" onclick="_selStep=2;renderAddSelection()">← Fabrics</button>';
+    if(_selAreaLocked){
+      var _la3=(APP.quote.rooms[_activeRoom]&&APP.quote.rooms[_activeRoom].areas||[]).find(function(a){ return a.id===_selAreaIds[0]; });
+      if(_la3) h+='<div style="margin-bottom:12px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);display:flex;align-items:center;gap:10px">'
+        +'<span style="font-size:18px">📌</span>'
+        +'<div><div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Applying to</div>'
+        +'<div style="font-size:14px;font-weight:800;color:var(--text)">'+esc(_la3.name)+'</div>'
+        +'<div style="font-size:11px;color:var(--text3)">'+_la3.width+'" × '+_la3.height+'" · Qty '+_la3.qty+'</div>'
+        +'</div></div>';
+    }
     if(!_selSheerEnabled){
       h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:20px;text-align:center;margin-bottom:16px">';
       h+='<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:6px">Add a sheer curtain?</div>';
@@ -4121,6 +4130,15 @@ function renderAddSelection(){
     // ── STEP 4 (curtains): Stitching ──
     h+=_selStepBar();
     h+='<button class="btn ghost sm" style="margin-bottom:16px" onclick="_selStep=3;renderAddSelection()">← Sheer</button>';
+    if(_selAreaLocked){
+      var _la4=(APP.quote.rooms[_activeRoom]&&APP.quote.rooms[_activeRoom].areas||[]).find(function(a){ return a.id===_selAreaIds[0]; });
+      if(_la4) h+='<div style="margin-bottom:12px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);display:flex;align-items:center;gap:10px">'
+        +'<span style="font-size:18px">📌</span>'
+        +'<div><div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Applying to</div>'
+        +'<div style="font-size:14px;font-weight:800;color:var(--text)">'+esc(_la4.name)+'</div>'
+        +'<div style="font-size:11px;color:var(--text3)">'+_la4.width+'" × '+_la4.height+'" · Qty '+_la4.qty+'</div>'
+        +'</div></div>';
+    }
     h+='<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Main Stitching</div>';
     h+='<div class="field"><label class="field-label">Stitch Pattern</label><div class="stitch-pills">';
     ['pleated','eyelet','ripple','pinch','eliza','plain'].forEach(function(s){
@@ -4255,7 +4273,7 @@ function _areaTypeToCat(type){
 function addSelForAreaQuick(areaId,cat){
   resetSelForm();
   _selCategory=cat; _selAreaIds=[areaId]; _selAreaLocked=true;
-  _selStep=(cat==='curtains_main'?2:2);
+  _selStep=2;
   goTo('screen-add-selection');
 }
 function _renderSelPostSave(editing){
