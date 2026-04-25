@@ -3836,36 +3836,6 @@ function _renderSelProdRows(){
         +'</div>'
         +'<button class="icon-btn danger" style="align-self:flex-start;flex-shrink:0" onclick="removeSelProd('+i+')">🗑</button></div>';
     }
-    // Fabric Details toggle + collapsible panel
-    h+='<div style="margin-top:6px;margin-bottom:4px">'
-      +'<button style="font-size:10px;font-weight:700;padding:2px 8px;border:1px solid var(--border2);border-radius:4px;background:var(--bg3);color:var(--text3);cursor:pointer" '
-      +'onclick="_selProducts['+i+']._showDetails=!_selProducts['+i+']._showDetails;renderAddSelection()">'
-      +(p._showDetails?'Details ▲':'Details ▾')+'</button></div>';
-    if(p._showDetails){
-      var fd=p.fabricDetails||{};
-      h+='<div style="margin-bottom:8px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm)">';
-      h+='<div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Fabric Details</div>';
-      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-      [['composition','Composition','e.g. 100% Polyester'],['color','Colour / Shade','e.g. Off White'],
-       ['weave','Weave / Texture','e.g. Jacquard'],['finish','Finish','e.g. Matt, Sheen']].forEach(function(f){
-        var val=fd[f[0]]||'';
-        h+='<div><label style="font-size:10px;font-weight:700;color:var(--text3);display:block;margin-bottom:2px">'+f[1]+'</label>'
-          +'<input class="inp" style="padding:6px;font-size:12px" value="'+esc(val)+'" placeholder="'+esc(f[2])+'" '
-          +'onchange="if(!_selProducts['+i+'].fabricDetails)_selProducts['+i+'].fabricDetails={};_selProducts['+i+'].fabricDetails[\''+f[0]+'\']=this.value"></div>';
-      });
-      h+='</div>';
-      h+='<div style="margin-top:8px"><label style="font-size:10px;font-weight:700;color:var(--text3);display:block;margin-bottom:2px">Other Details</label>'
-        +'<input class="inp" style="padding:6px;font-size:12px;width:100%" value="'+esc(fd.other||'')+'" placeholder="Any other fabric info..." '
-        +'onchange="if(!_selProducts['+i+'].fabricDetails)_selProducts['+i+'].fabricDetails={};_selProducts['+i+'].fabricDetails.other=this.value"></div>';
-      h+='</div>';
-    }
-    // Discount + Notes row
-    h+='<div style="display:grid;grid-template-columns:100px 1fr;gap:8px;margin-top:4px">'
-      +'<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:2px">Discount %</label>'
-      +'<input class="inp" type="number" min="0" max="100" value="'+esc(String(p.discount||0))+'" style="padding:7px;font-size:12px" onchange="setSelProdDisc('+i+',this.value)" onclick="this.select()"></div>'
-      +'<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:2px">Notes</label>'
-      +'<input class="inp" value="'+esc(p.notes||'')+'" style="padding:7px;font-size:12px" placeholder="lining / border notes" onchange="setSelProdNotes('+i+',this.value)"></div>'
-      +'</div>';
     // Photo section
     var pid='pp_'+i;
     h+='<div style="margin-top:8px;display:flex;align-items:center;gap:10px">';
