@@ -4017,9 +4017,18 @@ function startSelWithCat(cat){
 }
 function _renderSelPostSave(editing){
   var isCurtainsMain=_selCategory==='curtains_main';
+  var subLabel=(function(){
+    if(!isCurtainsMain) return selCatLabel(_selCategory);
+    var hasBorder=_selProducts.some(function(p){ return p.role==='border'; });
+    var hasSheer=_selSheerEnabled&&_selSheerProducts.length>0;
+    if(hasBorder&&hasSheer) return 'Curtains – Main, Border & Sheer';
+    if(hasBorder) return 'Curtains (Border / Mix Match)';
+    if(hasSheer) return 'Curtains – Main & Sheer';
+    return 'Curtains – Main';
+  })();
   var h='<div class="post-save-card"><div class="post-save-icon">✅</div>'
     +'<div class="post-save-title">Selection '+(editing?'updated':'saved')+'</div>'
-    +'<div class="post-save-sub">'+selCatLabel(_selCategory)+'</div>'
+    +'<div class="post-save-sub">'+subLabel+'</div>'
     +'<div class="post-save-actions">';
   h+='<button class="btn sm" style="width:100%" onclick="startAddSel()">+ Add Another Selection</button>';
   h+='<button class="btn sm" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--border)" onclick="openRoomModal()">+ Add Room</button>';
