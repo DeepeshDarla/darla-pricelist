@@ -4882,9 +4882,8 @@ function renderQList() {
   if(_qListListener){ _qListListener(); _qListListener=null; }
 
   var query=DB.collection('quotes')
-    .where('tenantId','==','darla')
     .orderBy('updatedAt','desc')
-    .limit(200);
+    .limit(300);
 
   drawQList(local,true);
   _qListListener=query.onSnapshot(function(snap){
@@ -4911,7 +4910,12 @@ function renderQList() {
     drawQList(_qFiltered,false);
     var cnt=document.getElementById('navSub');
     if(cnt) cnt.textContent=_qAll.length+' quotes · synced';
-  }, function(){ drawQList(_qFiltered,false); });
+  }, function(err){
+    console.error('[Quote list]', err);
+    var cnt=document.getElementById('navSub');
+    if(cnt) cnt.textContent='Sync error — showing local only';
+    drawQList(_qFiltered,false);
+  });
 }
 
 function filterQ() {
