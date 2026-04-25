@@ -3385,12 +3385,14 @@ function renderBld() {
       if(standalone.length){
         html+='<div style="margin-top:4px">';
         standalone.forEach(function(s){
+          var si=sels.indexOf(s);
           var fp3=activeProds(s)[0];
           var pn3=fp3?(function(){ var p=fp3.product||{}; return [p.brand,p.catalog].filter(Boolean).join(' ')||(p.manualName||''); })():'';
-          html+='<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border)">'
+          html+='<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--border)">'
             +'<span class="type-badge '+s.category+'" style="font-size:10px">'+selCatLabel(s.category)+'</span>'
             +(pn3?'<span style="font-size:12px;color:var(--text3)">'+esc(pn3)+'</span>':'')
-            +'<span style="font-size:10px;color:var(--text4);margin-left:auto">no area</span>'
+            +'<button style="margin-left:auto;font-size:10px;font-weight:700;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--red);cursor:pointer" '
+            +'onclick="_activeRoom='+ri+';openEditSel('+si+')">🔗 Link</button>'
             +'</div>';
         });
         html+='</div>';
@@ -3650,8 +3652,8 @@ function _renderAreaPostSave(area,isNew){
     +'<div class="post-save-title">'+esc(area.name)+' '+(isNew?'added':'updated')+'</div>'
     +'<div class="post-save-sub">'+area.width+'" W × '+area.height+'" H · Qty '+area.qty+'</div>'
     +'<div class="post-save-actions">';
-  h+='<button class="btn sm" style="width:100%" onclick="_editAreaIdx=-1;renderAddArea()">+ Add Another Measurement</button>'
-    +'<button class="btn sm" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--border)" onclick="goTo(\'screen-room-selections\')">+ Add Selections</button>'
+  h+='<button class="btn sm" style="width:100%" onclick="addSelForArea(\''+area.id+'\')">+ Add Selection for '+esc(area.name)+' →</button>'
+    +'<button class="btn sm" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--border)" onclick="_editAreaIdx=-1;renderAddArea()">+ Add Another Measurement</button>'
     +'<button class="btn ghost sm" onclick="openRoomModal()">+ Add Room</button>'
     +'</div></div>';
   document.getElementById('addAreaWrap').innerHTML=h;
