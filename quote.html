@@ -3255,30 +3255,58 @@ function renderBld() {
       +'<div class="room-ov-body">';
     if(ac||sc){
       html+='<div style="margin-bottom:10px">';
-      // Measurements
+      // Areas: show linked selections inline, flag uncovered ones
       areas.forEach(function(area,ai){
+        var linked=sels.filter(function(s){ return (s.areaIds||[]).indexOf(area.id)!==-1; });
         var fab=calcAreaFabricM(area,sels);
         var calcM=fab?fab.totalM:0;
         var displayM=area.fabricMOverride!=null?area.fabricMOverride:calcM;
         var breakdown=fab&&fab.panels&&fab.perPanel?' ('+fab.panels+' × '+fab.perPanel+'m)':'';
-        html+='<div style="padding:6px 0;border-bottom:1px solid var(--border)">'
-          +'<div style="font-size:13px;font-weight:700;color:var(--text)">'+esc(area.name)+'</div>'
-          +'<div style="font-size:12px;color:var(--text3);margin-top:2px;overflow-wrap:anywhere">'+area.width+'" W × '+area.height+'" H · Qty '+area.qty
-          +(fab?' &nbsp;|&nbsp; Req: <input type="number" step="0.05" value="'+displayM+'" '
-            +'style="width:50px;font-size:12px;font-family:inherit;color:var(--text3);background:transparent;border:none;border-bottom:1px dashed var(--text3);padding:0 2px;text-align:center;-webkit-appearance:none" '
-            +'onchange="setAreaFabricOverride('+ri+','+ai+',this.value)" onclick="this.select()"> m'+breakdown:'')
-          +'</div>'
-          +'</div>';
+        var uncovered=linked.length===0;
+        html+='<div style="padding:7px 0;border-bottom:1px solid var(--border)'+(uncovered?';background:rgba(230,126,34,0.04)':'')+'">'+
+          '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">'+
+            '<div style="font-size:13px;font-weight:700;color:var(--text)">'+esc(area.name)+'</div>'+
+            (uncovered
+              ? '<button style="font-size:10px;font-weight:700;padding:2px 8px;border:1px solid rgba(230,126,34,0.5);border-radius:4px;background:rgba(230,126,34,0.08);color:#c0610a;cursor:pointer;flex-shrink:0;white-space:nowrap" '
+                +'onclick="_activeRoom='+ri+';addSelForArea(\''+area.id+'\')">+ Add Selection</button>'
+              : ''
+            )+
+          '</div>'+
+          '<div style="font-size:12px;color:var(--text3);margin-top:2px;overflow-wrap:anywhere">'+
+            area.width+'" W × '+area.height+'" H · Qty '+area.qty+
+            (fab?' &nbsp;|&nbsp; Req: <input type="number" step="0.05" value="'+displayM+'" '
+              +'style="width:50px;font-size:12px;font-family:inherit;color:var(--text3);background:transparent;border:none;border-bottom:1px dashed var(--text3);padding:0 2px;text-align:center;-webkit-appearance:none" '
+              +'onchange="setAreaFabricOverride('+ri+','+ai+',this.value)" onclick="this.select()"> m'+breakdown:'')
+          +'</div>'+
+          (uncovered
+            ? '<div style="font-size:11px;font-weight:700;color:#c0610a;margin-top:3px">⚠ No selection yet</div>'
+            : '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">'+
+                linked.map(function(s){
+                  var fp2=activeProds(s)[0];
+                  var pn=fp2?(function(){ var p=fp2.product||{}; return [p.brand,p.catalog].filter(Boolean).join(' ')||(p.manualName||''); })():'';
+                  return '<span class="type-badge '+s.category+'" style="font-size:10px">'+selCatLabel(s.category)+(pn?' · '+esc(pn):'')+'</span>';
+                }).join('')+
+              '</div>'
+          )+
+        '</div>';
       });
-      // Selections
-      sels.forEach(function(sel){
-        var fp=activeProds(sel)[0];
-        var pname=fp?(function(){ var p=fp.product||{}; return [p.brand,p.catalog].filter(Boolean).join(' ')||(p.manualName||''); })():'';
-        html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">'
-          +'<span class="type-badge '+sel.category+'" style="font-size:10px">'+selCatLabel(sel.category)+'</span>'
-          +(pname?'<span style="font-size:12px;color:var(--text2);flex:1;margin-left:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(pname)+'</span>':'')
-          +'</div>';
+      // Standalone selections (not linked to any area in this room)
+      var standalone=sels.filter(function(s){
+        return !(s.areaIds||[]).length || (s.areaIds||[]).every(function(id){ return !areas.find(function(a){ return a.id===id; }); });
       });
+      if(standalone.length){
+        html+='<div style="margin-top:4px">';
+        standalone.forEach(function(s){
+          var fp3=activeProds(s)[0];
+          var pn3=fp3?(function(){ var p=fp3.product||{}; return [p.brand,p.catalog].filter(Boolean).join(' ')||(p.manualName||''); })():'';
+          html+='<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border)">'
+            +'<span class="type-badge '+s.category+'" style="font-size:10px">'+selCatLabel(s.category)+'</span>'
+            +(pn3?'<span style="font-size:12px;color:var(--text3)">'+esc(pn3)+'</span>':'')
+            +'<span style="font-size:10px;color:var(--text4);margin-left:auto">no area</span>'
+            +'</div>';
+        });
+        html+='</div>';
+      }
       html+='</div>';
     } else {
       html+='<div class="room-ov-meta" style="margin-bottom:8px">No measurements or selections yet</div>';
