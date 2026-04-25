@@ -1878,6 +1878,11 @@ border-bottom: 1.5pt solid #000;
 <!-- SCREEN: CUSTOMER -->
 <div id="screen-customer" class="screen">
   <div class="page-wrap">
+    <div class="section-label">Find Existing Customer</div>
+    <div class="form-card" style="padding:14px">
+      <input class="inp" id="custSearch" placeholder="Search by name or mobile number…" type="search" autocomplete="off" oninput="searchCustomers(this.value)" style="margin-bottom:0">
+      <div id="custSearchResults"></div>
+    </div>
     <div class="section-label">Customer Details</div>
     <div class="form-card accent-blue">
       <div class="field"><label class="field-label">Customer Name *</label><input class="inp" id="cName" placeholder="Full name" type="text" autocapitalize="words"></div>
@@ -2484,7 +2489,8 @@ function calcSelForArea(sel, area) {
 }
 function blankQ() {
   return { id:null, date:new Date().toLocaleDateString('en-IN'), staff:'', staff2:'',
-           customer:{name:'',mobile:'',arch:'',addr:''}, rooms:[], status:'draft', saved:false,
+           customer:{name:'',mobile:'',arch:'',addr:''}, customerId:null,
+           rooms:[], status:'draft', saved:false,
            overallDisc:0, overallDiscType:'pct', tenantId:'darla' };
 }
 // Blank room with v2 structure
@@ -2521,6 +2527,10 @@ var _replaceSelProdIdx = -1;    // index of product to replace (-1 = add new)
 var _selRomanType = '';          // 'single'|'double' for roman_blind
 var _selRomanLayerTarget = 1;   // 1|2 — which layer the next product search goes into
 var _selAreaLocked = false;     // true when area was pre-set from area card; hides checklist
+
+// Customer search state
+var _custResults = [];
+var _custSearchTimer = null;
 
 // Local-only draft save (always called first for speed)
 function saveDraftLocal() {
@@ -2560,7 +2570,8 @@ function _saveToFirestore(finalSave) {
     tenantId:   'darla',
     updatedAt:  firebase.firestore.FieldValue.serverTimestamp(),
     customerName:  APP.quote.customer ? APP.quote.customer.name  : '',
-    customerPhone: APP.quote.customer ? APP.quote.customer.mobile : ''
+    customerPhone: APP.quote.customer ? APP.quote.customer.mobile : '',
+    customerId:    APP.quote.customerId || null
   });
   if(!doc.createdAt) doc.createdAt = firebase.firestore.FieldValue.serverTimestamp();
   _lastSavedAt = Date.now();
@@ -2809,10 +2820,102 @@ function clearForm() {
   var s1=document.getElementById('cSales1');
   if(s1&&APP.staff&&APP.staff.name) s1.value=APP.staff.name;
   buildSales2Drop(APP.staff?APP.staff.name:'');
+  var cs=document.getElementById('custSearch'); if(cs) cs.value='';
+  var cr=document.getElementById('custSearchResults'); if(cr) cr.innerHTML='';
+  _custResults=[];
 }
 function goToCustomer() {
   setNavForCustomer();
   goTo('screen-customer');
+}
+
+// ── Customer DB search & upsert ──────────────────────────────
+function searchCustomers(q) {
+  clearTimeout(_custSearchTimer);
+  q = (q||'').trim();
+  var resultsEl = document.getElementById('custSearchResults');
+  if(q.length < 2){ resultsEl.innerHTML=''; _custResults=[]; return; }
+  _custSearchTimer = setTimeout(function(){
+    resultsEl.innerHTML='<div style="padding:10px;font-size:13px;color:var(--text3)">Searching…</div>';
+    _custResults=[];
+    var ref = DB.collection('customers');
+    var isNum = /^\d+$/.test(q);
+    var prom = isNum
+      ? ref.where('mobile','>=',q).where('mobile','<=',q+'').limit(6).get()
+      : ref.where('nameLower','>=',q.toLowerCase()).where('nameLower','<=',q.toLowerCase()+'').limit(8).get();
+    prom.then(function(snap){
+      if(snap.empty){
+        resultsEl.innerHTML='<div style="padding:10px;font-size:13px;color:var(--text3)">No existing customer — a new record will be created.</div>';
+        return;
+      }
+      snap.forEach(function(doc){ _custResults.push(Object.assign({id:doc.id},doc.data())); });
+      var h='<div style="margin-top:8px;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden">';
+      _custResults.forEach(function(c,i){
+        h+='<div style="padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;background:var(--bg)" onclick="selectCustomer('+i+')">'
+          +'<div style="font-size:14px;font-weight:700;color:var(--text)">'+esc(c.name)+'</div>'
+          +'<div style="font-size:12px;color:var(--text3)">'+esc(c.mobile)+(c.addr?' &nbsp;·&nbsp; '+esc(c.addr):'')+'</div>'
+          +'</div>';
+      });
+      h+='</div>';
+      resultsEl.innerHTML=h;
+    }).catch(function(){ resultsEl.innerHTML=''; });
+  }, 350);
+}
+
+function selectCustomer(i) {
+  var c=_custResults[i]; if(!c) return;
+  document.getElementById('cName').value=c.name||'';
+  document.getElementById('cMobile').value=c.mobile||'';
+  document.getElementById('cArch').value=c.arch||'';
+  document.getElementById('cAddr').value=c.addr||'';
+  APP.quote.customerId=c.id;
+  var cs=document.getElementById('custSearch'); if(cs) cs.value='';
+  document.getElementById('custSearchResults').innerHTML=
+    '<div style="margin-top:8px;padding:10px 14px;background:rgba(29,161,84,0.08);border:1px solid rgba(29,161,84,0.3);border-radius:var(--r-md);display:flex;align-items:center;gap:10px">'
+    +'<span style="font-size:18px">✓</span>'
+    +'<div style="flex:1"><div style="font-size:13px;font-weight:700;color:#1da154">'+esc(c.name)+' selected</div>'
+    +'<div style="font-size:11px;color:var(--text3)">Form filled — edit below if needed</div></div>'
+    +'<button style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:4px;background:var(--bg);cursor:pointer" onclick="clearCustomerSelection()">✕</button>'
+    +'</div>';
+}
+
+function clearCustomerSelection() {
+  APP.quote.customerId=null;
+  ['cName','cMobile','cArch','cAddr'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
+  var cs=document.getElementById('custSearch'); if(cs){ cs.value=''; cs.focus(); }
+  document.getElementById('custSearchResults').innerHTML='';
+  _custResults=[];
+}
+
+function _upsertCustomer(customer, existingId) {
+  if(!DB||!AUTH.currentUser||AUTH.currentUser.isAnonymous) return;
+  var data={
+    name:customer.name, nameLower:customer.name.toLowerCase(),
+    mobile:customer.mobile, arch:customer.arch||'', addr:customer.addr||'',
+    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+  };
+  if(existingId){
+    DB.collection('customers').doc(existingId).update(data)
+      .then(function(){ APP.quote.customerId=existingId; saveDraftLocal(); })
+      .catch(function(){});
+    return;
+  }
+  // No existing ID — check if mobile already has a record
+  DB.collection('customers').where('mobile','==',customer.mobile).limit(1).get()
+    .then(function(snap){
+      if(!snap.empty){
+        var ref=snap.docs[0].ref;
+        ref.update(data);
+        APP.quote.customerId=snap.docs[0].id;
+      } else {
+        data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+        data.createdBy=APP.staff?APP.staff.name:'';
+        DB.collection('customers').add(data).then(function(ref){
+          APP.quote.customerId=ref.id;
+          saveDraftLocal();
+        });
+      }
+    }).catch(function(){});
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2943,6 +3046,7 @@ function startQuote() {
   APP.quote.customer={name:name,mobile:mob,arch:document.getElementById('cArch').value.trim(),addr:document.getElementById('cAddr').value.trim()};
   APP.quote.staff=document.getElementById('cSales1').value.trim()||(APP.staff?APP.staff.name:'Staff');
   APP.quote.staff2=document.getElementById('cSales2').value.trim();
+  _upsertCustomer(APP.quote.customer, APP.quote.customerId||null);
   if(APP.quote.id){
     saveDraft(); setNavForBuilder(); goTo('screen-builder');
     startQuoteSync(APP.quote.id);
@@ -5201,7 +5305,10 @@ function applyQ(q) {
     if(!r.areas) r.areas=[];
     if(!r.selections) r.selections=[];
   });
-  APP.quote=q; saveDraft();
+  APP.quote=q; APP.quote.customerId=q.customerId||null; saveDraft();
+  var cs=document.getElementById('custSearch'); if(cs) cs.value='';
+  var cr=document.getElementById('custSearchResults'); if(cr) cr.innerHTML='';
+  _custResults=[];
   document.getElementById('cName').value=q.customer.name||'';
   document.getElementById('cMobile').value=q.customer.mobile||'';
   document.getElementById('cArch').value=q.customer.arch||'';
