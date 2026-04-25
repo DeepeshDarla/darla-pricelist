@@ -3360,7 +3360,17 @@ function renderMeasurements() {
   document.getElementById('measurementsWrap').innerHTML=html;
 }
 function openEditArea(ai){ _editAreaIdx=ai; goTo('screen-add-area'); }
-function addSelForArea(areaId){ resetSelForm(); _selAreaIds=[areaId]; _selAreaLocked=true; _selStep=1; goTo('screen-add-selection'); }
+function addSelForArea(areaId){
+  resetSelForm();
+  _selAreaIds=[areaId]; _selAreaLocked=true;
+  // Auto-detect category from area type so the category picker is skipped
+  var room=APP.quote.rooms[_activeRoom];
+  var area=room&&(room.areas||[]).find(function(a){ return a.id===areaId; });
+  var autoCat=area?_areaTypeToCat(area.type):null;
+  if(autoCat){ _selCategory=autoCat; _selStep=2; }
+  else { _selStep=1; }
+  goTo('screen-add-selection');
+}
 function deleteArea(ri,ai){
   var room=APP.quote.rooms[ri]; if(!room) return;
   var areaId=(room.areas[ai]||{}).id;
