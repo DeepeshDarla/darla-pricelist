@@ -3642,9 +3642,26 @@ function saveArea(){
   if(type==='flooring'){ var ftEl=document.getElementById('areaFloorType'); area.flooringType=ftEl?ftEl.value:'wooden'; }
   if(type==='wallpaper') area.wallpaperMode=_areaState.wallpaperMode||'custom';
   var editing=_editAreaIdx>=0;
+  var autoLinked=0;
   if(editing){ area.id=room.areas[_editAreaIdx].id; room.areas[_editAreaIdx]=area; }
-  else { if(!room.areas) room.areas=[]; room.areas.push(area); }
-  saveDraft(); showToast((editing?'Updated':'Added')+' ✓');
+  else {
+    if(!room.areas) room.areas=[];
+    room.areas.push(area);
+    // Auto-link any compatible standalone selections (areaIds=[]) to this new area
+    (room.selections||[]).forEach(function(sel){
+      var isStandalone=!(sel.areaIds||[]).length||(sel.areaIds||[]).every(function(id){
+        return !(room.areas||[]).find(function(a){ return a.id===id&&a.id!==area.id; });
+      });
+      if(isStandalone && isCompatibleArea(area,sel.category)){
+        if(!sel.areaIds) sel.areaIds=[];
+        if(sel.areaIds.indexOf(area.id)===-1){ sel.areaIds.push(area.id); autoLinked++; }
+      }
+    });
+  }
+  saveDraft();
+  showToast(autoLinked
+    ? 'Linked '+autoLinked+' selection'+(autoLinked>1?'s':'')+' to '+name+' ✓'
+    : (editing?'Updated':'Added')+' ✓');
   _postSaveArea=area; _renderAreaPostSave(area,!editing);
 }
 function _renderAreaPostSave(area,isNew){
