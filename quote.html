@@ -3700,6 +3700,11 @@ function setSelProdNotes(i,v){ if(_selProducts[i]) _selProducts[i].notes=v; }
 function setSelProdWidthType(i,v){ if(_selProducts[i]){ _selProducts[i].widthType=v; _selProducts[i].rotationAllowed=null; } renderAddSelection(); }
 function setSelProdWidthCm(i,v){ if(_selProducts[i]){ var cm=parseFloat(v)||0; _selProducts[i].widthCm=cm; _selProducts[i].rotationAllowed=null; if(cm>280) _selProducts[i].widthType='wider'; else _selProducts[i].widthType='standard'; } renderAddSelection(); }
 function setSelProdRotation(i,v){ if(_selProducts[i]) _selProducts[i].rotationAllowed=v; renderAddSelection(); }
+function setSheerProdWidthType(i,v){ if(_selSheerProducts[i]){ _selSheerProducts[i].widthType=v; _selSheerProducts[i].rotationAllowed=null; } renderAddSelection(); }
+function setSheerProdWidthCm(i,v){ if(_selSheerProducts[i]){ var cm=parseFloat(v)||0; _selSheerProducts[i].widthCm=cm; _selSheerProducts[i].rotationAllowed=null; if(cm>280) _selSheerProducts[i].widthType='wider'; else _selSheerProducts[i].widthType='standard'; } renderAddSelection(); }
+function setSheerProdRotation(i,v){ if(_selSheerProducts[i]) _selSheerProducts[i].rotationAllowed=v; renderAddSelection(); }
+function addSheerBorderFabric(){ _nextProdMode='component'; _nextProdRole='border'; _selProductTarget='sheer'; openProductModal(); }
+function addSheerOptionProduct(){ _nextProdMode='option'; _nextProdRole='option'; _selProductTarget='sheer'; openProductModal(); }
 function _activeAreaForSel(){
   var room=APP.quote.rooms[_activeRoom]; if(!room) return null;
   return (room.areas||[]).find(function(a){ return _selAreaIds.indexOf(a.id)!==-1; })||null;
@@ -3880,6 +3885,82 @@ function _renderSelProdRows(){
         } else if(areaH>0){
           h+='<div style="font-size:11px;color:#27ae60;margin-top:6px">✓ Height OK – using panels × 1.5m</div>';
         }
+      }
+    }
+    h+='</div>';
+    return h;
+  }).join('');
+}
+function _renderSheerProdRows(){
+  if(!_selSheerProducts.length) return '';
+  return _selSheerProducts.map(function(p,i){
+    var prod=p.product||{};
+    var isOption=p.mode==='option';
+    var role=p.role||(isOption?'option':'main');
+    var roleLabel=role==='border'?'BORDER / MIX MATCH':role==='option'?'ALTERNATIVE SELECTION':'';
+    var wCm=p.widthCm||parseFloat(prod.width)||0;
+    var nameParts=[prod.brand,prod.catalog,prod.s_no].filter(Boolean);
+    var pname=nameParts.join(' / ')||(prod.manualName||'—');
+    var h=(roleLabel?'<div style="font-size:10px;font-weight:900;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-top:14px;margin-bottom:4px;padding-left:2px">'+roleLabel+'</div>':'')
+      +'<div class="prod-row"'+(isOption?' style="border-left:3px solid var(--border2)"':'')+'>';
+    h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px">'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">'
+      +'<div style="font-size:13px;font-weight:900;color:var(--text)">'+esc(pname)+'</div>'
+      +(isOption?'<span style="font-size:10px;font-weight:800;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);border-radius:4px;padding:2px 7px;flex-shrink:0">OPTION 2</span>':'')
+      +(isOption?'<label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2);cursor:pointer"><input type="checkbox"'+(p.chosen?' checked':'')+' onchange="_selSheerProducts['+i+'].chosen=this.checked"> Mark as chosen</label>':'')
+      +'</div>'
+      +'<div style="margin-bottom:8px"><input class="inp" style="padding:7px 10px;font-size:12px;color:var(--text2)" value="'+esc(prod.otherDetails||'')+'" placeholder="Other details (if any)" onchange="_selSheerProducts['+i+'].product.otherDetails=this.value"></div>'
+      +'<div style="border-top:1px dashed var(--border2);margin-bottom:10px"></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+      +'<div><label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:3px">MRP (₹/m)</label>'
+      +'<input class="inp" type="number" value="'+esc(String(prod.mrp||0))+'" style="padding:9px;font-size:16px;font-weight:900;border:2px solid var(--border2)" onchange="_selSheerProducts['+i+'].product.mrp=parseFloat(this.value)||0" onclick="this.select()"></div>'
+      +'<div><label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:3px">Width (cm)</label>'
+      +'<input class="inp" type="number" value="'+esc(String(wCm||''))+'" placeholder="e.g. 280" style="padding:9px;font-size:16px;font-weight:900;border:2px solid var(--border2)" onchange="setSheerProdWidthCm('+i+',this.value)" onclick="this.select()"></div>'
+      +'</div>'
+      +'<div style="display:flex;gap:4px;margin-top:6px">'
+      +'<button class="mode-btn'+((p.widthType||'standard')==='standard'?' on':'')+'" style="flex:1;font-size:11px" onclick="setSheerProdWidthType('+i+',\'standard\')">Standard Width</button>'
+      +'<button class="mode-btn'+(p.widthType==='wider'?' on':'')+'" style="flex:1;font-size:11px" onclick="setSheerProdWidthType('+i+',\'wider\')">Wider Width</button>'
+      +'</div>'
+      +'</div>'
+      +'<button class="icon-btn danger" style="align-self:flex-start;flex-shrink:0" onclick="_selSheerProducts.splice('+i+',1);renderAddSelection()">🗑</button></div>';
+    var negIdx=-(i+1);
+    var pid='sp_'+i;
+    h+='<div style="margin-top:8px;display:flex;align-items:center;gap:10px">';
+    if(p.photo){
+      h+='<img src="'+esc(p.photo)+'" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--border);flex-shrink:0">'
+        +'<div style="display:flex;flex-direction:column;gap:4px">'
+        +'<button class="btn ghost sm" style="font-size:11px" onclick="document.getElementById(\''+pid+'\').click()">Replace Photo</button>'
+        +'<button class="btn ghost sm" style="font-size:11px;color:var(--danger)" onclick="_selSheerProducts['+i+'].photo=\'\';renderAddSelection()">Remove</button>'
+        +'</div>';
+    } else {
+      h+='<button class="btn ghost sm" style="font-size:12px" onclick="document.getElementById(\''+pid+'\').click()">📷 Add Photo</button>';
+    }
+    h+='<input type="file" id="'+pid+'" accept="image/*" capture="environment" style="display:none" onchange="handleFabricPhoto(event,'+negIdx+')">';
+    h+='</div>';
+    if(p.widthType==='wider'&&wCm>0){
+      var area=_activeAreaForSel();
+      var fabricWIn=wCm/2.54;
+      var areaH=area?parseFloat(area.height)||0:0;
+      if(areaH>0&&areaH>fabricWIn){
+        h+='<div style="background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.3);border-radius:var(--r-sm);padding:10px;margin-top:8px">';
+        h+='<div style="font-size:12px;font-weight:700;color:#e74c3c;margin-bottom:6px">⚠ Height ('+areaH+'") exceeds fabric width ('+wCm+'cm = '+fabricWIn.toFixed(0)+'"). </div>';
+        if(p.rotationAllowed===null){
+          h+='<div style="display:flex;gap:6px"><button class="btn sm" style="flex:1;margin:0;font-size:11px" onclick="setSheerProdRotation('+i+',\'ask\')">Proceed Anyway</button></div>';
+        } else if(p.rotationAllowed==='ask'){
+          h+='<div style="font-size:12px;color:var(--text2);margin-bottom:6px">Can we rotate the fabric?</div>'
+            +'<div style="display:flex;gap:6px">'
+            +'<button class="btn sm" style="flex:1;margin:0;font-size:11px" onclick="setSheerProdRotation('+i+',true)">Yes – Rotate</button>'
+            +'<button class="btn ghost sm" style="flex:1;margin:0;font-size:11px" onclick="setSheerProdRotation('+i+',false)">No – Use 1.5m Formula</button>'
+            +'</div>';
+        } else if(p.rotationAllowed===true){
+          h+='<div style="font-size:11px;color:#27ae60">✓ Rotation: calc uses fabric width ÷ 2.2 coverage</div>';
+        } else {
+          h+='<div style="font-size:11px;color:var(--text3)">✓ Using Wider Width formula (panels × 1.5m)</div>';
+        }
+        h+='</div>';
+      } else if(areaH>0){
+        h+='<div style="font-size:11px;color:#27ae60;margin-top:6px">✓ Height OK – using panels × 1.5m</div>';
       }
     }
     h+='</div>';
@@ -4179,27 +4260,14 @@ function renderAddSelection(){
     h+='<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Sheer Fabric</div>';
     h+='<button class="btn ghost sm" style="font-size:11px;color:var(--danger)" onclick="_selSheerEnabled=false;_selSheerProducts=[];_selSheerStitch=\'\';_selStep=4;renderAddSelection()">✕ Skip Sheer</button>';
     h+='</div>';
-    {
-      if(!_selSheerProducts.length){
-        h+='<button class="btn" style="width:100%;margin-bottom:12px" onclick="_selProductTarget=\'sheer\';openProductModal()">🔍 Search Sheer Product</button>';
-      } else {
-        _selSheerProducts.forEach(function(p,i){
-          var prod=p.product||{};
-          var pname=[prod.brand,prod.catalog,prod.s_no].filter(Boolean).join(' / ')||(prod.manualName||'—');
-          var wCm=p.widthCm||parseFloat(prod.width)||0;
-          h+='<div class="prod-row" style="margin-bottom:8px">'
-            +'<div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:8px">'
-            +'<div style="flex:1"><div style="font-size:13px;font-weight:800;color:var(--text)">'+esc(pname)+'</div>'
-            +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">'
-            +'<div><label style="font-size:11px;font-weight:700;color:var(--text2)">MRP (₹/m)</label>'
-            +'<input class="inp" type="number" value="'+esc(String(prod.mrp||0))+'" style="padding:8px;font-size:15px;font-weight:900;border:2px solid var(--border2);margin-top:2px" onchange="_selSheerProducts['+i+'].product.mrp=parseFloat(this.value)||0" onclick="this.select()"></div>'
-            +'<div><label style="font-size:11px;font-weight:700;color:var(--text2)">Width (cm)</label>'
-            +'<input class="inp" type="number" value="'+esc(String(wCm||''))+'" placeholder="e.g. 280" style="padding:8px;font-size:15px;font-weight:900;border:2px solid var(--border2);margin-top:2px" onchange="_selSheerProducts['+i+'].widthCm=parseFloat(this.value)||0" onclick="this.select()"></div>'
-            +'</div></div>'
-            +'<button class="icon-btn danger" style="align-self:flex-start" onclick="_selSheerProducts.splice('+i+',1);renderAddSelection()">🗑</button></div></div>';
-        });
-        h+='<button class="btn ghost" style="width:100%;margin-bottom:12px" onclick="_selProductTarget=\'sheer\';openProductModal()">🔍 Search Another Sheer</button>';
-      }
+    h+=_renderSheerProdRows();
+    if(!_selSheerProducts.length){
+      h+='<button class="btn" style="width:100%;margin-bottom:12px" onclick="_selProductTarget=\'sheer\';openProductModal()">🔍 Search Sheer Product</button>';
+    } else {
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">'
+        +'<button class="btn ghost" style="padding:12px 8px;font-size:13px;font-weight:700" onclick="addSheerBorderFabric()">+ Border/Mix Fabric</button>'
+        +'<button class="btn ghost" style="padding:12px 8px;font-size:13px;font-weight:700" onclick="addSheerOptionProduct()">+ Alternative Selection</button>'
+        +'</div>';
     }
     h+='<button class="btn" style="width:100%;margin-top:8px" onclick="_selStep=4;renderAddSelection()">Next: Stitching →</button>';
 
