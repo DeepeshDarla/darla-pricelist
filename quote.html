@@ -4425,6 +4425,29 @@ function addSelForAreaQuick(areaId,cat){
   _selStep=2;
   goTo('screen-add-selection');
 }
+function _postSaveProdRows(products, catLabel){
+  if(!products||!products.length) return '';
+  var mains=products.filter(function(p){ return p.mode!=='option'; });
+  var alts=products.filter(function(p){ return p.mode==='option'; });
+  if(!mains.length) return '';
+  var h='<div style="margin-top:8px">'
+    +'<div style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">'+catLabel+'</div>';
+  mains.forEach(function(p){
+    var prod=p.product||{};
+    var pname=[prod.brand,prod.catalog,prod.s_no].filter(Boolean).join(' / ')||(prod.manualName||'—');
+    var wCm=p.widthCm||parseFloat(prod.width)||0;
+    var isMix=p.role==='border';
+    h+='<div style="margin-bottom:5px">'
+      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">'
+      +'<div style="font-size:13px;font-weight:700;color:var(--text);min-width:0">'+esc(pname)
+      +(isMix?'<span style="font-size:9px;font-weight:800;background:var(--bg3);border:1px solid var(--border2);color:var(--text3);border-radius:3px;padding:1px 5px;margin-left:5px;vertical-align:middle">MIX</span>':'')
+      +'</div>'
+      +'<div style="font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0">'+(wCm?wCm+'cm · ':'')+'₹'+fmt(prod.mrp||0)+'/m</div>'
+      +'</div></div>';
+  });
+  if(alts.length) h+='<div style="font-size:11px;color:var(--text3);margin-top:2px">+'+alts.length+' alternative</div>';
+  return h+'</div>';
+}
 function _renderSelPostSave(editing){
   var isCurtainsMain=_selCategory==='curtains_main';
   var subLabel=(function(){
@@ -4436,8 +4459,8 @@ function _renderSelPostSave(editing){
     if(hasSheer) return 'Curtains – Main & Sheer';
     return 'Curtains – Main';
   })();
-  // Find areas in this room with no selection linked
   var room=APP.quote.rooms[_activeRoom];
+  // Find areas in this room with no selection linked
   var uncovered=[];
   if(room&&!editing){
     (room.areas||[]).forEach(function(area){
@@ -4448,9 +4471,31 @@ function _renderSelPostSave(editing){
   var h='<div class="post-save-card"><div class="post-save-icon">✅</div>'
     +'<div class="post-save-title">Selection '+(editing?'updated':'saved')+'</div>'
     +'<div class="post-save-sub">'+subLabel+'</div>';
+  // ── Mini-summary of what was just saved ──
+  var savedAreas=_lastSavedAreaIds.length&&room
+    ?(room.areas||[]).filter(function(a){ return _lastSavedAreaIds.indexOf(a.id)!==-1; })
+    :[];
+  var hasSheer=_selSheerEnabled&&_selSheerProducts.length>0;
+  if(savedAreas.length){
+    savedAreas.forEach(function(area){
+      h+='<div style="margin-top:12px;padding:12px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);text-align:left">';
+      h+='<div style="font-size:14px;font-weight:900;color:var(--text)">'+esc(area.name)+'</div>';
+      if(area.width&&area.height){
+        h+='<div style="font-size:11px;color:var(--text3);margin-top:2px">'+area.width+'" W × '+area.height+'" H · Qty '+area.qty+'</div>';
+      }
+      h+=_postSaveProdRows(_selProducts, selCatLabel(_selCategory));
+      if(hasSheer) h+=_postSaveProdRows(_selSheerProducts,'Curtains – Sheer');
+      h+='</div>';
+    });
+  } else if(_selProducts.length||hasSheer){
+    h+='<div style="margin-top:12px;padding:12px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);text-align:left">';
+    h+=_postSaveProdRows(_selProducts, selCatLabel(_selCategory));
+    if(hasSheer) h+=_postSaveProdRows(_selSheerProducts,'Curtains – Sheer');
+    h+='</div>';
+  }
   // Uncovered areas nudge
   if(uncovered.length){
-    h+='<div style="margin:12px 0;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm)">';
+    h+='<div style="margin:12px 0 0;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm)">';
     h+='<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">No selection yet</div>';
     uncovered.forEach(function(u){
       h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">'
@@ -4465,7 +4510,6 @@ function _renderSelPostSave(editing){
   h+='<button class="btn sm" style="width:100%" onclick="startAddSel()">+ Add Another Selection</button>';
   h+='<button class="btn sm" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--border)" onclick="openRoomModal()">+ Add Room</button>';
   if(isCurtainsMain){
-    // Hide "Add Sheer" when: sheer was saved inline just now, OR a curtains_sheer sel already covers the same areas
     var sheerJustSaved=_selSheerEnabled&&_selSheerProducts.length>0;
     var sheerExistsForAreas=_lastSavedAreaIds.length>0&&room&&(room.selections||[]).some(function(s){
       return s.category==='curtains_sheer'&&(s.areaIds||[]).some(function(id){ return _lastSavedAreaIds.indexOf(id)!==-1; });
@@ -4474,7 +4518,6 @@ function _renderSelPostSave(editing){
       h+='<button class="btn ghost sm" onclick="startSelWithCat(\'curtains_sheer\')">+ Add Sheer Curtains</button>';
     }
   }
-  // Only show "Add Measurement" if the room has no areas yet
   var hasAreas=room&&(room.areas||[]).length>0;
   if(!hasAreas){
     h+='<button class="btn ghost sm" onclick="_editAreaIdx=-1;goTo(\'screen-add-area\')">+ Add Measurement</button>';
