@@ -4479,42 +4479,44 @@ function _renderSelPostSave(editing){
     return 'Curtains – Main';
   })();
   var room=APP.quote.rooms[_activeRoom];
+  var roomName=room?room.name:'';
+  var allSels=room?(room.selections||[]):[];
   // Find areas in this room with no selection linked
   var uncovered=[];
   if(room&&!editing){
     (room.areas||[]).forEach(function(area){
-      var hasAny=(room.selections||[]).some(function(s){ return (s.areaIds||[]).indexOf(area.id)!==-1; });
+      var hasAny=allSels.some(function(s){ return (s.areaIds||[]).indexOf(area.id)!==-1; });
       if(!hasAny){ var cat=_areaTypeToCat(area.type); if(cat) uncovered.push({area:area,cat:cat}); }
     });
   }
   var h='<div class="post-save-card"><div class="post-save-icon">✅</div>'
     +'<div class="post-save-title">Selection '+(editing?'updated':'saved')+'</div>'
     +'<div class="post-save-sub">'+subLabel+'</div>';
-  // ── Mini-summary of what was just saved ──
-  var savedAreas=_lastSavedAreaIds.length&&room
-    ?(room.areas||[]).filter(function(a){ return _lastSavedAreaIds.indexOf(a.id)!==-1; })
-    :[];
-  var hasSheer=_selSheerEnabled&&_selSheerProducts.length>0;
-  if(savedAreas.length){
-    savedAreas.forEach(function(area){
-      h+='<div style="margin-top:12px;padding:12px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);text-align:left">';
-      h+='<div style="font-size:14px;font-weight:900;color:var(--text)">'+esc(area.name)+'</div>';
-      if(area.width&&area.height){
-        h+='<div style="font-size:11px;color:var(--text3);margin-top:2px">'+area.width+'" W × '+area.height+'" H · Qty '+area.qty+'</div>';
+  // ── Room name header ──
+  if(roomName){
+    h+='<div style="display:flex;align-items:center;gap:10px;margin:16px 0 10px;text-align:left">'
+      +'<div style="font-size:14px;font-weight:900;color:var(--text);text-transform:uppercase;letter-spacing:0.8px">'+esc(roomName)+'</div>'
+      +'<div style="flex:1;height:1px;background:var(--border)"></div>'
+      +'</div>';
+  }
+  // ── All selections in this room ──
+  if(allSels.length){
+    h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;text-align:left;margin-bottom:8px">';
+    allSels.forEach(function(sel,idx){
+      if(idx>0) h+='<div style="border-top:1px solid var(--border);margin:10px 0"></div>';
+      var linkedAreas=(room.areas||[]).filter(function(a){ return (sel.areaIds||[]).indexOf(a.id)!==-1; });
+      if(linkedAreas.length){
+        h+='<div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:2px">'
+          +linkedAreas.map(function(a){ return esc(a.name); }).join(' · ')
+          +'</div>';
       }
-      h+=_postSaveProdRows(_selProducts, selCatLabel(_selCategory), _selStitch);
-      if(hasSheer) h+=_postSaveProdRows(_selSheerProducts,'Curtains – Sheer',_selSheerStitch);
-      h+='</div>';
+      h+=_postSaveProdRows(sel.products||[], selCatLabel(sel.category), sel.stitchStyle||'');
     });
-  } else if(_selProducts.length||hasSheer){
-    h+='<div style="margin-top:12px;padding:12px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);text-align:left">';
-    h+=_postSaveProdRows(_selProducts, selCatLabel(_selCategory), _selStitch);
-    if(hasSheer) h+=_postSaveProdRows(_selSheerProducts,'Curtains – Sheer',_selSheerStitch);
     h+='</div>';
   }
-  // Uncovered areas nudge
+  // ── Uncovered areas nudge ──
   if(uncovered.length){
-    h+='<div style="margin:12px 0 0;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm)">';
+    h+='<div style="margin:0 0 8px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm)">';
     h+='<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">No selection yet</div>';
     uncovered.forEach(function(u){
       h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">'
@@ -4530,7 +4532,7 @@ function _renderSelPostSave(editing){
   h+='<button class="btn sm" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--border)" onclick="openRoomModal()">+ Add Room</button>';
   if(isCurtainsMain){
     var sheerJustSaved=_selSheerEnabled&&_selSheerProducts.length>0;
-    var sheerExistsForAreas=_lastSavedAreaIds.length>0&&room&&(room.selections||[]).some(function(s){
+    var sheerExistsForAreas=_lastSavedAreaIds.length>0&&room&&allSels.some(function(s){
       return s.category==='curtains_sheer'&&(s.areaIds||[]).some(function(id){ return _lastSavedAreaIds.indexOf(id)!==-1; });
     });
     if(!sheerJustSaved&&!sheerExistsForAreas){
