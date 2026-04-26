@@ -4425,27 +4425,34 @@ function addSelForAreaQuick(areaId,cat){
   _selStep=2;
   goTo('screen-add-selection');
 }
-function _postSaveProdRows(products, catLabel){
+function _postSaveProdRows(products, catLabel, stitchPattern){
   if(!products||!products.length) return '';
   var mains=products.filter(function(p){ return p.mode!=='option'; });
   var alts=products.filter(function(p){ return p.mode==='option'; });
   if(!mains.length) return '';
-  var h='<div style="margin-top:8px">'
-    +'<div style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">'+catLabel+'</div>';
+  var h='<div style="margin-top:10px">'
+    +'<div style="font-size:11px;font-weight:900;color:var(--red);text-transform:uppercase;letter-spacing:1.5px">'+catLabel+'</div>'
+    +'<div style="width:28px;height:2px;background:var(--red);border-radius:1px;margin:4px 0 8px"></div>';
   mains.forEach(function(p){
     var prod=p.product||{};
     var pname=[prod.brand,prod.catalog,prod.s_no].filter(Boolean).join(' / ')||(prod.manualName||'—');
     var wCm=p.widthCm||parseFloat(prod.width)||0;
     var isMix=p.role==='border';
-    h+='<div style="margin-bottom:5px">'
-      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">'
-      +'<div style="font-size:13px;font-weight:700;color:var(--text);min-width:0">'+esc(pname)
-      +(isMix?'<span style="font-size:9px;font-weight:800;background:var(--bg3);border:1px solid var(--border2);color:var(--text3);border-radius:3px;padding:1px 5px;margin-left:5px;vertical-align:middle">MIX</span>':'')
-      +'</div>'
-      +'<div style="font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0">'+(wCm?wCm+'cm · ':'')+'₹'+fmt(prod.mrp||0)+'/m</div>'
-      +'</div></div>';
+    var details=[];
+    if(prod.mrp) details.push('₹'+fmt(prod.mrp)+'/m');
+    if(wCm) details.push(wCm+' cm');
+    if(stitchPattern) details.push(stitchPattern.charAt(0).toUpperCase()+stitchPattern.slice(1));
+    h+='<div style="margin-bottom:8px">'
+      +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
+      +'<div style="font-size:14px;font-weight:800;color:var(--text)">'+esc(pname)+'</div>'
+      +(isMix?'<span style="font-size:9px;font-weight:800;background:var(--red-dim);border:1px solid var(--red);color:var(--red);border-radius:3px;padding:1px 5px">MIX</span>':'')
+      +'</div>';
+    if(details.length){
+      h+='<div style="font-size:12px;font-weight:700;color:var(--text2);margin-top:3px">'+details.join('  ·  ')+'</div>';
+    }
+    h+='</div>';
   });
-  if(alts.length) h+='<div style="font-size:11px;color:var(--text3);margin-top:2px">+'+alts.length+' alternative</div>';
+  if(alts.length) h+='<div style="font-size:11px;color:var(--text3)">+'+alts.length+' alternative</div>';
   return h+'</div>';
 }
 function _renderSelPostSave(editing){
@@ -4483,14 +4490,14 @@ function _renderSelPostSave(editing){
       if(area.width&&area.height){
         h+='<div style="font-size:11px;color:var(--text3);margin-top:2px">'+area.width+'" W × '+area.height+'" H · Qty '+area.qty+'</div>';
       }
-      h+=_postSaveProdRows(_selProducts, selCatLabel(_selCategory));
-      if(hasSheer) h+=_postSaveProdRows(_selSheerProducts,'Curtains – Sheer');
+      h+=_postSaveProdRows(_selProducts, selCatLabel(_selCategory), _selStitch);
+      if(hasSheer) h+=_postSaveProdRows(_selSheerProducts,'Curtains – Sheer',_selSheerStitch);
       h+='</div>';
     });
   } else if(_selProducts.length||hasSheer){
     h+='<div style="margin-top:12px;padding:12px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);text-align:left">';
-    h+=_postSaveProdRows(_selProducts, selCatLabel(_selCategory));
-    if(hasSheer) h+=_postSaveProdRows(_selSheerProducts,'Curtains – Sheer');
+    h+=_postSaveProdRows(_selProducts, selCatLabel(_selCategory), _selStitch);
+    if(hasSheer) h+=_postSaveProdRows(_selSheerProducts,'Curtains – Sheer',_selSheerStitch);
     h+='</div>';
   }
   // Uncovered areas nudge
