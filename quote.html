@@ -4052,7 +4052,10 @@ function renderAddSelection(){
       }
       h+='</div>';
       var canNext=_selProducts.length>0;
-      h+='<button class="btn" style="width:100%;margin-top:20px" '+(canNext?'onclick="_selStep=3;renderAddSelection()"':'disabled')+'>Next: Add Sheer →</button>';
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px">'
+        +'<button class="btn ghost" style="font-size:13px" '+(canNext?'onclick="_selStep=4;renderAddSelection()"':'disabled')+'>Skip Sheer →</button>'
+        +'<button class="btn" style="font-size:13px" '+(canNext?'onclick="_selSheerEnabled=true;_selStep=3;renderAddSelection()"':'disabled')+'>+ Add Sheer</button>'
+        +'</div>';
       if(!canNext) h+='<div style="text-align:center;font-size:12px;color:var(--text3);margin-top:8px">Add a fabric to continue</div>';
     } else {
       // ── STEP 2 (non-curtains): flat full form ──
@@ -4172,19 +4175,11 @@ function renderAddSelection(){
         +'<div style="font-size:11px;color:var(--text3)">'+_la3.width+'" × '+_la3.height+'" · Qty '+_la3.qty+'</div>'
         +'</div></div>';
     }
-    if(!_selSheerEnabled){
-      h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:20px;text-align:center;margin-bottom:16px">';
-      h+='<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:6px">Add a sheer curtain?</div>';
-      h+='<div style="font-size:13px;color:var(--text3)">Sheer fabric hangs behind the main curtain</div></div>';
-      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">';
-      h+='<button class="btn" onclick="_selSheerEnabled=true;renderAddSelection()">Yes – Add Sheer</button>';
-      h+='<button class="btn ghost" onclick="_selStep=4;renderAddSelection()">No – Skip →</button>';
-      h+='</div>';
-    } else {
-      h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
-      h+='<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Sheer Fabric</div>';
-      h+='<button class="btn ghost sm" style="font-size:11px;color:var(--danger)" onclick="_selSheerEnabled=false;_selSheerProducts=[];_selSheerStitch=\'\';renderAddSelection()">─ Remove Sheer</button>';
-      h+='</div>';
+    h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
+    h+='<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Sheer Fabric</div>';
+    h+='<button class="btn ghost sm" style="font-size:11px;color:var(--danger)" onclick="_selSheerEnabled=false;_selSheerProducts=[];_selSheerStitch=\'\';_selStep=4;renderAddSelection()">✕ Skip Sheer</button>';
+    h+='</div>';
+    {
       if(!_selSheerProducts.length){
         h+='<button class="btn" style="width:100%;margin-bottom:12px" onclick="_selProductTarget=\'sheer\';openProductModal()">🔍 Search Sheer Product</button>';
       } else {
