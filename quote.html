@@ -1827,6 +1827,7 @@ border-bottom: 1.5pt solid #000;
         <div class="nav-title" id="navTitle">Quote Builder</div>
         <div class="nav-sub" id="navSub">Darla Sales &amp; Agencies</div>
       </div>
+      <span id="autoSaveStatus" style="font-size:10px;font-weight:700;color:var(--text3);transition:opacity 0.6s;opacity:0;white-space:nowrap;padding:0 6px"></span>
       <div class="nav-actions" id="navActions"></div>
     </div>
     <div id="navTabsWrap" style="display:none">
@@ -1965,7 +1966,8 @@ border-bottom: 1.5pt solid #000;
     <button class="btn ghost" style="margin-top:0;flex:1;font-size:11px;padding:0 6px" onclick="showPrintPicker('measure')" title="Measurements only">📏<br><span style="font-size:9px">Measure</span></button>
     <button class="btn ghost" style="margin-top:0;flex:1;font-size:11px;padding:0 6px" onclick="showPrintPicker('select')" title="Selections only">🎨<br><span style="font-size:9px">Select</span></button>
     <button class="btn ghost" style="margin-top:0;flex:1;font-size:11px;padding:0 6px" onclick="showPrintPicker('quote')" title="Full quote with prices">💰<br><span style="font-size:9px">Quote</span></button>
-    <button class="btn" style="margin-top:0;flex:2;font-size:13px" onclick="saveAndExit()">✦ Save &amp; Exit</button>
+    <button class="btn ghost" style="margin-top:0;flex:1.5;font-size:13px;border-color:var(--red);color:var(--red)" onclick="saveQuote()">💾 Save</button>
+    <button class="btn" style="margin-top:0;flex:1.5;font-size:13px" onclick="saveAndExit()">Exit →</button>
   </div>
 </div>
 
@@ -2536,12 +2538,22 @@ function saveDraftLocal() {
   try{ localStorage.setItem('darla_draft', JSON.stringify(APP.quote)); }catch(e){}
 }
 
-// Full save: local + debounced Firestore write
+var _autoSaveHideTimer = null;
+function _showAutoSave(state) {
+  var el = document.getElementById('autoSaveStatus');
+  if(!el) return;
+  clearTimeout(_autoSaveHideTimer);
+  if(state === 'saving'){ el.textContent = '⏳ Saving…'; el.style.opacity = '1'; }
+  else { el.textContent = '✓ Saved'; el.style.opacity = '1'; _autoSaveHideTimer = setTimeout(function(){ el.style.opacity = '0'; }, 2500); }
+}
+// Full save: local list + debounced Firestore write
 function saveDraft() {
   saveDraftLocal();
+  saveToList();
   if(!APP.quote.id) return;
+  _showAutoSave('saving');
   clearTimeout(_saveDraftTimer);
-  _saveDraftTimer = setTimeout(function(){ _saveToFirestore(false); }, 1500);
+  _saveDraftTimer = setTimeout(function(){ _saveToFirestore(false); }, 2000);
 }
 
 // Generate quote ID via Cloud Function (atomic), fallback to local counter
@@ -2575,8 +2587,8 @@ function _saveToFirestore(finalSave) {
   if(!doc.createdAt) doc.createdAt = firebase.firestore.FieldValue.serverTimestamp();
   _lastSavedAt = Date.now();
   DB.collection('quotes').doc(APP.quote.id).set(doc, {merge:true})
-    .then(function(){ if(finalSave){ APP.quote.saved=true; saveDraftLocal(); saveToList(); showToast('✓ Saved — '+APP.quote.id); } })
-    .catch(function(err){ console.warn('[Firestore save]', err); });
+    .then(function(){ _showAutoSave('saved'); if(finalSave){ APP.quote.saved=true; saveDraftLocal(); saveToList(); showToast('✓ Saved — '+APP.quote.id); } })
+    .catch(function(err){ console.warn('[Firestore save]', err); var el=document.getElementById('autoSaveStatus'); if(el){el.textContent='⚠ Save failed';el.style.opacity='1';} });
 }
 
 // Start real-time sync for a quote (onSnapshot → update local state)
