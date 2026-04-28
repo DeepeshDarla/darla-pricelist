@@ -2522,7 +2522,8 @@ var _selOpeningId = null;   // single opening this selection belongs to (canonic
 var _selRemarks   = '';
 var _selSheerEnabled  = false;
 var _selSheerProducts = [];  // product entries for optional sheer layer
-var _selSheerStitch   = '';
+var _selSheerStitch      = '';
+var _selSheerStitchStyle = 'regular'; // regular|panel_mix|border|horizontal_mix
 var _selProductTarget = 'main'; // 'main'|'sheer' — controls which array selectProduct() pushes to
 var _nextProdMode = 'component'; // 'component'|'option' — mode for the next product to be added
 var _nextProdRole = 'main';     // 'main'|'border'|'option' — label shown in product row header
@@ -3841,7 +3842,7 @@ function selStep3(){ _selStep=3; renderAddSelection(); }
 function resetSelForm(){
   _selCategory=''; _selProducts=[]; _selStitch=''; _selStitchStyle='regular'; _selFabricSplit=[];
   _selBoxSqft=''; _selRollSqft=''; _selTrackType=''; _selRates={}; _selLining='none'; _selAreaIds=[]; _selOpeningId=null; _selRemarks=''; _editSelIdx=-1;
-  _selSheerEnabled=false; _selSheerProducts=[]; _selSheerStitch=''; _selProductTarget='main'; _nextProdMode='component'; _nextProdRole='main'; _replaceSelProdIdx=-1;
+  _selSheerEnabled=false; _selSheerProducts=[]; _selSheerStitch=''; _selSheerStitchStyle='regular'; _selProductTarget='main'; _nextProdMode='component'; _nextProdRole='main'; _replaceSelProdIdx=-1;
   _selRomanType=''; _selRomanLayerTarget=1; _selAreaLocked=false;
 }
 function _renderSelProdRows(){
@@ -4373,7 +4374,14 @@ function renderAddSelection(){
       ['pleated','eyelet','ripple','pinch','eliza','plain'].forEach(function(s){
         h+='<button class="stitch-pill'+(_selSheerStitch===s?' on':'')+'" onclick="_selSheerStitch=\''+s+'\';renderAddSelection()">'+s.charAt(0).toUpperCase()+s.slice(1)+'</button>';
       });
-      h+='</div></div></div>';
+      h+='</div></div>';
+      h+='<div class="field" style="margin-top:12px"><label class="field-label">Stitching Style</label><div class="stitch-pills">';
+      [{v:'regular',l:'Regular'},{v:'panel_mix',l:'Panel Mix Match'},{v:'border',l:'With Border'},{v:'horizontal_mix',l:'Horizontal Mix Match'}].forEach(function(s){
+        h+='<button class="stitch-pill'+(_selSheerStitchStyle===s.v?' on':'')+'" onclick="_selSheerStitchStyle=\''+s.v+'\';renderAddSelection()">'+s.l+'</button>';
+      });
+      h+='</div>';
+      h+='<div style="font-size:11px;color:var(--text3);margin-top:4px">Stitch rate: '+(_selSheerStitchStyle!=='regular'?'₹85/m':'₹60/m')+'</div>';
+      h+='</div></div>';
     }
     h+='<button class="btn" style="width:100%;margin-top:20px" onclick="_selStep=5;renderAddSelection()">Next: Tracks & Save →</button>';
 
@@ -4436,7 +4444,7 @@ function saveSelection(){
       id:'s_'+Date.now()+'1', category:'curtains_sheer',
       products:_selSheerProducts.map(function(p){ return Object.assign({},p,{product:Object.assign({},p.product||{})}); }),
       openingId:oid, areaIds:aids, remarks:'', stitchStyle:_selSheerStitch,
-      stitchStyleType:'regular', fabricSplit:[], trackType:'', rates:Object.assign({},_selRates),
+      stitchStyleType:_selSheerStitchStyle, fabricSplit:[], trackType:'', rates:Object.assign({},_selRates),
       lining:_selLining
     };
     room.selections.push(sheerSel);
