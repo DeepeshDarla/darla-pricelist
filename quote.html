@@ -2428,7 +2428,7 @@ function calcOthers(sel) {
 function calcAreaFabricM(area, sels) {
   var totalM=0, totalPanels=0;
   (sels||[]).forEach(function(sel){
-    if ((sel.areaIds||[]).indexOf(area.id)===-1) return;
+    if (sel.openingId!==area.id && (sel.areaIds||[]).indexOf(area.id)===-1) return;
     var fp2=fabricProd(sel), cat=sel.category, c;
     if (!fp2||!fp2.product) return;
     try {
@@ -2503,6 +2503,7 @@ var _editAreaIdx = -1;   // -1 = add new area, ≥0 = edit existing
 var _editSelIdx  = -1;   // -1 = add new selection, ≥0 = edit existing
 var _postSaveArea = null;      // area object just saved (for post-save card)
 var _lastSavedAreaIds = [];   // areaIds of the most recently saved selection
+var _lastSavedOpeningId = null; // openingId of the most recently saved selection
 
 // ── Add-selection wizard state ──
 var _selStep      = 1;
@@ -2517,6 +2518,7 @@ var _selTrackType = '';
 var _selRates     = {};  // overrides: {stitchRate, liningRate, installRate, mechRate, ...}
 var _selLining    = 'none'; // 'none'|'regular'|'blackout'|'dimout'
 var _selAreaIds   = [];
+var _selOpeningId = null;   // single opening this selection belongs to (canonical link)
 var _selRemarks   = '';
 var _selSheerEnabled  = false;
 var _selSheerProducts = [];  // product entries for optional sheer layer
@@ -2642,7 +2644,7 @@ function roomTotal(room) {
   var t = 0;
   (room.areas || []).forEach(function(area) {
     (room.selections || []).forEach(function(sel) {
-      if ((sel.areaIds || []).indexOf(area.id) === -1) return;
+      if (sel.openingId!==area.id && (sel.areaIds || []).indexOf(area.id) === -1) return;
       t += calcSelForArea(sel, area);
     });
   });
@@ -3357,7 +3359,7 @@ function renderBld() {
       html+='<div style="margin-bottom:10px">';
       // Areas: show linked selections inline, flag uncovered ones
       areas.forEach(function(area,ai){
-        var linked=sels.filter(function(s){ return (s.areaIds||[]).indexOf(area.id)!==-1; });
+        var linked=sels.filter(function(s){ return s.openingId===area.id||(s.areaIds||[]).indexOf(area.id)!==-1; });
         var fab=calcAreaFabricM(area,sels);
         var calcM=fab?fab.totalM:0;
         var displayM=area.fabricMOverride!=null?area.fabricMOverride:calcM;
@@ -3434,7 +3436,7 @@ function renderMeasurements() {
       +'</div>';
   } else {
     areas.forEach(function(area,ai){
-      var linked=(room.selections||[]).filter(function(s){ return (s.areaIds||[]).indexOf(area.id)!==-1; });
+      var linked=(room.selections||[]).filter(function(s){ return s.openingId===area.id||(s.areaIds||[]).indexOf(area.id)!==-1; });
       html+='<div class="area-item">'
         +'<div class="area-item-body">'
         +'<div class="area-item-name">'+esc(area.name)+'</div>'
@@ -3463,7 +3465,7 @@ function renderMeasurements() {
 function openEditArea(ai){ _editAreaIdx=ai; goTo('screen-add-area'); }
 function addSelForArea(areaId){
   resetSelForm();
-  _selAreaIds=[areaId]; _selAreaLocked=true;
+  _selOpeningId=areaId; _selAreaIds=[areaId]; _selAreaLocked=true;
   // Auto-detect category from area type so the category picker is skipped
   var room=APP.quote.rooms[_activeRoom];
   var area=room&&(room.areas||[]).find(function(a){ return a.id===areaId; });
@@ -3481,6 +3483,7 @@ function deleteArea(ri,ai){
     (room.selections||[]).forEach(function(sel){
       var idx=(sel.areaIds||[]).indexOf(areaId);
       if(idx!==-1) sel.areaIds.splice(idx,1);
+      if(sel.openingId===areaId) sel.openingId=null;
     });
   }
   saveDraft(); renderMeasurements(); showToast('Deleted ✓');
@@ -3536,6 +3539,8 @@ function openEditSel(si){
   _selRates=Object.assign({},sel.rates||{});
   _selLining=sel.lining||'none';
   _selAreaIds=(sel.areaIds||[]).slice();
+  _selOpeningId=sel.openingId||(_selAreaIds[0]||null);
+  _selAreaLocked=!!sel.openingId||_selAreaIds.length===1;
   _selRemarks=sel.remarks||'';
   _selRomanType=sel.romanType||'';
   _selRomanLayerTarget=1;
@@ -3654,36 +3659,36 @@ function saveArea(){
   if(type==='flooring'){ var ftEl=document.getElementById('areaFloorType'); area.flooringType=ftEl?ftEl.value:'wooden'; }
   if(type==='wallpaper') area.wallpaperMode=_areaState.wallpaperMode||'custom';
   var editing=_editAreaIdx>=0;
-  var autoLinked=0;
   if(editing){ area.id=room.areas[_editAreaIdx].id; room.areas[_editAreaIdx]=area; }
   else {
     if(!room.areas) room.areas=[];
     room.areas.push(area);
-    // Auto-link any compatible standalone selections (areaIds=[]) to this new area
-    (room.selections||[]).forEach(function(sel){
-      var isStandalone=!(sel.areaIds||[]).length||(sel.areaIds||[]).every(function(id){
-        return !(room.areas||[]).find(function(a){ return a.id===id&&a.id!==area.id; });
-      });
-      if(isStandalone && isCompatibleArea(area,sel.category)){
-        if(!sel.areaIds) sel.areaIds=[];
-        if(sel.areaIds.indexOf(area.id)===-1){ sel.areaIds.push(area.id); autoLinked++; }
-      }
-    });
   }
   saveDraft();
-  showToast(autoLinked
-    ? 'Linked '+autoLinked+' selection'+(autoLinked>1?'s':'')+' to '+name+' ✓'
-    : (editing?'Updated':'Added')+' ✓');
+  showToast((editing?'Updated':'Added')+' ✓');
   _postSaveArea=area; _renderAreaPostSave(area,!editing);
 }
 function _renderAreaPostSave(area,isNew){
+  var room=APP.quote.rooms[_activeRoom];
+  var linked=room?(room.selections||[]).filter(function(s){
+    return s.openingId===area.id||(s.areaIds||[]).indexOf(area.id)!==-1;
+  }):[];
   var h='<div class="post-save-card"><div class="post-save-icon">✅</div>'
     +'<div class="post-save-title">'+esc(area.name)+' '+(isNew?'added':'updated')+'</div>'
-    +'<div class="post-save-sub">'+area.width+'" W × '+area.height+'" H · Qty '+area.qty+'</div>'
-    +'<div class="post-save-actions">';
-  h+='<button class="btn sm" style="width:100%" onclick="addSelForArea(\''+area.id+'\')">+ Add Selection for '+esc(area.name)+' →</button>'
+    +'<div class="post-save-sub">'+area.width+'" W × '+area.height+'" H · Qty '+area.qty+'</div>';
+  if(linked.length){
+    h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;text-align:left;margin:12px 0 8px">';
+    linked.forEach(function(sel,idx){
+      if(idx>0) h+='<div style="border-top:1px solid var(--border);margin:8px 0"></div>';
+      h+=_postSaveProdRows(sel.products||[], selCatLabel(sel.category), sel.stitchStyle||'');
+    });
+    h+='</div>';
+  }
+  h+='<div class="post-save-actions">';
+  h+='<button class="btn sm" style="width:100%" onclick="addSelForArea(\''+area.id+'\')">'+(linked.length?'+ Add Another Selection for '+esc(area.name):'+ Add Selection for '+esc(area.name)+' →')+'</button>'
     +'<button class="btn sm" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--border)" onclick="_editAreaIdx=-1;renderAddArea()">+ Add Another Measurement</button>'
     +'<button class="btn ghost sm" onclick="openRoomModal()">+ Add Room</button>'
+    +'<button class="btn ghost sm" style="font-size:12px;color:var(--text3)" onclick="goTo(\'screen-summary\')">View Summary →</button>'
     +'</div></div>';
   document.getElementById('addAreaWrap').innerHTML=h;
 }
@@ -3693,6 +3698,54 @@ function isCompatibleArea(area,cat){
             blind:'blinds',headboard:'headboard',mattress:'mattress',flooring:'flooring',
             wallpaper:'wallpaper',tracks_rods:'curtains'};
   return !map[cat]||area.type===map[cat];
+}
+function _catToAreaType(cat){
+  return {curtains_main:'curtains',curtains_sheer:'curtains',curtains:'curtains',
+          roman_blind:'roman_blinds',blind:'blinds',headboard:'headboard',
+          mattress:'mattress',flooring:'flooring',wallpaper:'wallpaper',
+          tracks_rods:'curtains'}[cat]||null;
+}
+function _renderOpeningPicker(){
+  var room=APP.quote.rooms[_activeRoom]; if(!room) return '';
+  var areaType=_catToAreaType(_selCategory);
+  var compatible=(room.areas||[]).filter(function(a){ return !areaType||a.type===areaType; });
+  var h='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:16px">'
+    +'<div style="font-size:11px;font-weight:900;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Which opening is this for?</div>';
+  if(compatible.length){
+    compatible.forEach(function(area){
+      var dims=area.width&&area.height?(area.width+'"W × '+area.height+'"H · Qty '+area.qty):'(not measured yet)';
+      h+='<div onclick="_selOpeningId=\''+area.id+'\';_selAreaIds=[\''+area.id+'\'];_selAreaLocked=true;renderAddSelection()" '
+        +'style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg);border:1px solid '
+        +(_selOpeningId===area.id?'var(--red)':'var(--border)')+';border-radius:var(--r-sm);margin-bottom:6px;cursor:pointer">'
+        +'<div>'
+        +'<div style="font-size:14px;font-weight:800;color:var(--text)">'+esc(area.name)+'</div>'
+        +'<div style="font-size:11px;color:var(--text3)">'+esc(dims)+'</div>'
+        +'</div>'
+        +(_selOpeningId===area.id?'<div style="color:var(--red);font-size:18px">✓</div>':'')
+        +'</div>';
+    });
+    h+='<div style="border-top:1px solid var(--border);margin:10px 0"></div>';
+  } else {
+    h+='<div style="text-align:center;padding:10px;font-size:12px;color:var(--text3);margin-bottom:6px">No openings yet — create one below</div>';
+  }
+  h+='<div id="newOpeningForm" style="display:none;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:8px">'
+    +'<input class="inp" id="newOpeningName" placeholder="Opening name (e.g. Window 1)" style="margin-bottom:8px">'
+    +'<button class="btn" style="width:100%;margin:0" onclick="createNewOpening()">Create &amp; Select</button>'
+    +'</div>'
+    +'<button class="btn ghost sm" style="width:100%" onclick="var f=document.getElementById(\'newOpeningForm\');f.style.display=f.style.display===\'none\'?\'block\':\'none\'">+ Create New Opening</button>'
+    +'</div>';
+  return h;
+}
+function createNewOpening(){
+  var room=APP.quote.rooms[_activeRoom]; if(!room) return;
+  var name=(document.getElementById('newOpeningName').value||'').trim();
+  if(!name){ showToast('Enter a name'); return; }
+  var areaType=_catToAreaType(_selCategory)||'curtains';
+  var area={id:'a_'+Date.now(),name:name,type:areaType,width:0,height:0,qty:1,hasMeasurement:false};
+  if(!room.areas) room.areas=[];
+  room.areas.push(area);
+  _selOpeningId=area.id; _selAreaIds=[area.id]; _selAreaLocked=true;
+  saveDraft(); renderAddSelection();
 }
 function toggleAreaCheck(id,checked){
   var idx=_selAreaIds.indexOf(id);
@@ -3719,6 +3772,7 @@ function addSheerBorderFabric(){ _nextProdMode='component'; _nextProdRole='borde
 function addSheerOptionProduct(){ _nextProdMode='option'; _nextProdRole='option'; _selProductTarget='sheer'; openProductModal(); }
 function _activeAreaForSel(){
   var room=APP.quote.rooms[_activeRoom]; if(!room) return null;
+  if(_selOpeningId) return (room.areas||[]).find(function(a){ return a.id===_selOpeningId; })||null;
   return (room.areas||[]).find(function(a){ return _selAreaIds.indexOf(a.id)!==-1; })||null;
 }
 function _roomExistingFabrics(){
@@ -3781,16 +3835,12 @@ function handleFabricPhoto(evt,i){
 }
 function selStep2(){
   if(!_selCategory){ showToast('Select a category'); return; }
-  var room=APP.quote.rooms[_activeRoom];
-  if(!_selAreaIds.length&&room){
-    _selAreaIds=(room.areas||[]).filter(function(a){ return isCompatibleArea(a,_selCategory); }).map(function(a){ return a.id; });
-  }
   _selStep=2; renderAddSelection();
 }
 function selStep3(){ _selStep=3; renderAddSelection(); }
 function resetSelForm(){
   _selCategory=''; _selProducts=[]; _selStitch=''; _selStitchStyle='regular'; _selFabricSplit=[];
-  _selBoxSqft=''; _selRollSqft=''; _selTrackType=''; _selRates={}; _selLining='none'; _selAreaIds=[]; _selRemarks=''; _editSelIdx=-1;
+  _selBoxSqft=''; _selRollSqft=''; _selTrackType=''; _selRates={}; _selLining='none'; _selAreaIds=[]; _selOpeningId=null; _selRemarks=''; _editSelIdx=-1;
   _selSheerEnabled=false; _selSheerProducts=[]; _selSheerStitch=''; _selProductTarget='main'; _nextProdMode='component'; _nextProdRole='main'; _replaceSelProdIdx=-1;
   _selRomanType=''; _selRomanLayerTarget=1; _selAreaLocked=false;
 }
@@ -4106,16 +4156,24 @@ function renderAddSelection(){
       +'<span class="type-badge '+_selCategory+'">'+selCatLabel(_selCategory==='curtains_main'||_selCategory==='curtains_sheer'?'curtains_main':_selCategory)+'</span>'
       +'<button class="btn ghost sm" style="font-size:11px;margin-top:0" onclick="_selStep=1;renderAddSelection()">← Change</button></div>';
     var _rm2=APP.quote.rooms[_activeRoom];
-    var _linkedAreas=_rm2?(_rm2.areas||[]).filter(function(a){ return _selAreaIds.indexOf(a.id)!==-1; }):[];
-    if(_linkedAreas.length){
-      h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:14px">';
-      _linkedAreas.forEach(function(a){
-        h+='<div style="display:flex;justify-content:space-between;align-items:baseline;padding:3px 0">'
-          +'<span style="font-size:13px;font-weight:800;color:var(--text)">'+esc(a.name)+'</span>'
-          +'<span style="font-size:12px;color:var(--text3)">'+a.width+'" W × '+a.height+'" H · Qty '+a.qty+'</span>'
-          +'</div>';
-      });
-      h+='</div>';
+    // Opening picker: shown when no opening chosen and not locked
+    if(!_selOpeningId && !_selAreaLocked){
+      h+=_renderOpeningPicker();
+      document.getElementById('addSelWrap').innerHTML=h+'</div>';
+      return;
+    }
+    // Opening pin card
+    var _chosenOpening=_rm2?(_rm2.areas||[]).find(function(a){ return a.id===(_selOpeningId||(_selAreaIds[0]||null)); }):null;
+    if(_chosenOpening){
+      var _hasDims=_chosenOpening.width&&_chosenOpening.height;
+      h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">'
+        +'<div style="display:flex;align-items:center;gap:10px">'
+        +'<span style="font-size:16px">📌</span>'
+        +'<div><div style="font-size:13px;font-weight:800;color:var(--text)">'+esc(_chosenOpening.name)+'</div>'
+        +(_hasDims?'<div style="font-size:11px;color:var(--text3)">'+_chosenOpening.width+'"W × '+_chosenOpening.height+'"H · Qty '+_chosenOpening.qty+'</div>':'<div style="font-size:11px;color:var(--text3)">Not measured yet</div>')
+        +'</div></div>'
+        +(!_selAreaLocked?'<button class="btn ghost sm" style="font-size:11px;margin:0" onclick="_selOpeningId=null;_selAreaIds=[];_selAreaLocked=false;renderAddSelection()">Change</button>':'')
+        +'</div>';
     }
     if(_selCategory==='curtains_main'){
       // ── STEP 2 (curtains): Fabrics + Lining ──
@@ -4232,25 +4290,7 @@ function renderAddSelection(){
         h+='</div>';
       }
       h+=_renderRatesPanel();
-      var _roomChk=APP.quote.rooms[_activeRoom];
-      var _compat=(_roomChk&&_roomChk.areas||[]).filter(function(a){ return isCompatibleArea(a,_selCategory); });
-      if(_selAreaLocked){
-        var _la=(_roomChk&&_roomChk.areas||[]).find(function(a){ return a.id===_selAreaIds[0]; });
-        if(_la) h+='<div style="margin-top:16px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);display:flex;align-items:center;gap:10px">'
-          +'<span style="font-size:18px">📌</span>'
-          +'<div><div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Applying to</div>'
-          +'<div style="font-size:14px;font-weight:800;color:var(--text)">'+esc(_la.name)+'</div>'
-          +'<div style="font-size:11px;color:var(--text3)">'+_la.width+'" × '+_la.height+'" · Qty '+_la.qty+'</div>'
-          +'</div></div>';
-      } else if(_compat.length){
-        h+='<div style="margin-top:20px"><div class="field-label" style="margin-bottom:8px">Apply to Measurements</div>';
-        _compat.forEach(function(area){
-          var checked=_selAreaIds.indexOf(area.id)!==-1;
-          h+='<label class="area-check-item"><input type="checkbox" value="'+esc(area.id)+'"'+(checked?' checked':'')+' onchange="toggleAreaCheck(this.value,this.checked)">'
-            +'<span>'+esc(area.name)+'</span><span style="font-size:11px;color:var(--text3)">'+area.width+'" × '+area.height+'" · Qty '+area.qty+'</span></label>';
-        });
-        h+='</div>';
-      }
+      // Opening pin card already shown above — no checklist needed when openingId is set
       h+='<div id="selPostSave"></div>';
       h+='<button class="btn" style="width:100%;margin-top:20px" onclick="saveSelection()">Save Selections</button>';
     }
@@ -4259,15 +4299,13 @@ function renderAddSelection(){
     // ── STEP 3 (curtains): Sheer ──
     h+=_selStepBar();
     h+='<button class="btn ghost sm" style="margin-bottom:16px" onclick="_selStep=2;renderAddSelection()">← Fabrics</button>';
-    if(_selAreaLocked){
-      var _la3=(APP.quote.rooms[_activeRoom]&&APP.quote.rooms[_activeRoom].areas||[]).find(function(a){ return a.id===_selAreaIds[0]; });
-      if(_la3) h+='<div style="margin-bottom:12px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);display:flex;align-items:center;gap:10px">'
-        +'<span style="font-size:18px">📌</span>'
-        +'<div><div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Applying to</div>'
-        +'<div style="font-size:14px;font-weight:800;color:var(--text)">'+esc(_la3.name)+'</div>'
-        +'<div style="font-size:11px;color:var(--text3)">'+_la3.width+'" × '+_la3.height+'" · Qty '+_la3.qty+'</div>'
-        +'</div></div>';
-    }
+    var _la3=(APP.quote.rooms[_activeRoom]&&APP.quote.rooms[_activeRoom].areas||[]).find(function(a){ return a.id===(_selOpeningId||(_selAreaIds[0]||null)); });
+    if(_la3) h+='<div style="margin-bottom:12px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);display:flex;align-items:center;gap:10px">'
+      +'<span style="font-size:18px">📌</span>'
+      +'<div><div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Applying to</div>'
+      +'<div style="font-size:14px;font-weight:800;color:var(--text)">'+esc(_la3.name)+'</div>'
+      +'<div style="font-size:11px;color:var(--text3)">'+_la3.width+'" × '+_la3.height+'" · Qty '+_la3.qty+'</div>'
+      +'</div></div>';
     h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
     h+='<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Sheer Fabric</div>';
     h+='<button class="btn ghost sm" style="font-size:11px;color:var(--danger)" onclick="_selSheerEnabled=false;_selSheerProducts=[];_selSheerStitch=\'\';_selStep=4;renderAddSelection()">✕ Skip Sheer</button>';
@@ -4287,15 +4325,13 @@ function renderAddSelection(){
     // ── STEP 4 (curtains): Stitching ──
     h+=_selStepBar();
     h+='<button class="btn ghost sm" style="margin-bottom:16px" onclick="_selStep=3;renderAddSelection()">← Sheer</button>';
-    if(_selAreaLocked){
-      var _la4=(APP.quote.rooms[_activeRoom]&&APP.quote.rooms[_activeRoom].areas||[]).find(function(a){ return a.id===_selAreaIds[0]; });
-      if(_la4) h+='<div style="margin-bottom:12px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);display:flex;align-items:center;gap:10px">'
-        +'<span style="font-size:18px">📌</span>'
-        +'<div><div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Applying to</div>'
-        +'<div style="font-size:14px;font-weight:800;color:var(--text)">'+esc(_la4.name)+'</div>'
-        +'<div style="font-size:11px;color:var(--text3)">'+_la4.width+'" × '+_la4.height+'" · Qty '+_la4.qty+'</div>'
-        +'</div></div>';
-    }
+    var _la4=(APP.quote.rooms[_activeRoom]&&APP.quote.rooms[_activeRoom].areas||[]).find(function(a){ return a.id===(_selOpeningId||(_selAreaIds[0]||null)); });
+    if(_la4) h+='<div style="margin-bottom:12px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);display:flex;align-items:center;gap:10px">'
+      +'<span style="font-size:18px">📌</span>'
+      +'<div><div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Applying to</div>'
+      +'<div style="font-size:14px;font-weight:800;color:var(--text)">'+esc(_la4.name)+'</div>'
+      +'<div style="font-size:11px;color:var(--text3)">'+_la4.width+'" × '+_la4.height+'" · Qty '+_la4.qty+'</div>'
+      +'</div></div>';
     h+='<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Main Stitching</div>';
     h+='<div class="field"><label class="field-label">Stitch Pattern</label><div class="stitch-pills">';
     ['pleated','eyelet','ripple','pinch','eliza','plain'].forEach(function(s){
@@ -4359,25 +4395,14 @@ function renderAddSelection(){
     }
     h+='</div>';
     h+=_renderRatesPanel();
-    var _roomChk5=APP.quote.rooms[_activeRoom];
-    var _compat5=(_roomChk5&&_roomChk5.areas||[]).filter(function(a){ return isCompatibleArea(a,_selCategory); });
-    if(_selAreaLocked){
-      var _la5=(_roomChk5&&_roomChk5.areas||[]).find(function(a){ return a.id===_selAreaIds[0]; });
-      if(_la5) h+='<div style="margin-top:16px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);display:flex;align-items:center;gap:10px">'
-        +'<span style="font-size:18px">📌</span>'
-        +'<div><div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Applying to</div>'
-        +'<div style="font-size:14px;font-weight:800;color:var(--text)">'+esc(_la5.name)+'</div>'
-        +'<div style="font-size:11px;color:var(--text3)">'+_la5.width+'" × '+_la5.height+'" · Qty '+_la5.qty+'</div>'
-        +'</div></div>';
-    } else if(_compat5.length){
-      h+='<div style="margin-top:20px"><div class="field-label" style="margin-bottom:8px">Apply to Measurements</div>';
-      _compat5.forEach(function(area){
-        var checked=_selAreaIds.indexOf(area.id)!==-1;
-        h+='<label class="area-check-item"><input type="checkbox" value="'+esc(area.id)+'"'+(checked?' checked':'')+' onchange="toggleAreaCheck(this.value,this.checked)">'
-          +'<span>'+esc(area.name)+'</span><span style="font-size:11px;color:var(--text3)">'+area.width+'" × '+area.height+'" · Qty '+area.qty+'</span></label>';
-      });
-      h+='</div>';
-    }
+    // Opening pin card: show which opening this will be saved for
+    var _la5=(APP.quote.rooms[_activeRoom]&&APP.quote.rooms[_activeRoom].areas||[]).find(function(a){ return a.id===(_selOpeningId||(_selAreaIds[0]||null)); });
+    if(_la5) h+='<div style="margin-top:16px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);display:flex;align-items:center;gap:10px">'
+      +'<span style="font-size:18px">📌</span>'
+      +'<div><div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Applying to</div>'
+      +'<div style="font-size:14px;font-weight:800;color:var(--text)">'+esc(_la5.name)+'</div>'
+      +'<div style="font-size:11px;color:var(--text3)">'+_la5.width+'" × '+_la5.height+'" · Qty '+_la5.qty+'</div>'
+      +'</div></div>';
     h+='<div id="selPostSave"></div>';
     h+='<button class="btn" style="width:100%;margin-top:20px" onclick="saveSelection()">Save Selections</button>';
   }
@@ -4388,14 +4413,12 @@ function saveSelection(){
   var room=APP.quote.rooms[_activeRoom]; if(!room) return;
   var rem=_selRemarks;
   if(!_selCategory){ showToast('Select a category'); return; }
-  // Auto-link to all compatible areas if none explicitly chosen
-  if(!_selAreaIds.length && !_selAreaLocked){
-    _selAreaIds=(room.areas||[]).filter(function(a){ return isCompatibleArea(a,_selCategory); }).map(function(a){ return a.id; });
-  }
+  var oid=_selOpeningId||(_selAreaIds[0]||null);
+  var aids=oid?[oid]:_selAreaIds.slice();
   var sel={
     id:'s_'+Date.now(), category:_selCategory,
     products:_selProducts.map(function(p){ return Object.assign({},p,{product:Object.assign({},p.product||{})}); }),
-    areaIds:_selAreaIds.slice(), remarks:rem, stitchStyle:_selStitch,
+    openingId:oid, areaIds:aids, remarks:rem, stitchStyle:_selStitch,
     stitchStyleType:_selStitchStyle, fabricSplit:_selFabricSplit.slice(),
     boxSqft:_selBoxSqft?parseFloat(_selBoxSqft):null,
     rollSqft:_selRollSqft?parseFloat(_selRollSqft):null,
@@ -4410,20 +4433,23 @@ function saveSelection(){
     var sheerSel={
       id:'s_'+Date.now()+'1', category:'curtains_sheer',
       products:_selSheerProducts.map(function(p){ return Object.assign({},p,{product:Object.assign({},p.product||{})}); }),
-      areaIds:_selAreaIds.slice(), remarks:'', stitchStyle:_selSheerStitch,
+      openingId:oid, areaIds:aids, remarks:'', stitchStyle:_selSheerStitch,
       stitchStyleType:'regular', fabricSplit:[], trackType:'', rates:Object.assign({},_selRates),
       lining:_selLining
     };
     room.selections.push(sheerSel);
   }
-  _lastSavedAreaIds = sel.areaIds.slice();
+  _lastSavedAreaIds = aids.slice();
+  _lastSavedOpeningId = oid;
   saveDraft(); showToast((editing?'Updated':'Saved')+' ✓');
   _renderSelPostSave(editing);
 }
 function startSelWithCat(cat){
   resetSelForm();
   _selCategory=cat;
-  _selAreaIds=_lastSavedAreaIds.slice();
+  _selOpeningId=_lastSavedOpeningId;
+  _selAreaIds=_lastSavedOpeningId?[_lastSavedOpeningId]:_lastSavedAreaIds.slice();
+  _selAreaLocked=!!_lastSavedOpeningId;
   _selStep=2;
   goTo('screen-add-selection');
 }
@@ -4433,7 +4459,7 @@ function _areaTypeToCat(type){
 }
 function addSelForAreaQuick(areaId,cat){
   resetSelForm();
-  _selCategory=cat; _selAreaIds=[areaId]; _selAreaLocked=true;
+  _selCategory=cat; _selOpeningId=areaId; _selAreaIds=[areaId]; _selAreaLocked=true;
   _selStep=2;
   goTo('screen-add-selection');
 }
@@ -4483,7 +4509,7 @@ function _renderSelPostSave(editing){
   var uncovered=[];
   if(room&&!editing){
     (room.areas||[]).forEach(function(area){
-      var hasAny=allSels.some(function(s){ return (s.areaIds||[]).indexOf(area.id)!==-1; });
+      var hasAny=allSels.some(function(s){ return s.openingId===area.id||(s.areaIds||[]).indexOf(area.id)!==-1; });
       if(!hasAny){ var cat=_areaTypeToCat(area.type); if(cat) uncovered.push({area:area,cat:cat}); }
     });
   }
@@ -4502,7 +4528,7 @@ function _renderSelPostSave(editing){
     h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;text-align:left;margin-bottom:8px">';
     allSels.forEach(function(sel,idx){
       if(idx>0) h+='<div style="border-top:1px solid var(--border);margin:10px 0"></div>';
-      var linkedAreas=(room.areas||[]).filter(function(a){ return (sel.areaIds||[]).indexOf(a.id)!==-1; });
+      var linkedAreas=(room.areas||[]).filter(function(a){ return a.id===sel.openingId||(sel.areaIds||[]).indexOf(a.id)!==-1; });
       if(linkedAreas.length){
         h+='<div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:2px">'
           +linkedAreas.map(function(a){ return esc(a.name); }).join(' · ')
@@ -4530,8 +4556,8 @@ function _renderSelPostSave(editing){
   h+='<button class="btn sm" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--border)" onclick="openRoomModal()">+ Add Room</button>';
   if(isCurtainsMain){
     var sheerJustSaved=_selSheerEnabled&&_selSheerProducts.length>0;
-    var sheerExistsForAreas=_lastSavedAreaIds.length>0&&room&&allSels.some(function(s){
-      return s.category==='curtains_sheer'&&(s.areaIds||[]).some(function(id){ return _lastSavedAreaIds.indexOf(id)!==-1; });
+    var sheerExistsForAreas=(_lastSavedOpeningId||_lastSavedAreaIds.length>0)&&room&&allSels.some(function(s){
+      return s.category==='curtains_sheer'&&(s.openingId===_lastSavedOpeningId||(s.areaIds||[]).some(function(id){ return _lastSavedAreaIds.indexOf(id)!==-1; }));
     });
     if(!sheerJustSaved&&!sheerExistsForAreas){
       h+='<button class="btn ghost sm" onclick="startSelWithCat(\'curtains_sheer\')">+ Add Sheer Curtains</button>';
@@ -5061,7 +5087,7 @@ function renderSum() {
       // Case B — has measurements: full calc view
       // Area-linked selections
       (room.areas||[]).forEach(function(area){
-        var areaSelections=(room.selections||[]).filter(function(sel){ return (sel.areaIds||[]).indexOf(area.id)!==-1; });
+        var areaSelections=(room.selections||[]).filter(function(sel){ return sel.openingId===area.id||(sel.areaIds||[]).indexOf(area.id)!==-1; });
         h+='<div style="border-top:1px solid var(--border);padding:12px 14px">';
         h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
           +'<span class="type-badge '+area.type+'">'+areaTypeName(area.type)+'</span>'
@@ -5178,7 +5204,7 @@ function _buildPrintSelect(roomFilter) {
     h+='<div style="break-inside:avoid;margin-bottom:4mm">'
       +'<div style="background:#1a1a1a;color:#fff;padding:2mm 3mm;font-size:10pt;font-weight:900">'+esc(room.name)+'</div>';
     (room.areas||[]).forEach(function(area){
-      var areaSelections=(room.selections||[]).filter(function(sel){ return (sel.areaIds||[]).indexOf(area.id)!==-1; });
+      var areaSelections=(room.selections||[]).filter(function(sel){ return sel.openingId===area.id||(sel.areaIds||[]).indexOf(area.id)!==-1; });
       if(!areaSelections.length) return;
       h+='<div style="padding:2mm 3mm;border-bottom:0.75pt solid #ccc;break-inside:avoid">'
         +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1.5mm">'
@@ -5216,7 +5242,7 @@ function _buildPrintQuote(roomFilter) {
       +'<div style="background:#1a1a1a;color:#fff;padding:2mm 3mm;font-size:10pt;font-weight:900;display:flex;justify-content:space-between">'
       +'<span>'+esc(room.name)+'</span>'+(rt>0?'<span>'+fmt(rt)+'</span>':'')+'</div>';
     (room.areas||[]).forEach(function(area){
-      var areaSelections=(room.selections||[]).filter(function(sel){ return (sel.areaIds||[]).indexOf(area.id)!==-1; });
+      var areaSelections=(room.selections||[]).filter(function(sel){ return sel.openingId===area.id||(sel.areaIds||[]).indexOf(area.id)!==-1; });
       if(!areaSelections.length) return;
       var areaTot=0; areaSelections.forEach(function(sel){ areaTot+=calcSelForArea(sel,area); });
       h+='<div style="padding:2mm 3mm;border-bottom:0.75pt solid #ccc;break-inside:avoid">'
@@ -5422,6 +5448,10 @@ function applyQ(q) {
   (q.rooms||[]).forEach(function(r){
     if(!r.areas) r.areas=[];
     if(!r.selections) r.selections=[];
+    // Migrate old single-area selections to openingId model
+    r.selections.forEach(function(sel){
+      if(!sel.openingId && (sel.areaIds||[]).length===1) sel.openingId=sel.areaIds[0];
+    });
   });
   APP.quote=q; APP.quote.customerId=q.customerId||null; saveDraft();
   var cr=document.getElementById('custSearchResults'); if(cr) cr.innerHTML='';
