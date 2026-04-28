@@ -3859,9 +3859,10 @@ function _renderSelProdRows(){
         +'<div style="font-size:11px;color:var(--text3);font-weight:700">MANUAL ENTRY</div>'
         +'<button class="icon-btn danger" onclick="removeSelProd('+i+')">🗑</button></div>'
         +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">'
-        +'<input class="inp" style="grid-column:1/-1;font-size:12px;padding:7px" placeholder="Product / Brand name *" onchange="_selProducts['+i+'].product.catalog=this.value;_selProducts['+i+'].product.manualName=this.value">'
-        +'<input class="inp" type="number" style="font-size:12px;padding:7px" placeholder="MRP (₹) *" inputmode="decimal" onchange="_selProducts['+i+'].product.mrp=parseFloat(this.value)||0">'
+        +'<input class="inp" style="font-size:12px;padding:7px" placeholder="Brand *" onchange="_selProducts['+i+'].product.brand=this.value">'
+        +'<input class="inp" style="font-size:12px;padding:7px" placeholder="Catalog" onchange="_selProducts['+i+'].product.catalog=this.value;_selProducts['+i+'].product.manualName=this.value">'
         +'<input class="inp" style="font-size:12px;padding:7px" placeholder="S.No / Code (opt)" onchange="_selProducts['+i+'].product.s_no=this.value">'
+        +'<input class="inp" type="number" style="font-size:12px;padding:7px" placeholder="MRP (₹) *" inputmode="decimal" onchange="_selProducts['+i+'].product.mrp=parseFloat(this.value)||0">'
         +'</div>';
     } else {
       var nameParts=[prod.brand,prod.catalog,prod.s_no].filter(Boolean);
@@ -4100,9 +4101,10 @@ function _renderRomanSingleProdRow(i){
   if(p._manual&&!prod.mrp){
     h+='<div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:6px">MANUAL ENTRY</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">'
-      +'<input class="inp" style="grid-column:1/-1;font-size:12px;padding:7px" placeholder="Product / Brand name *" onchange="_selProducts['+i+'].product.catalog=this.value;_selProducts['+i+'].product.manualName=this.value">'
-      +'<input class="inp" type="number" style="font-size:12px;padding:7px" placeholder="MRP (₹) *" inputmode="decimal" onchange="_selProducts['+i+'].product.mrp=parseFloat(this.value)||0">'
+      +'<input class="inp" style="font-size:12px;padding:7px" placeholder="Brand *" onchange="_selProducts['+i+'].product.brand=this.value">'
+      +'<input class="inp" style="font-size:12px;padding:7px" placeholder="Catalog" onchange="_selProducts['+i+'].product.catalog=this.value;_selProducts['+i+'].product.manualName=this.value">'
       +'<input class="inp" style="font-size:12px;padding:7px" placeholder="S.No / Code (opt)" onchange="_selProducts['+i+'].product.s_no=this.value">'
+      +'<input class="inp" type="number" style="font-size:12px;padding:7px" placeholder="MRP (₹) *" inputmode="decimal" onchange="_selProducts['+i+'].product.mrp=parseFloat(this.value)||0">'
       +'</div>';
   } else {
     var nameParts=[prod.brand,prod.catalog,prod.s_no].filter(Boolean);
