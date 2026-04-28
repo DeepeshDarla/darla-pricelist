@@ -3437,13 +3437,16 @@ function renderMeasurements() {
 function openEditArea(ai){ _editAreaIdx=ai; goTo('screen-add-area'); }
 function addSelForArea(areaId){
   resetSelForm();
-  _selOpeningId=areaId; _selAreaIds=[areaId]; _selAreaLocked=true;
-  // Auto-detect category from area type so the category picker is skipped
   var room=APP.quote.rooms[_activeRoom];
   var area=room&&(room.areas||[]).find(function(a){ return a.id===areaId; });
   var autoCat=area?_areaTypeToCat(area.type):null;
-  if(autoCat){ _selCategory=autoCat; _selStep=2; }
-  else { _selStep=1; }
+  if(autoCat){
+    _selCategory=autoCat;
+    var sameType=(room.areas||[]).filter(function(a){ return a.type===area.type; });
+    _selAreaIds=sameType.map(function(a){ return a.id; });
+    _selAreaLocked=sameType.length===1;
+    _selStep=2;
+  } else { _selStep=1; }
   goTo('screen-add-selection');
 }
 function deleteArea(ri,ai){
@@ -3682,21 +3685,23 @@ function _renderOpeningPicker(){
   var areaType=_catToAreaType(_selCategory);
   var compatible=(room.areas||[]).filter(function(a){ return !areaType||a.type===areaType; });
   var h='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:16px">'
-    +'<div style="font-size:11px;font-weight:900;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Which opening is this for?</div>';
+    +'<div style="font-size:11px;font-weight:900;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Which openings is this for?</div>';
   if(compatible.length){
     compatible.forEach(function(area){
       var dims=area.width&&area.height?(area.width+'"W × '+area.height+'"H · Qty '+area.qty):'(not measured yet)';
-      h+='<div onclick="_selOpeningId=\''+area.id+'\';_selAreaIds=[\''+area.id+'\'];_selAreaLocked=true;renderAddSelection()" '
-        +'style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg);border:1px solid '
-        +(_selOpeningId===area.id?'var(--red)':'var(--border)')+';border-radius:var(--r-sm);margin-bottom:6px;cursor:pointer">'
-        +'<div>'
-        +'<div style="font-size:14px;font-weight:800;color:var(--text)">'+esc(area.name)+'</div>'
-        +'<div style="font-size:11px;color:var(--text3)">'+esc(dims)+'</div>'
+      var checked=_selAreaIds.indexOf(area.id)!==-1;
+      h+='<div onclick="(function(){var idx=_selAreaIds.indexOf(\''+area.id+'\');if(idx===-1)_selAreaIds.push(\''+area.id+'\');else _selAreaIds.splice(idx,1);renderAddSelection();})()" '
+        +'style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid '
+        +(checked?'var(--red)':'var(--border)')+';border-radius:var(--r-sm);margin-bottom:6px;cursor:pointer">'
+        +'<div style="width:18px;height:18px;border-radius:4px;border:2px solid '+(checked?'var(--red)':'var(--border)')+';background:'+(checked?'var(--red)':'transparent')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+        +(checked?'<span style="color:#fff;font-size:11px;font-weight:900">✓</span>':'')
         +'</div>'
-        +(_selOpeningId===area.id?'<div style="color:var(--red);font-size:18px">✓</div>':'')
+        +'<div style="flex:1"><div style="font-size:14px;font-weight:800;color:var(--text)">'+esc(area.name)+'</div>'
+        +'<div style="font-size:11px;color:var(--text3)">'+esc(dims)+'</div></div>'
         +'</div>';
     });
-    h+='<div style="border-top:1px solid var(--border);margin:10px 0"></div>';
+    h+='<button class="btn" style="width:100%;margin-top:4px;margin-bottom:12px" onclick="_selAreaLocked=true;renderAddSelection()">Continue →</button>';
+    h+='<div style="border-top:1px solid var(--border);margin:0 0 10px 0"></div>';
   } else {
     h+='<div style="text-align:center;padding:10px;font-size:12px;color:var(--text3);margin-bottom:6px">No openings yet — create one below</div>';
   }
@@ -3716,7 +3721,8 @@ function createNewOpening(){
   var area={id:'a_'+Date.now(),name:name,type:areaType,width:0,height:0,qty:1,hasMeasurement:false};
   if(!room.areas) room.areas=[];
   room.areas.push(area);
-  _selOpeningId=area.id; _selAreaIds=[area.id]; _selAreaLocked=true;
+  if(_selAreaIds.indexOf(area.id)===-1) _selAreaIds.push(area.id);
+  _selAreaLocked=true;
   saveDraft(); renderAddSelection();
 }
 function toggleAreaCheck(id,checked){
@@ -4128,24 +4134,26 @@ function renderAddSelection(){
       +'<span class="type-badge '+_selCategory+'">'+selCatLabel(_selCategory==='curtains_main'||_selCategory==='curtains_sheer'?'curtains_main':_selCategory)+'</span>'
       +'<button class="btn ghost sm" style="font-size:11px;margin-top:0" onclick="_selStep=1;renderAddSelection()">← Change</button></div>';
     var _rm2=APP.quote.rooms[_activeRoom];
-    // Opening picker: shown when no opening chosen and not locked
-    if(!_selOpeningId && !_selAreaLocked){
-      h+=_renderOpeningPicker();
+    // Opening picker: shown until user confirms selection
+    if(!_selAreaLocked){
+      if(_rm2&&(_rm2.areas||[]).length) h+=_renderOpeningPicker();
       document.getElementById('addSelWrap').innerHTML=h+'</div>';
       return;
     }
-    // Opening pin card
-    var _chosenOpening=_rm2?(_rm2.areas||[]).find(function(a){ return a.id===(_selOpeningId||(_selAreaIds[0]||null)); }):null;
-    if(_chosenOpening){
-      var _hasDims=_chosenOpening.width&&_chosenOpening.height;
-      h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">'
-        +'<div style="display:flex;align-items:center;gap:10px">'
-        +'<span style="font-size:16px">📌</span>'
-        +'<div><div style="font-size:13px;font-weight:800;color:var(--text)">'+esc(_chosenOpening.name)+'</div>'
-        +(_hasDims?'<div style="font-size:11px;color:var(--text3)">'+_chosenOpening.width+'"W × '+_chosenOpening.height+'"H · Qty '+_chosenOpening.qty+'</div>':'<div style="font-size:11px;color:var(--text3)">Not measured yet</div>')
-        +'</div></div>'
-        +(!_selAreaLocked?'<button class="btn ghost sm" style="font-size:11px;margin:0" onclick="_selOpeningId=null;_selAreaIds=[];_selAreaLocked=false;renderAddSelection()">Change</button>':'')
+    // Opening pin card — shows all selected areas
+    var _selectedAreas=_rm2?(_rm2.areas||[]).filter(function(a){ return _selAreaIds.indexOf(a.id)!==-1; }):[];
+    if(_selectedAreas.length){
+      h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:14px">';
+      h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+        +'<div style="display:flex;align-items:center;gap:6px"><span style="font-size:15px">📌</span>'
+        +'<span style="font-size:11px;font-weight:900;color:var(--text3);text-transform:uppercase;letter-spacing:1px">'+_selectedAreas.length+' Opening'+(_selectedAreas.length>1?'s':'')+' selected</span></div>'
+        +'<button class="btn ghost sm" style="font-size:11px;margin:0" onclick="_selAreaLocked=false;renderAddSelection()">Change</button>'
         +'</div>';
+      _selectedAreas.forEach(function(a){
+        var dims=a.width&&a.height?(a.width+'"W × '+a.height+'"H · Qty '+a.qty):'Not measured yet';
+        h+='<div style="font-size:12px;color:var(--text);margin-top:2px">· '+esc(a.name)+'<span style="color:var(--text3);font-size:11px;margin-left:6px">'+esc(dims)+'</span></div>';
+      });
+      h+='</div>';
     }
     if(_selCategory==='curtains_main'){
       // ── STEP 2 (curtains): Fabrics + Lining ──
@@ -4385,8 +4393,9 @@ function saveSelection(){
   var room=APP.quote.rooms[_activeRoom]; if(!room) return;
   var rem=_selRemarks;
   if(!_selCategory){ showToast('Select a category'); return; }
-  var oid=_selOpeningId||(_selAreaIds[0]||null);
-  var aids=oid?[oid]:_selAreaIds.slice();
+  var aids=_selAreaIds.slice();
+  if(!aids.length&&_selOpeningId) aids=[_selOpeningId];
+  var oid=aids.length===1?aids[0]:null;
   var sel={
     id:'s_'+Date.now(), category:_selCategory,
     products:_selProducts.map(function(p){ return Object.assign({},p,{product:Object.assign({},p.product||{})}); }),
@@ -4440,9 +4449,8 @@ function setSumAreaFabricM(ri,ai,val){
 function startSelWithCat(cat){
   resetSelForm();
   _selCategory=cat;
-  _selOpeningId=_lastSavedOpeningId;
-  _selAreaIds=_lastSavedOpeningId?[_lastSavedOpeningId]:_lastSavedAreaIds.slice();
-  _selAreaLocked=!!_lastSavedOpeningId;
+  _selAreaIds=_lastSavedAreaIds.slice();
+  _selAreaLocked=_lastSavedAreaIds.length>0;
   _selStep=2;
   goTo('screen-add-selection');
 }
@@ -4452,7 +4460,12 @@ function _areaTypeToCat(type){
 }
 function addSelForAreaQuick(areaId,cat){
   resetSelForm();
-  _selCategory=cat; _selOpeningId=areaId; _selAreaIds=[areaId]; _selAreaLocked=true;
+  _selCategory=cat;
+  var room=APP.quote.rooms[_activeRoom];
+  var area=room&&(room.areas||[]).find(function(a){ return a.id===areaId; });
+  var sameType=area?(room.areas||[]).filter(function(a){ return a.type===area.type; }):[];
+  _selAreaIds=sameType.length?sameType.map(function(a){ return a.id; }):[areaId];
+  _selAreaLocked=_selAreaIds.length===1;
   _selStep=2;
   goTo('screen-add-selection');
 }
