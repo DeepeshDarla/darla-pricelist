@@ -911,10 +911,6 @@ function quoteSelectProduct(product){
 
 // Switch tab — re-render tabs with new active state, load new category
 
-// Called by showAdvancedSearch — if in quote mode with hangers, 
-// inject the search UI into qSearchBody (not replacing the whole #app)
-var _origShowAdvanced = null;
-
 // Wrap showAdvancedSearch to keep banner+tabs intact in quote+hangers mode
 (function() {
   var _orig = showAdvancedSearch;
