@@ -3746,7 +3746,7 @@ function createNewOpening(){
   if(!room.areas) room.areas=[];
   room.areas.push(area);
   _selOpeningId=area.id; _selAreaIds=[area.id]; _selAreaLocked=true;
-  saveDraft(); renderAddSelection();
+  saveDraft(); showToast('Opening created — add measurements from the Rooms tab'); renderAddSelection();
 }
 function toggleAreaCheck(id,checked){
   var idx=_selAreaIds.indexOf(id);
@@ -4175,7 +4175,7 @@ function renderAddSelection(){
         +'<div><div style="font-size:13px;font-weight:800;color:var(--text)">'+esc(_chosenOpening.name)+'</div>'
         +(_hasDims?'<div style="font-size:11px;color:var(--text3)">'+_chosenOpening.width+'"W × '+_chosenOpening.height+'"H · Qty '+_chosenOpening.qty+'</div>':'<div style="font-size:11px;color:var(--text3)">Not measured yet</div>')
         +'</div></div>'
-        +(!_selAreaLocked?'<button class="btn ghost sm" style="font-size:11px;margin:0" onclick="_selOpeningId=null;_selAreaIds=[];_selAreaLocked=false;renderAddSelection()">Change</button>':'')
+        +'<button class="btn ghost sm" style="font-size:11px;margin:0" onclick="_selOpeningId=null;_selAreaIds=[];_selAreaLocked=false;renderAddSelection()">Change</button>'
         +'</div>';
     }
     if(_selCategory==='curtains_main'){
@@ -4380,7 +4380,7 @@ function renderAddSelection(){
         h+='<button class="stitch-pill'+(_selSheerStitchStyle===s.v?' on':'')+'" onclick="_selSheerStitchStyle=\''+s.v+'\';renderAddSelection()">'+s.l+'</button>';
       });
       h+='</div>';
-      h+='<div style="font-size:11px;color:var(--text3);margin-top:4px">Stitch rate: '+(_selSheerStitchStyle!=='regular'?'₹85/m':'₹60/m')+'</div>';
+      h+='<div style="font-size:11px;color:var(--text3);margin-top:4px">Stitch rate: '+(_selSheerStitchStyle!=='regular'?'₹'+P.curtainStitchMixPerM+'/m':'₹'+P.curtainStitchPerM+'/m')+'</div>';
       h+='</div></div>';
     }
     h+='<button class="btn" style="width:100%;margin-top:20px" onclick="_selStep=5;renderAddSelection()">Next: Tracks & Save →</button>';
@@ -4444,7 +4444,7 @@ function saveSelection(){
       id:'s_'+Date.now()+'1', category:'curtains_sheer',
       products:_selSheerProducts.map(function(p){ return Object.assign({},p,{product:Object.assign({},p.product||{})}); }),
       openingId:oid, areaIds:aids, remarks:'', stitchStyle:_selSheerStitch,
-      stitchStyleType:_selSheerStitchStyle, fabricSplit:[], trackType:'', rates:Object.assign({},_selRates),
+      stitchStyleType:_selSheerStitchStyle, fabricSplit:[], trackType:'', rates:(function(){ var r=Object.assign({},_selRates); delete r.stitchRate; return r; })(),
       lining:_selLining
     };
     room.selections.push(sheerSel);
