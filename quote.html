@@ -2172,6 +2172,14 @@ var P = (function(){
 function saveP() {
   try { localStorage.setItem('darla_P_v2', JSON.stringify(P)); } catch(e) {}
 }
+function qrate(key){
+  return APP.quote&&APP.quote.rates&&APP.quote.rates[key]!=null ? APP.quote.rates[key] : P[key];
+}
+function updateQuoteRate(key, val){
+  if(!APP.quote.rates) APP.quote.rates={};
+  APP.quote.rates[key]=parseFloat(val)||0;
+  saveDraft(); renderSum();
+}
 function resetPConfig() {
   if (!confirm('Reset all rates to factory defaults?')) return;
   try { localStorage.removeItem('darla_P_v2'); } catch(e) {}
@@ -2182,7 +2190,7 @@ function resetPConfig() {
 function flooringInstallRate(type) {
   var map = { wooden:'flooringInstallWooden', carpet:'flooringInstallCarpet',
                vinyl:'flooringInstallVinyl', gym:'flooringInstallGym', other:'flooringInstallOther' };
-  return P[map[type]] || 0;
+  return qrate(map[type]) || 0;
 }
 
 var TRACK_TYPES = ['M Track','Delac Track','Ripple Track','Silent Gliss','Wooden Rod','Metal Rod','Bay Rod','Other'];
@@ -2276,9 +2284,9 @@ function fabricProd(sel) {
 function getLiningRate(cat, type) {
   if(!type||type==='none') return 0;
   var isRoman=cat==='roman_blind';
-  return ({regular:isRoman?P.romanLiningRegular:P.curtainLiningRegular,
-           blackout:isRoman?P.romanLiningBlackout:P.curtainLiningBlackout,
-           dimout: isRoman?P.romanLiningDimout:P.curtainLiningDimout})[type]||0;
+  return ({regular:isRoman?qrate('romanLiningRegular'):qrate('curtainLiningRegular'),
+           blackout:isRoman?qrate('romanLiningBlackout'):qrate('curtainLiningBlackout'),
+           dimout: isRoman?qrate('romanLiningDimout'):qrate('curtainLiningDimout')})[type]||0;
 }
 function calcCurtains(area, sel, fp) {
   var W = parseFloat(area.width)||0, H = parseFloat(area.height)||0, qty = parseInt(area.qty)||1;
@@ -2295,25 +2303,25 @@ function calcCurtains(area, sel, fp) {
       fabricM = roundUpTo025(panels * (H / 39.37) * 1.10);
       rotationUsed = true;
     } else {
-      panels = Math.ceil(W / P.curtainPanelW) * qty;
+      panels = Math.ceil(W / qrate('curtainPanelW')) * qty;
       fabricM = roundUpTo025(panels * 1.50);
     }
   } else {
-    panels = Math.ceil(W / P.curtainPanelW) * qty;
+    panels = Math.ceil(W / qrate('curtainPanelW')) * qty;
     fabricM = roundUpTo025((panels * H / 39.37) * 1.10);
   }
   var mrp = parseFloat(fp.product.mrp)||0;
   var disc = parseFloat(fp.discount)||0;
   var fabricCost = Math.round(fabricM * mrp * (1 - disc/100));
   var isMix = ['panel_mix','border','horizontal_mix'].indexOf(sel.stitchStyleType||'regular') !== -1;
-  var baseStitch = isMix ? P.curtainStitchMixPerM : P.curtainStitchPerM;
+  var baseStitch = isMix ? qrate('curtainStitchMixPerM') : qrate('curtainStitchPerM');
   var stitchRate = sel.rates && sel.rates.stitchRate != null ? sel.rates.stitchRate : baseStitch;
   var stitchCost = Math.round(fabricM * stitchRate);
   var liningType = sel.lining||'none';
   var liningBaseRate = getLiningRate('curtains_main', liningType);
   var liningRate = sel.rates && sel.rates.liningRate != null ? sel.rates.liningRate : liningBaseRate;
   var liningCost = liningType!=='none' ? Math.round(fabricM * liningRate) : 0;
-  var installRate = sel.rates && sel.rates.installRate != null ? sel.rates.installRate : P.curtainInstall;
+  var installRate = sel.rates && sel.rates.installRate != null ? sel.rates.installRate : qrate('curtainInstall');
   var installCost = Math.round(installRate * qty);
   var total = fabricCost + stitchCost + liningCost + installCost;
   return { panels:panels, fabricM:td(fabricM), fabricCost:fabricCost, stitchCost:stitchCost,
@@ -2325,15 +2333,15 @@ function calcCurtains(area, sel, fp) {
 function calcRomanBlind(area, sel, fp) {
   var W = parseFloat(area.width)||0, H = parseFloat(area.height)||0, qty = parseInt(area.qty)||1;
   var sqft = td((W * H / 144) * qty);
-  var mechRate = sel.rates && sel.rates.mechRate != null ? sel.rates.mechRate : P.romanMech;
+  var mechRate = sel.rates && sel.rates.mechRate != null ? sel.rates.mechRate : qrate('romanMech');
   var mechCost = Math.round(sqft * mechRate);
-  var panels = Math.ceil(W / P.curtainPanelW);
+  var panels = Math.ceil(W / qrate('curtainPanelW'));
   var fabricM = roundUpTo025((panels * H * qty / 39.37) * 1.10);
   var mrp = parseFloat(fp.product.mrp)||0, disc = parseFloat(fp.discount)||0;
   var fabricCost = Math.round(fabricM * mrp * (1 - disc/100));
-  var stitchRate = sel.rates && sel.rates.stitchRateRoman != null ? sel.rates.stitchRateRoman : P.romanStitch;
+  var stitchRate = sel.rates && sel.rates.stitchRateRoman != null ? sel.rates.stitchRateRoman : qrate('romanStitch');
   var stitchCost = Math.round(stitchRate * qty);
-  var installRate = sel.rates && sel.rates.installRate != null ? sel.rates.installRate : P.romanInstall;
+  var installRate = sel.rates && sel.rates.installRate != null ? sel.rates.installRate : qrate('romanInstall');
   var installCost = Math.round(installRate * qty);
   var liningType = sel.lining||'none';
   var liningBaseRate = getLiningRate('roman_blind', liningType);
@@ -2355,14 +2363,14 @@ function calcBlind(area, fp) {
 function calcHeadboard(area, sel, fp) {
   var W = parseFloat(area.width)||0, H = parseFloat(area.height)||0;
   var sqft = td(r2(W/12,0.25) * r2(H/12,0.25));
-  var makingRate = sel.rates && sel.rates.makingRate != null ? sel.rates.makingRate : P.headboardAreaRate;
+  var makingRate = sel.rates && sel.rates.makingRate != null ? sel.rates.makingRate : qrate('headboardAreaRate');
   var makingCharge = Math.round(sqft * makingRate);
-  var CW = W + P.headboardOverhang, CH = H + P.headboardOverhang;
-  var panelW = P.headboardPanelW;
+  var CW = W + qrate('headboardOverhang'), CH = H + qrate('headboardOverhang');
+  var panelW = qrate('headboardPanelW');
   var pA = Math.ceil(CW/panelW), fA = pA * CH;
   var pB = Math.ceil(CH/panelW), fB = pB * CW;
   var fabricInches = area.rotationAllowed ? Math.min(fA,fB) : fA;
-  var fabricM = roundUpTo025((fabricInches / 39.37) * P.headboardWastage);
+  var fabricM = roundUpTo025((fabricInches / 39.37) * qrate('headboardWastage'));
   var mrp = parseFloat(fp.product.mrp)||0, disc = parseFloat(fp.discount)||0;
   var fabricCost = Math.round(fabricM * mrp * (1 - disc/100));
   var total = makingCharge + fabricCost;
@@ -2372,7 +2380,7 @@ function calcHeadboard(area, sel, fp) {
 function calcFlooring(area, sel, fp) {
   var W = parseFloat(area.width)||0, H = parseFloat(area.height)||0, qty = parseInt(area.qty)||1;
   var rawSqft = (W * H * qty) / 144;
-  var sqftWithWaste = td(rawSqft * P.flooringWastage);
+  var sqftWithWaste = td(rawSqft * qrate('flooringWastage'));
   var boxSqft = parseFloat(sel.boxSqft) || parseFloat(fp.product.box_sqft) || 1;
   var boxes = Math.ceil(sqftWithWaste / boxSqft);
   var billedSqft = td(boxes * boxSqft);
@@ -2390,17 +2398,17 @@ function calcWallpaper(area, sel, fp) {
   var mrp = parseFloat(fp.product.mrp)||0, disc = parseFloat(fp.discount)||0;
   if (area.wallpaperMode === 'roll') {
     var rawSqft = (W * H * qty) / 144;
-    var sqftWithWaste = td(rawSqft * P.wallpaperWastage);
+    var sqftWithWaste = td(rawSqft * qrate('wallpaperWastage'));
     var rollSqft = parseFloat(sel.rollSqft) || parseFloat(fp.product.roll_sqft) || 1;
     var rolls = Math.ceil(sqftWithWaste / rollSqft);
     var materialCost = Math.round(rolls * mrp * (1 - disc/100));
-    var labourRate = sel.rates && sel.rates.wallpaperLabour != null ? sel.rates.wallpaperLabour : P.wallpaperRollLabour;
+    var labourRate = sel.rates && sel.rates.wallpaperLabour != null ? sel.rates.wallpaperLabour : qrate('wallpaperRollLabour');
     var labour = Math.round(rolls * labourRate);
     return { mode:'roll', sqftWithWaste:sqftWithWaste, rolls:rolls, materialCost:materialCost, labour:labour, total:materialCost+labour };
   } else {
     var sqft = td(r2(W/12,0.25) * r2(H/12,0.25) * qty);
     var materialCost = Math.round(sqft * mrp * (1 - disc/100));
-    var labourRate = sel.rates && sel.rates.wallpaperLabour != null ? sel.rates.wallpaperLabour : P.wallpaperCustomLabour;
+    var labourRate = sel.rates && sel.rates.wallpaperLabour != null ? sel.rates.wallpaperLabour : qrate('wallpaperCustomLabour');
     var labour = Math.round(sqft * labourRate);
     return { mode:'custom', sqft:sqft, materialCost:materialCost, labour:labour, total:materialCost+labour };
   }
@@ -2416,7 +2424,7 @@ function calcMattress(area, fp) {
 function calcTracks(area, sel) {
   var qty = parseInt(sel._hwQty||area.qty)||1;
   var trackWidth = parseFloat(sel._hwWidth||area.width)||0;
-  var installRate = sel.rates && sel.rates.installRate != null ? sel.rates.installRate : P.trackInstall;
+  var installRate = sel.rates && sel.rates.installRate != null ? sel.rates.installRate : qrate('trackInstall');
   var installCost = Math.round(qty * installRate);
   // If product attached: price per foot
   var fp2 = fabricProd(sel);
@@ -2502,7 +2510,7 @@ function blankQ() {
   return { id:null, date:new Date().toLocaleDateString('en-IN'), staff:'', staff2:'',
            customer:{name:'',mobile:'',arch:'',addr:''}, customerId:null,
            rooms:[], status:'draft', saved:false,
-           overallDisc:0, overallDiscType:'pct', tenantId:'darla' };
+           overallDisc:0, overallDiscType:'pct', tenantId:'darla', rates:{} };
 }
 // Blank room with v2 structure
 function blankRoom(name) { return { name: name, areas: [], selections: [] }; }
@@ -2512,6 +2520,10 @@ var _activeRoom  = -1;   // index into APP.quote.rooms
 var _editAreaIdx = -1;   // -1 = add new area, ≥0 = edit existing
 var _editSelIdx  = -1;   // -1 = add new selection, ≥0 = edit existing
 var _postSaveArea = null;      // area object just saved (for post-save card)
+var _sumTab = 'quote';         // 'quote' | 'constants'
+var _sumOpenRoom = null;       // index of expanded room in summary, or null
+function setSumTab(t){ _sumTab=t; renderSum(); }
+function toggleSumRoom(ri){ _sumOpenRoom=(_sumOpenRoom===ri?null:ri); renderSum(); }
 var _lastSavedAreaIds = [];   // areaIds of the most recently saved selection
 var _lastSavedOpeningId = null; // openingId of the most recently saved selection
 
@@ -5241,178 +5253,21 @@ function updateAreaQty(ri,areaId,val){
   area.qty=Math.max(1,parseInt(val)||1);
   saveDraft(); renderSum();
 }
-function renderSum() {
+function renderSum(){
   setNavForSummary();
-  var q=APP.quote, gt=grandTotal(), h='';
-  h+='<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 16px;font-size:10px;color:var(--text3);text-align:center;margin-bottom:12px;letter-spacing:0.1em;text-transform:uppercase;font-weight:700">'
-    +'Quote Reference<span style="color:var(--text);font-weight:900;font-size:16px;display:block;margin-top:3px;letter-spacing:0.15em">'+esc(q.id||'—')+'</span></div>';
-  h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;margin-bottom:12px">';
-  h+='<div style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:4px">'+esc(q.customer.name||'—')+'</div>';
-  h+='<div style="font-size:14px;color:var(--text2);margin-bottom:2px">📱 '+esc(q.customer.mobile||'—')+'</div>';
-  if(q.customer.addr) h+='<div style="font-size:13px;color:var(--text3);margin-bottom:2px">📍 '+esc(q.customer.addr)+'</div>';
-  h+='<div style="height:1px;background:var(--border);margin:10px 0"></div>';
-  if(q.customer.arch) h+='<div style="font-size:13px;color:var(--text2);margin-bottom:4px"><span style="color:var(--text3);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px">Designer</span> '+esc(q.customer.arch)+'</div>';
-  h+='<div style="font-size:13px;color:var(--text2);margin-bottom:2px"><span style="color:var(--text3);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px">Salesman</span> '+esc(q.staff||'—')+(q.staff2?' &amp; '+esc(q.staff2):'')+'</div>';
-  h+='<div style="font-size:12px;color:var(--text3)">'+esc(q.date)+'</div></div>';
-  q.rooms.forEach(function(room, ri){
-    var rt=roomTotal(room);
-    h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;margin-bottom:14px">';
-    h+='<div style="background:var(--red);padding:10px 16px;display:flex;justify-content:space-between;align-items:center">'
-      +'<span style="font-size:14px;font-weight:900;color:#fff;letter-spacing:0.5px">'+esc(room.name).toUpperCase()+'</span>'
-      +(rt>0?'<span style="font-size:14px;font-weight:900;color:rgba(255,255,255,0.9)">'+fmt(rt)+'</span>':'')+'</div>';
-    // Helper to render a selection card in summary
-    function renderSelCard(sel, area) {
-      var result = area ? _calcSelForArea_detail(sel, area) : _calcSelTotal_noArea(sel);
-      if(!result) return '';
-      var sh='<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:8px">';
-      sh+='<div style="font-size:10px;font-weight:900;color:var(--text3);letter-spacing:1.5px;margin-bottom:8px">'+selCatLabel(sel.category).toUpperCase()+'</div>';
-      // Product headers — name + width + MRP, no repetition in charge lines
-      if(sel.trackType){
-        sh+='<div style="font-size:14px;font-weight:900;color:var(--text);margin-bottom:4px">'+esc(sel.trackType)+'</div>';
-      }
-      activeProds(sel).forEach(function(p){
-        var prod=p.product||{};
-        var pname=[prod.brand,prod.catalog,prod.s_no].filter(Boolean).join(' / ')||(prod.manualName||'—');
-        var disc=p.discount||0;
-        var widthCm=parseFloat(p.widthCm||prod.width)||0;
-        var pi=sel.products.indexOf(p);
-        var subParts=[];
-        if(widthCm) subParts.push('Width: '+widthCm+'cm');
-        if(disc>0) subParts.push(disc+'% off');
-        sh+='<div style="margin-bottom:8px">'
-          +'<div style="font-size:14px;font-weight:900;color:var(--text)">'+esc(pname)+'</div>';
-        sh+='<div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">';
-        sh+='<div style="display:flex;align-items:center;gap:4px"><label style="font-size:10px;color:var(--text3);white-space:nowrap">MRP ₹/m</label>'
-          +'<input type="number" class="inp" value="'+esc(String(prod.mrp||0))+'" '
-          +'style="width:72px;padding:4px 6px;font-size:13px;font-weight:700" '
-          +'onchange="updateProductMRP('+ri+',\''+sel.id+'\','+pi+',this.value)" onclick="this.select()"></div>';
-        if(subParts.length) sh+='<span style="font-size:11px;color:var(--text3)">'+subParts.join(' &nbsp;·&nbsp; ')+'</span>';
-        sh+='</div></div>';
-      });
-      if(sel.stitchStyle||sel.stitchStyleType){
-        var stLabel=(sel.stitchStyle?sel.stitchStyle.charAt(0).toUpperCase()+sel.stitchStyle.slice(1):'')
-          +(sel.stitchStyleType&&sel.stitchStyleType!=='regular'?' · '+sel.stitchStyleType.replace(/_/g,' '):'');
-        if(stLabel) sh+='<div style="font-size:11px;color:var(--text3);margin-bottom:6px">'+stLabel+'</div>';
-      }
-      // Separator
-      sh+='<div style="height:1px;background:var(--border);margin:6px 0"></div>';
-      sh+=_sumBreakdownLines(result);
-      sh+='<div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid var(--border);margin-top:4px">'
-        +'<span style="font-size:12px;font-weight:700;color:var(--text3)">Total</span>'
-        +'<span style="font-size:14px;font-weight:900;color:var(--red)">'+fmt(result.total)+'</span></div>';
-      // Editable rate overrides
-      var _isFab=sel.category==='curtains_main'||sel.category==='curtains_sheer'||sel.category==='roman_blind';
-      var _isRom=sel.category==='roman_blind';
-      if(_isFab||sel.trackType){
-        sh+='<details style="margin-top:8px"><summary style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;cursor:pointer;user-select:none">Edit Rates</summary>';
-        sh+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">';
-        if(_isFab&&!_isRom){
-          var _sr=sel.rates&&sel.rates.stitchRate!=null?sel.rates.stitchRate:'';
-          sh+='<div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:2px">Stitch ₹/m</label>'
-            +'<input type="number" class="inp" placeholder="default" value="'+_sr+'" style="padding:5px 7px;font-size:12px;font-weight:700" '
-            +'onchange="updateSelRate('+ri+',\''+sel.id+'\',\'stitchRate\',this.value)" onclick="this.select()"></div>';
-        }
-        if(_isRom){
-          var _srR=sel.rates&&sel.rates.stitchRateRoman!=null?sel.rates.stitchRateRoman:'';
-          sh+='<div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:2px">Stitch ₹/win</label>'
-            +'<input type="number" class="inp" placeholder="default" value="'+_srR+'" style="padding:5px 7px;font-size:12px;font-weight:700" '
-            +'onchange="updateSelRate('+ri+',\''+sel.id+'\',\'stitchRateRoman\',this.value)" onclick="this.select()"></div>';
-        }
-        if(_isFab){
-          var _ir=sel.rates&&sel.rates.installRate!=null?sel.rates.installRate:'';
-          sh+='<div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:2px">Install ₹/win</label>'
-            +'<input type="number" class="inp" placeholder="default" value="'+_ir+'" style="padding:5px 7px;font-size:12px;font-weight:700" '
-            +'onchange="updateSelRate('+ri+',\''+sel.id+'\',\'installRate\',this.value)" onclick="this.select()"></div>';
-        }
-        if(sel.trackType){
-          var _tr=sel.rates&&sel.rates.trackInstallRate!=null?sel.rates.trackInstallRate:'';
-          sh+='<div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:2px">Track Install ₹/win</label>'
-            +'<input type="number" class="inp" placeholder="default" value="'+_tr+'" style="padding:5px 7px;font-size:12px;font-weight:700" '
-            +'onchange="updateSelRate('+ri+',\''+sel.id+'\',\'trackInstallRate\',this.value)" onclick="this.select()"></div>';
-        }
-        sh+='</div></details>';
-      }
-      sh+='</div>';
-      return sh;
-    }
-    if(!(room.areas||[]).length){
-      // Case A — no measurements: simple product list
-      h+='<div style="padding:12px 14px">';
-      if((room.selections||[]).length){
-        (room.selections||[]).forEach(function(sel, si){
-          h+='<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:8px">';
-          h+='<div style="font-size:10px;font-weight:900;color:var(--text3);letter-spacing:1.5px;margin-bottom:8px">'+selCatLabel(sel.category).toUpperCase()+'</div>';
-          (sel.products||[]).forEach(function(p, pi){
-            if(p.mode==='option'&&!p.chosen) return;
-            var prod=p.product||{};
-            var pname=[prod.brand,prod.catalog,prod.s_no].filter(Boolean).join(' / ')||(prod.manualName||'—');
-            h+='<div style="font-size:14px;font-weight:900;color:var(--text);margin-bottom:8px">'+esc(pname)+'</div>';
-            var isFabric=sel.category==='curtains_main'||sel.category==='curtains_sheer'||sel.category==='roman_blind';
-            if(isFabric){
-              var wCm=parseFloat(p.widthCm||prod.width)||0;
-              var mrp=parseFloat(prod.mrp)||0;
-              h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px">'
-                +'<div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:2px">Width (cm)</label>'
-                +'<input class="inp" type="number" value="'+esc(String(wCm||''))+'" placeholder="e.g. 280" style="padding:6px;font-size:13px;font-weight:700" '
-                +'onchange="APP.quote.rooms['+ri+'].selections['+si+'].products['+pi+'].widthCm=parseFloat(this.value)||0;APP.quote.rooms['+ri+'].selections['+si+'].products['+pi+'].product.width=this.value;saveDraft();renderSum()"></div>'
-                +'<div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:2px">MRP (₹/m)</label>'
-                +'<input class="inp" type="number" value="'+esc(String(mrp||''))+'" placeholder="0" style="padding:6px;font-size:13px;font-weight:700" '
-                +'onchange="APP.quote.rooms['+ri+'].selections['+si+'].products['+pi+'].product.mrp=parseFloat(this.value)||0;saveDraft();renderSum()"></div>'
-                +'</div>';
-            }
-          });
-          h+='</div>';
-        });
-      } else {
-        h+='<div style="font-size:13px;color:var(--text3);padding:8px 0">No selections added yet.</div>';
-      }
-      h+='<button class="btn ghost" style="width:100%;margin-top:8px" onclick="_activeRoom='+ri+';_editAreaIdx=-1;goTo(\'screen-add-area\')">+ Add Measurements</button>';
-      h+='</div>';
-    } else {
-      // Case B — has measurements: full calc view
-      // Area-linked selections
-      (room.areas||[]).forEach(function(area){
-        var areaSelections=(room.selections||[]).filter(function(sel){ return sel.openingId===area.id||(sel.areaIds||[]).indexOf(area.id)!==-1; });
-        h+='<div style="border-top:1px solid var(--border);padding:12px 14px">';
-        h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">'
-          +'<span class="type-badge '+area.type+'">'+areaTypeName(area.type)+'</span>'
-          +'<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:800;color:var(--text)">'+esc(area.name)+'</div>'
-          +'<div style="font-size:12px;color:var(--text3);display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
-            +esc(area.width)+'" W × '+esc(area.height)+'" H'
-            +' &nbsp;·&nbsp; Qty&nbsp;<input type="number" min="1" value="'+area.qty+'" '
-            +'style="width:46px;font-size:12px;font-weight:700;padding:2px 5px;border:1px solid var(--border2);border-radius:4px;background:var(--bg);color:var(--text);-webkit-appearance:none" '
-            +'onchange="updateAreaQty('+ri+',\''+area.id+'\',this.value)" onclick="this.select()">'
-          +'</div></div>'
-          +'<button class="btn ghost sm" style="font-size:11px;padding:4px 8px;margin:0;flex-shrink:0" onclick="addSelForArea(\''+area.id+'\')">+ Selection</button>'
-          +'</div>';
-        if(areaSelections.length){
-          areaSelections.forEach(function(sel){ h+=renderSelCard(sel, area); });
-        } else {
-          h+='<div style="font-size:12px;color:var(--text3);padding:6px 0">No selections added yet.</div>';
-        }
-        h+='</div>';
-      });
-      // Standalone selections (no area linked, or linked area deleted)
-      var standalones=(room.selections||[]).filter(function(sel){
-        if(!(sel.areaIds||[]).length) return true;
-        return (sel.areaIds||[]).every(function(id){ return !(room.areas||[]).find(function(a){ return a.id===id; }); });
-      });
-      if(standalones.length){
-        h+='<div style="border-top:1px solid var(--border);padding:12px 14px">';
-        h+='<div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">General Selections</div>';
-        standalones.forEach(function(sel){ h+=renderSelCard(sel, null); });
-        h+='</div>';
-      }
-    }
-    if(rt>0) h+='<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg3);border-top:1px solid var(--border);padding:10px 16px">'
-      +'<span style="font-size:12px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">'+esc(room.name)+' Sub-total</span>'
-      +'<span style="font-size:15px;font-weight:900;color:var(--text)">'+fmt(rt)+'</span></div>';
-    h+='</div>';
-  });
-  // Overall discount UI
-  var sub=grandSubtotal(), od=APP.quote.overallDisc||0, odt=APP.quote.overallDiscType||'pct';
-  var savedAmt = odt==='pct' ? Math.round(sub*od/100) : Math.round(Math.min(od,sub));
-  var finalAmt = Math.round(Math.max(0, sub - savedAmt));
+  var q=APP.quote;
+  var tabBar='<div style="display:flex;border-bottom:2px solid var(--border);margin-bottom:14px">'
+    +'<button style="flex:1;padding:10px;font-size:13px;font-weight:800;border:none;background:none;cursor:pointer;border-bottom:2px solid '+(_sumTab==='quote'?'var(--red)':'transparent')+';color:'+(_sumTab==='quote'?'var(--red)':'var(--text3)')+';margin-bottom:-2px" onclick="setSumTab(\'quote\')">📋 Quote</button>'
+    +'<button style="flex:1;padding:10px;font-size:13px;font-weight:800;border:none;background:none;cursor:pointer;border-bottom:2px solid '+(_sumTab==='constants'?'var(--red)':'transparent')+';color:'+(_sumTab==='constants'?'var(--red)':'var(--text3)')+';margin-bottom:-2px" onclick="setSumTab(\'constants\')">⚙ Constants</button>'
+    +'</div>';
+  if(_sumTab==='constants'){
+    document.getElementById('sumContent').innerHTML='<div class="sum-layout"><div class="sum-main">'+tabBar+_renderSumConstantsTab()+'</div></div>';
+    return;
+  }
+  // Quote tab
+  var sub=grandSubtotal(), od=q.overallDisc||0, odt=q.overallDiscType||'pct';
+  var savedAmt=odt==='pct'?Math.round(sub*od/100):Math.round(Math.min(od,sub));
+  var finalAmt=Math.round(Math.max(0,sub-savedAmt));
   var asideH='<div class="grand-card">';
   if(od>0){
     asideH+='<div style="font-size:11px;color:var(--text3);text-align:center;margin-bottom:4px">Subtotal: ₹'+Number(sub).toLocaleString('en-IN')+'</div>';
@@ -5433,7 +5288,203 @@ function renderSum() {
   asideH+='<div class="terms-card"><div class="title">Terms &amp; Notes</div><div class="body">';
   CFG.terms.forEach(function(t){ asideH+='· '+esc(t)+'<br>'; });
   asideH+='</div></div>';
-  document.getElementById('sumContent').innerHTML='<div class="sum-layout"><div class="sum-main">'+h+'</div><div class="sum-aside">'+asideH+'</div></div>';
+  document.getElementById('sumContent').innerHTML='<div class="sum-layout"><div class="sum-main">'+tabBar+_renderSumQuoteTab(q)+'</div><div class="sum-aside">'+asideH+'</div></div>';
+}
+
+function _renderSumQuoteTab(q){
+  var h='';
+  // Quote ref + customer (compact)
+  h+='<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 14px;font-size:10px;color:var(--text3);text-align:center;margin-bottom:12px;letter-spacing:0.1em;text-transform:uppercase;font-weight:700">'
+    +'Quote Reference<span style="color:var(--text);font-weight:900;font-size:15px;display:block;margin-top:2px;letter-spacing:0.15em">'+esc(q.id||'—')+'</span></div>';
+  h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">';
+  h+='<div><div style="font-size:16px;font-weight:900;color:var(--text)">'+esc(q.customer.name||'—')+'</div>'
+    +'<div style="font-size:12px;color:var(--text2)">'+esc(q.customer.mobile||'—')+(q.customer.arch?' &nbsp;·&nbsp; Designer: '+esc(q.customer.arch):'')+'</div>'
+    +(q.customer.addr?'<div style="font-size:11px;color:var(--text3)">'+esc(q.customer.addr)+'</div>':'')
+    +'</div>';
+  h+='<div style="text-align:right;flex-shrink:0"><div style="font-size:11px;color:var(--text3)">'+esc(q.date)+'</div>'
+    +(q.staff?'<div style="font-size:11px;color:var(--text3)">'+esc(q.staff)+'</div>':'')+'</div>';
+  h+='</div>';
+  // Room accordion
+  q.rooms.forEach(function(room, ri){
+    var rt=roomTotal(room);
+    var isOpen=(_sumOpenRoom===ri);
+    h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:10px;overflow:hidden">';
+    h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;user-select:none'+(isOpen?';border-bottom:1px solid var(--border)':'')+'" onclick="toggleSumRoom('+ri+')">'
+      +'<span style="font-size:15px;font-weight:900;color:var(--text)">'+esc(room.name)+'</span>'
+      +'<span style="display:flex;align-items:center;gap:10px">'
+      +(rt>0?'<span style="font-size:14px;font-weight:900;color:var(--red)">'+fmt(rt)+'</span>':'')
+      +'<span style="font-size:13px;color:var(--text3);transition:transform 0.2s">'+(isOpen?'▼':'▶')+'</span>'
+      +'</span></div>';
+    if(isOpen){
+      h+='<div style="padding:14px 16px">';
+      h+=_renderSumRoomExpanded(q, room, ri);
+      var nextRi=ri+1<q.rooms.length?ri+1:null;
+      h+='<button class="btn" style="width:100%;margin-top:14px" onclick="_sumOpenRoom='+(nextRi!==null?nextRi:'null')+';renderSum()">Done with '+esc(room.name)+' ✓</button>';
+      h+='</div>';
+    }
+    h+='</div>';
+  });
+  return h;
+}
+
+function _renderSumRoomExpanded(q, room, ri){
+  var h='', areas=room.areas||[], sels=room.selections||[];
+  if(!areas.length){
+    sels.forEach(function(sel){ h+=_renderSumSelCard(ri, sel, null); });
+    if(!sels.length) h+='<div style="font-size:13px;color:var(--text3);padding:6px 0">No selections yet.</div>';
+    h+='<button class="btn ghost sm" style="width:100%;margin-top:8px" onclick="_activeRoom='+ri+';_editAreaIdx=-1;goTo(\'screen-add-area\')">+ Add Measurements</button>';
+    return h;
+  }
+  areas.forEach(function(area, ai){
+    var areaSelections=sels.filter(function(s){ return s.openingId===area.id||(s.areaIds||[]).indexOf(area.id)!==-1; });
+    var unmeasured=!area.width||!area.height;
+    h+='<div style="margin-bottom:16px">';
+    h+='<div style="display:flex;align-items:center;gap:8px;padding-bottom:6px;border-bottom:2px solid var(--border2);margin-bottom:8px">'
+      +'<span class="type-badge '+area.type+'">'+areaTypeName(area.type)+'</span>'
+      +'<span style="font-size:14px;font-weight:900;color:var(--text);flex:1">'+esc(area.name)+'</span>'
+      +(unmeasured?'<span style="font-size:11px;font-style:italic;color:var(--text3)">Not measured</span>':
+        '<span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:3px">'
+        +area.width+'"×'+area.height+'" Qty '
+        +'<input type="number" min="1" value="'+area.qty+'" '
+        +'style="width:38px;font-size:11px;padding:1px 4px;border:1px solid var(--border2);border-radius:3px;background:var(--bg);color:var(--text);-webkit-appearance:none" '
+        +'onchange="updateAreaQty('+ri+',\''+area.id+'\',this.value)" onclick="this.select()">'
+        +'</span>')
+      +'</div>';
+    if(areaSelections.length){
+      areaSelections.forEach(function(sel){ h+=_renderSumSelCard(ri, sel, area); });
+    } else {
+      h+='<div style="font-size:12px;color:var(--text3);margin-bottom:4px">No selection yet</div>';
+    }
+    h+='<button class="btn ghost sm" style="font-size:11px;padding:3px 10px;margin:4px 0 0" onclick="addSelForArea(\''+area.id+'\')">+ Add Selection</button>';
+    h+='</div>';
+  });
+  var standalones=sels.filter(function(sel){
+    if(!(sel.areaIds||[]).length) return true;
+    return (sel.areaIds||[]).every(function(id){ return !areas.find(function(a){ return a.id===id; }); });
+  });
+  if(standalones.length){
+    h+='<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px">';
+    h+='<div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">General</div>';
+    standalones.forEach(function(sel){ h+=_renderSumSelCard(ri, sel, null); });
+    h+='</div>';
+  }
+  return h;
+}
+
+function _renderSumSelCard(ri, sel, area){
+  var result=area?_calcSelForArea_detail(sel,area):_calcSelTotal_noArea(sel);
+  var _isFab=sel.category==='curtains_main'||sel.category==='curtains_sheer'||sel.category==='roman_blind';
+  var _isRom=sel.category==='roman_blind';
+  var sh='<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:8px">';
+  sh+='<div style="font-size:10px;font-weight:900;color:var(--text3);letter-spacing:1.5px;margin-bottom:6px">'+selCatLabel(sel.category).toUpperCase()+'</div>';
+  if(sel.trackType) sh+='<div style="font-size:13px;font-weight:900;color:var(--text);margin-bottom:6px">'+esc(sel.trackType)+'</div>';
+  activeProds(sel).forEach(function(p){
+    var prod=p.product||{};
+    var pname=[prod.brand,prod.catalog,prod.s_no].filter(Boolean).join(' / ')||(prod.manualName||'—');
+    var pi=sel.products.indexOf(p);
+    var widthCm=parseFloat(p.widthCm||prod.width)||0;
+    var disc=p.discount||0;
+    sh+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">'
+      +'<span style="font-size:13px;font-weight:800;color:var(--text);flex:1;min-width:120px">'+esc(pname)+(disc>0?' <span style="font-size:10px;color:#27ae60;font-weight:700">'+disc+'% off</span>':'')+'</span>'
+      +'<div style="display:flex;align-items:center;gap:4px;flex-shrink:0">'
+      +'<label style="font-size:10px;color:var(--text3)">MRP</label>'
+      +'<input type="number" class="inp" value="'+esc(String(prod.mrp||0))+'" '
+      +'style="width:68px;padding:3px 5px;font-size:12px;font-weight:700" '
+      +'onchange="updateProductMRP('+ri+',\''+sel.id+'\','+pi+',this.value)" onclick="this.select()"></div>'
+      +(widthCm?'<span style="font-size:11px;color:var(--text3)">'+widthCm+'cm</span>':'')
+      +'</div>';
+  });
+  if(result){
+    sh+='<div style="height:1px;background:var(--border);margin:6px 0"></div>';
+    sh+=_sumBreakdownLines(result);
+    sh+='<div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid var(--border);margin-top:4px">'
+      +'<span style="font-size:12px;font-weight:700;color:var(--text3)">Total</span>'
+      +'<span style="font-size:14px;font-weight:900;color:var(--red)">'+fmt(result.total)+'</span></div>';
+  }
+  if(_isFab||sel.trackType){
+    sh+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border2)">';
+    if(_isFab&&!_isRom){
+      var _sr=sel.rates&&sel.rates.stitchRate!=null?sel.rates.stitchRate:'';
+      sh+='<div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:2px">Stitch ₹/m</label>'
+        +'<input type="number" class="inp" placeholder="'+qrate('curtainStitchPerM')+'" value="'+_sr+'" style="padding:4px 6px;font-size:12px;font-weight:700" '
+        +'onchange="updateSelRate('+ri+',\''+sel.id+'\',\'stitchRate\',this.value)" onclick="this.select()"></div>';
+    }
+    if(_isRom){
+      var _srR=sel.rates&&sel.rates.stitchRateRoman!=null?sel.rates.stitchRateRoman:'';
+      sh+='<div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:2px">Stitch ₹/win</label>'
+        +'<input type="number" class="inp" placeholder="'+qrate('romanStitch')+'" value="'+_srR+'" style="padding:4px 6px;font-size:12px;font-weight:700" '
+        +'onchange="updateSelRate('+ri+',\''+sel.id+'\',\'stitchRateRoman\',this.value)" onclick="this.select()"></div>';
+    }
+    if(_isFab){
+      var _ir=sel.rates&&sel.rates.installRate!=null?sel.rates.installRate:'';
+      sh+='<div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:2px">Install ₹/win</label>'
+        +'<input type="number" class="inp" placeholder="'+(_isRom?qrate('romanInstall'):qrate('curtainInstall'))+'" value="'+_ir+'" style="padding:4px 6px;font-size:12px;font-weight:700" '
+        +'onchange="updateSelRate('+ri+',\''+sel.id+'\',\'installRate\',this.value)" onclick="this.select()"></div>';
+    }
+    if(sel.trackType){
+      var _tr=sel.rates&&sel.rates.trackInstallRate!=null?sel.rates.trackInstallRate:'';
+      sh+='<div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:2px">Track ₹/win</label>'
+        +'<input type="number" class="inp" placeholder="'+qrate('trackInstall')+'" value="'+_tr+'" style="padding:4px 6px;font-size:12px;font-weight:700" '
+        +'onchange="updateSelRate('+ri+',\''+sel.id+'\',\'trackInstallRate\',this.value)" onclick="this.select()"></div>';
+    }
+    sh+='</div>';
+  }
+  sh+='</div>';
+  return sh;
+}
+
+function _renderSumConstantsTab(){
+  function cRow(label, key, unit, isPercent){
+    var raw=qrate(key);
+    var displayVal=isPercent?Math.round((raw-1)*100):raw;
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">'
+      +'<label style="font-size:12px;color:var(--text2)">'+label+'</label>'
+      +'<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
+      +'<input type="number" class="inp" value="'+displayVal+'" style="width:72px;padding:4px 6px;font-size:13px;font-weight:700;text-align:right" '
+      +'onchange="updateQuoteRate(\''+key+'\','+(isPercent?'(parseFloat(this.value)||0)/100+1':'this.value')+')" onclick="this.select()">'
+      +'<span style="font-size:11px;color:var(--text3);width:56px">'+unit+'</span>'
+      +'</div></div>';
+  }
+  function cSection(title){
+    return '<div style="font-size:10px;font-weight:900;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin:18px 0 2px">'+title+'</div>';
+  }
+  var h='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px">';
+  h+='<div style="font-size:12px;color:var(--text3);margin-bottom:4px">Changes here apply to all selections in this quote. Per-selection overrides still take priority.</div>';
+  h+=cSection('Curtains');
+  h+=cRow('Stitch rate','curtainStitchPerM','₹/m');
+  h+=cRow('Stitch (mix/border)','curtainStitchMixPerM','₹/m');
+  h+=cRow('Install','curtainInstall','₹/window');
+  h+=cRow('Panel width','curtainPanelW','inches');
+  h+=cRow('Lining – Regular','curtainLiningRegular','₹/m');
+  h+=cRow('Lining – Blackout','curtainLiningBlackout','₹/m');
+  h+=cRow('Lining – Dimout','curtainLiningDimout','₹/m');
+  h+=cSection('Roman Blind');
+  h+=cRow('Stitch','romanStitch','₹/window');
+  h+=cRow('Mechanism','romanMech','₹/sqft');
+  h+=cRow('Install','romanInstall','₹/window');
+  h+=cRow('Lining – Regular','romanLiningRegular','₹/m');
+  h+=cRow('Lining – Blackout','romanLiningBlackout','₹/m');
+  h+=cRow('Lining – Dimout','romanLiningDimout','₹/m');
+  h+=cSection('Tracks & Rods');
+  h+=cRow('Install','trackInstall','₹/window');
+  h+=cSection('Headboard');
+  h+=cRow('Making rate','headboardAreaRate','₹/sqft');
+  h+=cRow('Panel width','headboardPanelW','inches');
+  h+=cRow('Overhang','headboardOverhang','inches');
+  h+=cRow('Wastage','headboardWastage','%',true);
+  h+=cSection('Flooring');
+  h+=cRow('Wastage','flooringWastage','%',true);
+  h+=cRow('Install – Wooden','flooringInstallWooden','₹/sqft');
+  h+=cRow('Install – Carpet','flooringInstallCarpet','₹/sqft');
+  h+=cRow('Install – Vinyl','flooringInstallVinyl','₹/sqft');
+  h+=cSection('Wallpaper');
+  h+=cRow('Wastage','wallpaperWastage','%',true);
+  h+=cRow('Labour per roll','wallpaperRollLabour','₹/roll');
+  h+=cRow('Custom labour','wallpaperCustomLabour','₹/sqft');
+  h+='<button class="btn ghost" style="width:100%;margin-top:18px;font-size:12px;color:var(--text3)" '
+    +'onclick="if(confirm(\'Reset all constants to defaults for this quote?\')){APP.quote.rates={};saveDraft();renderSum();}">Reset to Defaults</button>';
+  h+='</div>';
+  return h;
 }
 
 // ── PRINT HEADER (shared) ────────────────────────────────────────────────────
