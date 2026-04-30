@@ -10,7 +10,6 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#faf8f5;min-height:100vh;-webkit-font-smoothing:antialiased;padding-bottom:120px}
-/* Desktop max-width centering */
 .hdr,.search-wrap,.cat-grid,.results-wrap,.wrap{max-width:680px;margin-left:auto;margin-right:auto}
 @media(min-width:768px){
   body{padding-bottom:80px}
@@ -131,8 +130,6 @@ button:focus-visible,input:focus-visible{outline:2px solid #c0392b;outline-offse
 .pk.del{font-size:20px;color:#a89890}
 .pk.ghost{background:transparent;border-color:transparent;pointer-events:none}
 .pin-cancel{display:block;width:100%;background:none;border:none;color:#a89890;font-size:14px;padding:10px;cursor:pointer}
-
-/* ── QUOTE MODE BANNER ── */
 #quoteBanner{display:none;position:sticky;top:0;z-index:100;background:#eef9f2;border-bottom:2px solid #27ae60}
 #quoteBanner.active{display:block}
 .qb-top{display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
@@ -142,9 +139,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #c0392b;outline-offse
 .qb-tabs{display:flex;background:#e4f5eb;border-top:1px solid #c5e1cc}
 .qb-tab{flex:1;padding:11px 8px;font-size:13px;font-weight:700;color:#a89890;border:none;background:transparent;cursor:pointer;border-bottom:3px solid transparent;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .qb-tab.active{color:#1c1612;border-bottom-color:#c0392b}
-/* Quote select button */
 .quote-sel-btn{width:100%;background:#c0392b;color:#fff;border:none;border-radius:11px;padding:15px;font-size:15px;font-weight:800;cursor:pointer;display:block;margin:10px 0 4px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;letter-spacing:0.5px}
-/* Result cards */
 .res-card{background:#ffffff;border:1px solid #e0dbd3;border-radius:14px;padding:16px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
 .rc-badge{font-size:10px;font-weight:800;color:#c0392b;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
 .rc-hdr{font-size:19px;font-weight:900;color:#1c1612;margin-bottom:10px;line-height:1.3;word-break:break-word}
@@ -157,7 +152,6 @@ button:focus-visible,input:focus-visible{outline:2px solid #c0392b;outline-offse
 .rc-mrp-val{font-size:40px;font-weight:900;color:#000;letter-spacing:-2px}
 .quote-sel-btn:active{opacity:0.85;transform:scale(0.98)}
 </style>
-<!-- Firebase compat SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -202,11 +196,6 @@ var SK  = "darla_staff_v1";
 var SAK = "darla_search_v1";
 var BASE= window.location.origin+window.location.pathname;
 
-// ── CATEGORY DEFINITIONS ──
-// inputs: search fields in order
-// rtdbPath: Firebase path (defaults to key if omitted)
-// lvl4Field: Firebase field name for 4th-level client-side filter
-// mrpLabel: label for MRP display
 var CATS = {
   fabric: {
     label:"Fabric", icon:"&#129525;", codeSearch:false,
@@ -230,8 +219,8 @@ var CATS = {
   },
   beds: {
     label:"Beds", icon:"&#128716;", codeSearch:false,
-  inputs:["Brand","Model","Thickness"],
-  bedsMode:true, mrpLabel:"MRP"
+    inputs:["Brand","Model","Size"],
+    bedsMode:true, mrpLabel:"MRP"
   },
   flooring: {
     label:"Flooring", icon:"&#128305;", codeSearch:false,
@@ -250,7 +239,6 @@ var CATS = {
   }
 };
 
-// ── SANITIZERS ──
 function sk(str){
   return String(str||"").trim()
     .replace(/[^a-zA-Z0-9\-_]/g,"_")
@@ -267,9 +255,8 @@ function gv(r,key){
   return r[s]||r[key]||"";
 }
 function getParam(n){return new URLSearchParams(window.location.search).get(n)||"";}
-// ── QUOTE MODE GLOBALS ──
-var QUOTE_HANGERS  = false;  // alias for ALLOW_HANGERS  // true when curtain component (show Fabric+Hangers tabs)
 
+var QUOTE_HANGERS = false;
 
 function esc(t){
   if(!t)return"";
@@ -279,7 +266,7 @@ function spinner(m){return '<div class="spinner"><div class="spinner-ring"></div
 function isStaff(){
   var u=AUTH.currentUser;
   if(u && !u.isAnonymous) return true;
-  return localStorage.getItem(SK)==="1";  // fallback for offline
+  return localStorage.getItem(SK)==="1";
 }
 function hasSearchAccess(){
   var u=AUTH.currentUser;
@@ -287,7 +274,6 @@ function hasSearchAccess(){
   return localStorage.getItem(SAK)==="1";
 }
 
-// Sync Firebase Auth state with localStorage flags so renderRows works before observer fires
 AUTH.onAuthStateChanged(function(user){
   if(user && !user.isAnonymous){
     localStorage.setItem(SK,"1"); localStorage.setItem(SAK,"1");
@@ -300,7 +286,6 @@ AUTH.onAuthStateChanged(function(user){
   }
 });
 
-// ── INIT ──
 window.addEventListener("DOMContentLoaded",function(){
   var code     = getParam("code").trim().toUpperCase();
   var category = getParam("category").trim().toLowerCase() || "fabric";
@@ -310,8 +295,8 @@ window.addEventListener("DOMContentLoaded",function(){
     QUOTE_MODE    = true;
     ALLOW_HANGERS = (getParam("allowHangers") === "1");
     ACTIVE_CAT    = category;
-    initQuoteBanner();          // populate persistent banner div
-    showAdvancedSearch(category); // load search immediately
+    initQuoteBanner();
+    showAdvancedSearch(category);
   } else if(code){
     showProductPage(code, category);
   } else {
@@ -319,11 +304,6 @@ window.addEventListener("DOMContentLoaded",function(){
   }
 });
 
-
-
-
-
-// ── HEADER ──
 function hdr(title,code,badge){
   return '<div class="hdr">'
     +'<img class="hdr-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display=\'none\'" alt="Darla">'
@@ -334,7 +314,6 @@ function hdr(title,code,badge){
     +'</div>';
 }
 
-// ── HOME ──
 function showHome(){
   var html=hdr("Product Lookup","",false)
     +'<div style="padding:16px 12px 8px;text-align:center">'
@@ -355,11 +334,9 @@ function goSearch(cat){
   else showSearchGate(cat);
 }
 
-// ── PIN GATE ──
 var gateEn="",gateCat="",gateStaff=null;
 function showSearchGate(cat){
   gateCat=cat; gateEn=""; gateStaff=null;
-  // Load staff list from Firestore (public read)
   var staffOpts='<option value="">— Select Name —</option>';
   try{ var sc=JSON.parse(localStorage.getItem("darla_staff_cache")||"[]"); sc.forEach(function(s){ staffOpts+='<option value="'+esc(s.name)+'">'+esc(s.name)+'</option>'; }); }catch(e){}
   document.getElementById("app").innerHTML=
@@ -380,7 +357,6 @@ function showSearchGate(cat){
     +'<div id="gateErr" style="color:#e74c3c;font-size:13px;font-weight:600;min-height:18px;margin-top:8px"></div>'
     +'<button class="pin-cancel" onclick="showHome()" style="color:#555;margin-top:8px">&#8592; Back</button>'
     +'</div>';
-  // Also load fresh staff list from Firestore (simple get — no composite index needed)
   DB.collection("staffDirectory").get()
     .then(function(snap){
       var list=[];
@@ -427,16 +403,13 @@ function gChk(){
     });
 }
 
-// ── SEARCH STATE ──
 var BCM={},BCSM={},allBrands=[],currentCat="fabric",searchCtx={};
 
-// ── ADVANCED SEARCH ──
 function showAdvancedSearch(cat){
   currentCat=String(cat||"fabric").toLowerCase();
   var ci=CATS[currentCat]||CATS.fabric;
   BCM={};BCSM={};allBrands=[];searchCtx={};
 
-  // Code search (Hangers)
   if(ci.codeSearch){
     document.getElementById("app").innerHTML=
       hdr(ci.label+" Search","",true)
@@ -457,7 +430,6 @@ function showAdvancedSearch(cat){
     return;
   }
 
-  // Build dynamic input fields
   var fieldsHtml='';
   ci.inputs.forEach(function(label,idx){
     var fid=toFid(label);
@@ -484,7 +456,6 @@ function showAdvancedSearch(cat){
 }
 function toFid(label){ return label.toLowerCase().replace(/[^a-z0-9]/g,"_"); }
 
-// ── LOAD META ──
 function loadMeta(attempt){
   if(window._metaLoading&&attempt===1)return;
   if(attempt===1)window._metaLoading=true;
@@ -504,7 +475,6 @@ function loadMeta(attempt){
       if(!d||!d.brandList||!d.brandList.length){
         st2.textContent="No data yet for this category.";return;
       }
-      // Populate brand/catalog/sno maps
       allBrands=d.brandList.map(function(b){return b.label||b;}).sort();
       d.brandList.forEach(function(b){
         var bKey=b.key||b,bLabel=b.label||b;
@@ -514,7 +484,6 @@ function loadMeta(attempt){
           BCSM[bLabel+"|||"+cLabel]=(d.bcsmArr[bKey+"|||"+cKey]||[]).map(function(s){return s.label||s;});
         });
       });
-      // Enable first field
       var ci=CATS[currentCat];
       var f0=document.getElementById("f_"+toFid(ci.inputs[0]));
       if(f0){f0.disabled=false;f0.placeholder="Type to search...";}
@@ -535,7 +504,6 @@ function loadMeta(attempt){
     });
 }
 
-// ── BIND INPUT EVENTS ──
 function bindInputEvents(){
   var ci=CATS[currentCat];if(!ci)return;
   ci.inputs.forEach(function(label,idx){
@@ -571,7 +539,6 @@ function pickOpt(idx,val){
   var drop=document.getElementById("fd_"+fid);
   if(el)el.value=val;
   if(drop)drop.classList.remove("show");
-  // Enable next field, reset subsequent
   for(var j=idx+1;j<ci.inputs.length;j++){
     var jEl=document.getElementById("f_"+toFid(ci.inputs[j]));
     if(jEl){
@@ -579,7 +546,6 @@ function pickOpt(idx,val){
       else{jEl.value="";jEl.disabled=true;}
     }
   }
-  // After 3rd field picked: fetch level-4 opts or blinds mechanisms
   if(idx===2){
     var brand=getFieldVal(ci.inputs[0]);
     var lvl1=getFieldVal(ci.inputs[1]);
@@ -602,10 +568,11 @@ function pickOpt(idx,val){
         })
         .catch(function(){var l4=document.getElementById("f_"+toFid(ci.inputs[3]));if(l4){l4.disabled=false;l4.placeholder="Type to search...";}});
     } else if(currentCat==="blinds"){
-  fetchBlindsMechanisms(bKey,cKey,sKey);
-} else if(currentCat==="beds"){
-  fetchBedsSizes(bKey,cKey,sKey);
-}  }
+      fetchBlindsMechanisms(bKey,cKey,sKey);
+    } else if(currentCat==="beds"){
+      fetchBedsThickness(bKey,cKey,sKey);
+    }
+  }
 }
 
 function bindLvl4Input(){
@@ -644,32 +611,32 @@ function fetchBlindsMechanisms(bKey,cKey,sKey){
     })
     .catch(function(){});
 }
-function fetchBedsSizes(bKey,cKey,sKey){
-  var sw=document.getElementById("size_wrap");if(sw)sw.remove();
+
+function fetchBedsThickness(bKey,cKey,sKey){
+  var tw=document.getElementById("thickness_wrap");if(tw)tw.remove();
   fetch(FB+"/beds/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+"/"+encodeURIComponent(sKey)+".json")
     .then(function(r){return r.json();})
     .then(function(data){
       var res=[];function flat(o){if(Array.isArray(o))o.forEach(function(x){if(x&&x.code)res.push(x);});else if(o&&typeof o==="object")Object.values(o).forEach(flat);}flat(data);
       var seen={},unique=[];
-      res.forEach(function(x){var v=x.size||gv(x,"size")||"";if(v&&!seen[v]){seen[v]=true;unique.push(v);}});
+      res.forEach(function(x){var v=x.thickness||gv(x,"thickness")||"";if(v&&!seen[v]){seen[v]=true;unique.push(v);}});
       unique.sort();if(!unique.length)return;
       var card=document.querySelector(".search-card");if(!card)return;
       var btn=card.querySelector(".submit-btn");if(!btn)return;
-      var wrap=document.createElement("div");wrap.id="size_wrap";
-      wrap.innerHTML='<div class="field-lbl">Size</div><div class="lbl-line-sm"></div>'
-        +'<div class="autocomplete-wrap"><input class="ac-input" id="f_size" placeholder="Select size..." autocomplete="off" spellcheck="false">'
-        +'<div class="dropdown" id="fd_size"></div></div>';
+      var wrap=document.createElement("div");wrap.id="thickness_wrap";
+      wrap.innerHTML='<div class="field-lbl">Thickness</div><div class="lbl-line-sm"></div>'
+        +'<div class="autocomplete-wrap"><input class="ac-input" id="f_thickness" placeholder="Select thickness..." autocomplete="off" spellcheck="false">'
+        +'<div class="dropdown" id="fd_thickness"></div></div>';
       card.insertBefore(wrap,btn);
-      var sel=document.getElementById("f_size");
-      var sdrop=document.getElementById("fd_size");
-      sel.addEventListener("focus",function(){showDrop(sdrop,unique,sel,function(v){sel.value=v;sdrop.classList.remove("show");});});
-      sel.addEventListener("input",function(){showDrop(sdrop,filt(unique,this.value),sel,function(v){sel.value=v;sdrop.classList.remove("show");});});
-      sel.addEventListener("blur",function(){setTimeout(function(){sdrop.classList.remove("show");},200);});
+      var tel=document.getElementById("f_thickness");
+      var tdrop=document.getElementById("fd_thickness");
+      tel.addEventListener("focus",function(){showDrop(tdrop,unique,tel,function(v){tel.value=v;tdrop.classList.remove("show");});});
+      tel.addEventListener("input",function(){showDrop(tdrop,filt(unique,this.value),tel,function(v){tel.value=v;tdrop.classList.remove("show");});});
+      tel.addEventListener("blur",function(){setTimeout(function(){tdrop.classList.remove("show");},200);});
     })
     .catch(function(){});
 }
-  
-// ── SEARCH ──
+
 function doCodeSearch(){
   var inp=document.getElementById("codeInp");if(!inp)return;
   var code=codeKey(inp.value.trim());if(!code)return;
@@ -720,7 +687,7 @@ function doSearch(){
         else if(obj&&typeof obj==="object")Object.values(obj).forEach(function(v){flatten(v);});
       }
       flatten(data);
-      // Filter by 4th-level field if provided
+      // Filter by 4th-level field if provided (flooring, motors, rods)
       if(ci.inputs.length>=4&&ci.lvl4Field){
         var v4=searchCtx[toFid(ci.inputs[3])]||"";
         if(v4){var fk=ci.lvl4Field;results=results.filter(function(x){return(gv(x,fk)||x[fk]||"").toLowerCase()===v4.toLowerCase();});}
@@ -730,12 +697,12 @@ function doSearch(){
         var mv=searchCtx["mechanism"];
         results=results.filter(function(x){return(x.mechanism||gv(x,"mechanism")||"").toLowerCase()===mv.toLowerCase();});
       }
-      // Filter by size for beds
+      // Filter by thickness for beds
       if(currentCat==="beds"){
-        var sv=document.getElementById("f_size");
-        if(sv&&sv.value.trim()){
-          var sz=sv.value.trim();
-          results=results.filter(function(x){return(x.size||gv(x,"size")||"").toLowerCase()===sz.toLowerCase();});
+        var tv=document.getElementById("f_thickness");
+        if(tv&&tv.value.trim()){
+          var thk=tv.value.trim();
+          results=results.filter(function(x){return(x.thickness||gv(x,"thickness")||"").toLowerCase()===thk.toLowerCase();});
         }
       }
       renderRows(results,currentCat);
@@ -753,14 +720,13 @@ function clearSearch(){
       if(el){el.value="";if(idx>0)el.disabled=true;}
     });
     var mw=document.getElementById("mech_wrap");if(mw)mw.remove();
-    var sw=document.getElementById("size_wrap");if(sw)sw.remove();
+    var tw=document.getElementById("thickness_wrap");if(tw)tw.remove();
     window._lvl4Opts=[];
   }
   searchCtx={};
   var r=document.getElementById("results");if(r)r.innerHTML="";
 }
 
-// ── PRODUCT PAGE (QR scan) ──
 function showProductPage(code,cat){
   var safeCode=codeKey(code);
   var safeCat=String(cat||"fabric").toLowerCase();
@@ -780,7 +746,6 @@ function showProductPage(code,cat){
     });
 }
 
-// ── RENDER ──
 function renderRows(rows,cat){
   var el=document.getElementById("results");if(!el)return;
   if(!rows||!rows.length){
@@ -832,11 +797,11 @@ function buildResultCard(r,cat,ci,staff,ridx){
     html+=rcRow("Size",r.size);
     html+=rcMrp(r.mrp,ci.mrpLabel);
   } else if(cat==="beds"){
-  var h=[r.brand,r.model].filter(Boolean).join(" / ");
-  html+='<div class="rc-hdr">'+esc(h)+'</div>';
-  html+=rcRow("Thickness",r.thickness||gv(r,"thickness"));
-  html+=rcRow("Size",r.size);
-  html+=rcMrp(r.mrp,ci.mrpLabel);
+    var h=[r.brand,r.model].filter(Boolean).join(" / ");
+    html+='<div class="rc-hdr">'+esc(h)+'</div>';
+    html+=rcRow("Size",r.size);
+    html+=rcRow("Thickness",r.thickness||gv(r,"thickness"));
+    html+=rcMrp(r.mrp,ci.mrpLabel);
   } else if(cat==="flooring"){
     html+='<div class="rc-hdr">'+esc(r.category||"")+'</div>';
     html+=rcRow("Brand",r.brand);
@@ -866,6 +831,7 @@ function buildResultCard(r,cat,ci,staff,ridx){
   if(QUOTE_MODE)html+='<button class="quote-sel-btn" onclick="quotePickRow('+ridx+')">&#10003;&nbsp; Select This Product</button>';
   return html+'</div>';
 }
+
 function filt(arr,q){
   if(!arr||!arr.length)return[];
   if(!q||!q.trim())return arr.slice(0,50);
@@ -884,17 +850,14 @@ function showDrop(drop,items,inp,onSel){
 }
 function selItem(el,ev){ev.preventDefault();var cb=el.parentElement._cb;if(cb)cb(el.textContent);}
 
-// ── STAFF PIN ──
 var staffEn="", staffPinStaff=null;
 function openStaffPin(){
   staffEn=""; staffPinStaff=null; sDots();
-  // Populate dropdown from cache
   var sel=document.getElementById("staffPinNameSel");
   if(sel){
     sel.innerHTML='<option value="">— Select your name —</option>';
     try{ var sc=JSON.parse(localStorage.getItem("darla_staff_cache")||"[]");
       sc.forEach(function(s){ var o=document.createElement("option"); o.value=s.name; o.textContent=s.name; sel.appendChild(o); }); }catch(e){}
-    // If already know who this is from previous session
     try{ var ss=JSON.parse(localStorage.getItem("darla_staff")||"null"); if(ss&&ss.name){ sel.value=ss.name; staffPinStaff=ss; }}catch(e){}
   }
   document.getElementById("pOv").classList.add("open");
@@ -921,10 +884,7 @@ function sDots(err){
   }
 }
 
-// quoteSelectRow deprecated — quotePickRow(idx) used instead
-
 function quoteSelectProduct(product){
-  // Save selected product and return to quote
   localStorage.setItem("darla_selected_product", JSON.stringify({
     code:         product.code||"",
     brand:        product.brand||"",
@@ -939,37 +899,23 @@ function quoteSelectProduct(product){
   window.location.href = "quote.html";
 }
 
-// ═══════════════════════════════════════════════════════════════
-// QUOTE MODE — globals + clean implementation
-// ═══════════════════════════════════════════════════════════════
-
-// Switch tab — re-render tabs with new active state, load new category
-
-// Called by showAdvancedSearch — if in quote mode with hangers, 
-// inject the search UI into qSearchBody (not replacing the whole #app)
 var _origShowAdvanced = null;
 
-// Wrap showAdvancedSearch to keep banner+tabs intact in quote+hangers mode
 (function() {
   var _orig = showAdvancedSearch;
   showAdvancedSearch = function(cat) {
     if (QUOTE_MODE && QUOTE_HANGERS) {
-      // Let showAdvancedSearch render into #app first
       _orig(cat);
-      // Then move its content into qSearchBody, restoring banner+tabs
       var app = document.getElementById("app");
       var body = document.getElementById("qSearchBody");
       if (!body) {
-        // qSearchBody was wiped — re-render tabs then move content
         var content = app.innerHTML;
         _renderQuoteTabs(cat);
         var qs = document.getElementById("qSearchBody");
         if (qs) qs.innerHTML = content;
       }
-      // Add cancel button to header if not already there
       injectCancelToHeader();
     } else if (QUOTE_MODE) {
-      // Non-hangers quote mode — just add the cancel button
       _orig(cat);
       injectCancelToHeader();
     } else {
@@ -979,7 +925,7 @@ var _origShowAdvanced = null;
 })();
 
 function injectCancelToHeader() {
-  if (document.getElementById("qCancelBtn")) return; // already added
+  if (document.getElementById("qCancelBtn")) return;
   var hdrEl = document.querySelector(".hdr");
   if (!hdrEl) return;
   var btn = document.createElement("button");
@@ -996,7 +942,6 @@ function goSearchQuote(cat) {
   showAdvancedSearch(cat);
   injectCancelToHeader();
 }
-
 
 var PIN_SUFFIX = '!drla';
 
@@ -1018,17 +963,11 @@ function sChk(){
     });
 }
 
-// ── QUOTE MODE: inject banner+tabs after any search renders ──────
-
 function switchQuoteTab(cat){
   ACTIVE_QUOTE_CAT = cat;
   showAdvancedSearch(cat);
 }
 
-
-// ════════════════════════════════════════════════════════════
-// QUOTE MODE — clean implementation
-// ════════════════════════════════════════════════════════════
 var QUOTE_MODE = false;
 var ALLOW_HANGERS = false;
 var ACTIVE_CAT = "fabric";
@@ -1053,7 +992,6 @@ function initQuoteBanner(){
 
 function switchCat(cat){
   ACTIVE_CAT = cat;
-  // Update tab styles
   var tf = document.getElementById("qbTabFab");
   var th = document.getElementById("qbTabHan");
   if(tf){ tf.className = "qb-tab" + (cat==="fabric"?" active":""); }
@@ -1061,14 +999,12 @@ function switchCat(cat){
   showAdvancedSearch(cat);
 }
 
-// Called from Select button in results
 function quotePickRow(idx){
   var rows = window._rows;
   if(!rows || idx < 0 || idx >= rows.length){ showToast("Error — please try again"); return; }
   quoteSelectProduct(rows[idx]);
 }
 
-// Show a toast inside product search
 function showToast(msg){
   var t = document.createElement("div");
   t.textContent = msg;
@@ -1076,7 +1012,6 @@ function showToast(msg){
   document.body.appendChild(t);
   setTimeout(function(){ if(t.parentNode)t.parentNode.removeChild(t); }, 2500);
 }
-
 </script>
 </body>
 </html>
