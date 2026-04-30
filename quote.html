@@ -3509,17 +3509,13 @@ function renderBld() {
 function addMeasForRoom(ri){
   _activeRoom=ri;
   var r=APP.quote.rooms[ri]; if(!r) return;
-  var areas=r.areas||[];
-  // collect types that already have at least one measured area
-  var measuredTypes={};
+  var areas=r.areas||[], sels=r.selections||[];
+  function hasSel(a){ return sels.some(function(s){ return s.openingId===a.id||(s.areaIds||[]).indexOf(a.id)!==-1; }); }
+  // first priority: unmeasured AND already has a selection (quote needs dims to calculate)
   for(var ai=0;ai<areas.length;ai++){
-    if(areas[ai].width&&areas[ai].height) measuredTypes[areas[ai].type]=true;
+    if((!areas[ai].width||!areas[ai].height)&&hasSel(areas[ai])){ openEditArea(ai); return; }
   }
-  // first pass: unmeasured area of a type already being measured (finish the set first)
-  for(var ai=0;ai<areas.length;ai++){
-    if((!areas[ai].width||!areas[ai].height)&&measuredTypes[areas[ai].type]){ openEditArea(ai); return; }
-  }
-  // second pass: any unmeasured area
+  // second priority: any other unmeasured area
   for(var ai=0;ai<areas.length;ai++){
     if(!areas[ai].width||!areas[ai].height){ openEditArea(ai); return; }
   }
