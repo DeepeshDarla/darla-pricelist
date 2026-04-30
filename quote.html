@@ -3817,6 +3817,19 @@ function _renderAreaPostSave(area,isNew){
       }
     }
   }
+  // Unmeasured areas that already have a selection — show as "measure next" list
+  var pendingMeas=[];
+  if(room){
+    (room.areas||[]).forEach(function(a,ai){
+      if(a.id!==area.id&&(!a.width||!a.height)&&
+         (room.selections||[]).some(function(s){ return s.openingId===a.id||(s.areaIds||[]).indexOf(a.id)!==-1; })){
+        pendingMeas.push({area:a,ai:ai});
+      }
+    });
+  }
+  var areaTypeLabel={'curtains':'Curtains','roman_blinds':'Roman Blind','blinds':'Blind',
+    'headboard':'Headboard','mattress':'Mattress','flooring':'Flooring','wallpaper':'Wallpaper'};
+
   var h='<div class="post-save-card"><div class="post-save-icon">✅</div>'
     +'<div class="post-save-title">'+esc(area.name)+' '+(isNew?'added':'updated')+'</div>'
     +'<div class="post-save-sub">'+area.width+'" W × '+area.height+'" H · Qty '+area.qty+'</div>';
@@ -3837,8 +3850,23 @@ function _renderAreaPostSave(area,isNew){
       +'<button class="btn ghost" style="margin:0;font-size:12px" onclick="document.getElementById(\'copySelPrompt\').style.display=\'none\'">No, skip</button>'
       +'</div></div>';
   }
+  // "Measure next" — list unmeasured areas that already have selections
+  if(pendingMeas.length){
+    h+='<div style="margin:14px 0 6px">'
+      +'<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">📐 Measure next</div>';
+    pendingMeas.forEach(function(pm){
+      var typeLabel=areaTypeLabel[pm.area.type]||pm.area.type||'';
+      h+='<button class="btn ghost" style="width:100%;text-align:left;margin-bottom:6px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px" '
+        +'onclick="openEditArea('+pm.ai+')">'
+        +'<span style="font-size:13px;font-weight:800">'+esc(pm.area.name)+'</span>'
+        +'<span style="font-size:11px;color:var(--text3);white-space:nowrap">'+esc(typeLabel)+' →</span>'
+        +'</button>';
+    });
+    h+='</div>';
+  }
   h+='<div class="post-save-actions">';
-  h+='<button class="btn sm" style="width:100%" onclick="_editAreaIdx=-1;renderAddArea()">+ Add Another Measurement</button>';
+  var addNewLabel='+ Add New '+(areaTypeLabel[area.type]||'Area');
+  h+='<button class="btn sm" style="width:100%" onclick="_editAreaIdx=-1;renderAddArea()">'+addNewLabel+'</button>';
   if(!copySrcArea){
     h+='<button class="btn sm" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--border)" onclick="addSelForArea(\''+area.id+'\')">'+(linked.length?'+ Add Another Selection':'+ Add Selection →')+'</button>';
   }
