@@ -230,8 +230,8 @@ var CATS = {
   },
   beds: {
     label:"Beds", icon:"&#128716;", codeSearch:false,
-    inputs:["Brand","Model","Size"],
-    mrpLabel:"MRP"
+  inputs:["Brand","Model","Thickness","Size"],
+  lvl4Field:"size", mrpLabel:"MRP"
   },
   flooring: {
     label:"Flooring", icon:"&#128305;", codeSearch:false,
@@ -799,10 +799,11 @@ function buildResultCard(r,cat,ci,staff,ridx){
     html+=rcRow("Size",r.size);
     html+=rcMrp(r.mrp,ci.mrpLabel);
   } else if(cat==="beds"){
-    var h=[r.brand,r.model].filter(Boolean).join(" / ");
-    html+='<div class="rc-hdr">'+esc(h)+'</div>';
-    html+=rcRow("Size",r.size);
-    html+=rcMrp(r.mrp,ci.mrpLabel);
+  var h=[r.brand,r.model].filter(Boolean).join(" / ");
+  html+='<div class="rc-hdr">'+esc(h)+'</div>';
+  html+=rcRow("Thickness",r.thickness||gv(r,"thickness"));
+  html+=rcRow("Size",r.size);
+  html+=rcMrp(r.mrp,ci.mrpLabel);
   } else if(cat==="flooring"){
     html+='<div class="rc-hdr">'+esc(r.category||"")+'</div>';
     html+=rcRow("Brand",r.brand);
