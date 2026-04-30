@@ -3940,6 +3940,30 @@ function selStep2(){
   _selStep=2; renderAddSelection();
 }
 function selStep3(){ _selStep=3; renderAddSelection(); }
+function _updateOpeningName(areaId, val){
+  var room=APP.quote.rooms[_activeRoom]; if(!room) return;
+  var area=(room.areas||[]).find(function(a){ return a.id===areaId; }); if(!area) return;
+  area.name=(val.trim())||area.name;
+  saveDraftLocal();
+}
+function _changeAreaAndReset(){
+  var room=APP.quote.rooms[_activeRoom]; if(!room) return;
+  var areaId=_selOpeningId||(_selAreaIds&&_selAreaIds[0])||null;
+  if(areaId){
+    var areaIdx=-1;
+    for(var i=0;i<(room.areas||[]).length;i++){ if(room.areas[i].id===areaId){areaIdx=i;break;} }
+    if(areaIdx>=0){
+      var a=room.areas[areaIdx];
+      var isEmpty=(!a.width&&!a.height);
+      var hasLinkedSel=(room.selections||[]).some(function(s){
+        return s.openingId===a.id||(s.areaIds||[]).indexOf(a.id)!==-1;
+      });
+      if(isEmpty&&!hasLinkedSel){ room.areas.splice(areaIdx,1); saveDraftLocal(); }
+    }
+  }
+  _selOpeningId=null; _selAreaIds=[]; _selAreaLocked=false; _selStep=1;
+  renderAddSelection();
+}
 function resetSelForm(){
   _selCategory=''; _selProducts=[]; _selStitch=''; _selStitchStyle='regular'; _selFabricSplit=[];
   _selBoxSqft=''; _selRollSqft=''; _selTrackType=''; _selRates={}; _selLining='none'; _selAreaIds=[]; _selOpeningId=null; _selRemarks=''; _editSelIdx=-1;
@@ -4267,10 +4291,10 @@ function renderAddSelection(){
       h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">'
         +'<div style="display:flex;align-items:center;gap:10px">'
         +'<span style="font-size:16px">📌</span>'
-        +'<div><div style="font-size:13px;font-weight:800;color:var(--text)">'+esc(_chosenOpening.name)+'</div>'
+        +'<div><input class="inp" value="'+esc(_chosenOpening.name)+'" style="font-size:13px;font-weight:800;padding:3px 6px;width:140px;margin-bottom:2px" onchange="_updateOpeningName(\''+_chosenOpening.id+'\',this.value)" onclick="this.select()">'
         +(_hasDims?'<div style="font-size:11px;color:var(--text3)">'+_chosenOpening.width+'"W × '+_chosenOpening.height+'"H · Qty '+_chosenOpening.qty+'</div>':'<div style="font-size:11px;color:var(--text3)">Not measured yet</div>')
         +'</div></div>'
-        +'<button class="btn ghost sm" style="font-size:11px;margin:0" onclick="_selOpeningId=null;_selAreaIds=[];_selAreaLocked=false;_selStep=1;renderAddSelection()">Change Area</button>'
+        +'<button class="btn ghost sm" style="font-size:11px;margin:0" onclick="_changeAreaAndReset()">Change Area</button>'
         +'</div>';
     }
     if(_selCategory==='curtains_main'){
