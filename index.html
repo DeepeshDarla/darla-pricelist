@@ -230,8 +230,8 @@ var CATS = {
   },
   beds: {
     label:"Beds", icon:"&#128716;", codeSearch:false,
-  inputs:["Brand","Model","Thickness","Size"],
-  lvl4Field:"Thickness", mrpLabel:"MRP"
+  inputs:["Brand","Model","Thickness"],
+  bedsMode:true, mrpLabel:"MRP"
   },
   flooring: {
     label:"Flooring", icon:"&#128305;", codeSearch:false,
@@ -602,9 +602,10 @@ function pickOpt(idx,val){
         })
         .catch(function(){var l4=document.getElementById("f_"+toFid(ci.inputs[3]));if(l4){l4.disabled=false;l4.placeholder="Type to search...";}});
     } else if(currentCat==="blinds"){
-      fetchBlindsMechanisms(bKey,cKey,sKey);
-    }
-  }
+  fetchBlindsMechanisms(bKey,cKey,sKey);
+} else if(currentCat==="beds"){
+  fetchBedsSizes(bKey,cKey,sKey);
+}  }
 }
 
 function bindLvl4Input(){
@@ -643,7 +644,31 @@ function fetchBlindsMechanisms(bKey,cKey,sKey){
     })
     .catch(function(){});
 }
-
+function fetchBedsSizes(bKey,cKey,sKey){
+  var sw=document.getElementById("size_wrap");if(sw)sw.remove();
+  fetch(FB+"/beds/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+"/"+encodeURIComponent(sKey)+".json")
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var res=[];function flat(o){if(Array.isArray(o))o.forEach(function(x){if(x&&x.code)res.push(x);});else if(o&&typeof o==="object")Object.values(o).forEach(flat);}flat(data);
+      var seen={},unique=[];
+      res.forEach(function(x){var v=x.size||gv(x,"size")||"";if(v&&!seen[v]){seen[v]=true;unique.push(v);}});
+      unique.sort();if(!unique.length)return;
+      var card=document.querySelector(".search-card");if(!card)return;
+      var btn=card.querySelector(".submit-btn");if(!btn)return;
+      var wrap=document.createElement("div");wrap.id="size_wrap";
+      wrap.innerHTML='<div class="field-lbl">Size</div><div class="lbl-line-sm"></div>'
+        +'<div class="autocomplete-wrap"><input class="ac-input" id="f_size" placeholder="Select size..." autocomplete="off" spellcheck="false">'
+        +'<div class="dropdown" id="fd_size"></div></div>';
+      card.insertBefore(wrap,btn);
+      var sel=document.getElementById("f_size");
+      var sdrop=document.getElementById("fd_size");
+      sel.addEventListener("focus",function(){showDrop(sdrop,unique,sel,function(v){sel.value=v;sdrop.classList.remove("show");});});
+      sel.addEventListener("input",function(){showDrop(sdrop,filt(unique,this.value),sel,function(v){sel.value=v;sdrop.classList.remove("show");});});
+      sel.addEventListener("blur",function(){setTimeout(function(){sdrop.classList.remove("show");},200);});
+    })
+    .catch(function(){});
+}
+  
 // ── SEARCH ──
 function doCodeSearch(){
   var inp=document.getElementById("codeInp");if(!inp)return;
@@ -708,6 +733,14 @@ function doSearch(){
       }
       renderRows(results,currentCat);
     })
+
+    if(currentCat==="beds"){
+  var sv=document.getElementById("f_size");
+  if(sv&&sv.value.trim()){
+    var sz=sv.value.trim();
+    results=results.filter(function(x){return(x.size||gv(x,"size")||"").toLowerCase()===sz.toLowerCase();});
+  }
+}
     .catch(function(){var r=document.getElementById("results");if(r)r.innerHTML='<div class="nf"><h3>Error</h3><p>Please try again.</p></div>';});
 }
 
@@ -721,6 +754,7 @@ function clearSearch(){
       if(el){el.value="";if(idx>0)el.disabled=true;}
     });
     var mw=document.getElementById("mech_wrap");if(mw)mw.remove();
+    var sw=document.getElementById("size_wrap");if(sw)sw.remove();
     window._lvl4Opts=[];
   }
   searchCtx={};
