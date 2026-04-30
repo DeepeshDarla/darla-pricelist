@@ -66,7 +66,7 @@ color: var(--text);
 -webkit-tap-highlight-color: transparent;
 font-size: 16px;
 }
-body { min-height: 100vh; min-height: -webkit-fill-available; overscroll-behavior: none; }
+body { min-height: 100vh; min-height: -webkit-fill-available; overscroll-behavior: none; overflow-x: hidden; }
 button { font-family: inherit; cursor: pointer; }
 input, select, textarea { font-family: inherit; box-sizing: border-box; }
 *, *::before, *::after { box-sizing: border-box; }
@@ -132,17 +132,18 @@ text-transform: uppercase;
 }
 .nav-actions {
 display: flex;
-gap: 8px;
+gap: 6px;
 flex-shrink: 0;
+align-items: center;
 }
 .nav-btn {
 height: 34px;
-padding: 0 14px;
+padding: 0 12px;
 border-radius: var(--r-sm);
 border: 1px solid var(--border2);
 background: transparent;
 color: var(--text2);
-font-size: 13px;
+font-size: 12px;
 font-weight: 600;
 white-space: nowrap;
 transition: all 0.15s;
@@ -1374,6 +1375,14 @@ DESKTOP RESPONSIVE
 /* ── Sidebar: hidden on mobile ── */
 .bld-sidebar { display: none; }
 .sum-aside { /* flows inline on mobile */ }
+
+/* ── Mobile nav: on very narrow screens hide saving indicator, shrink title ── */
+@media (max-width: 480px) {
+  .nav-title { font-size: 13px; }
+  .nav-btn { padding: 0 8px; font-size: 11px; height: 30px; }
+  .nav-inner { gap: 6px; padding: 8px 12px; }
+  #navSaving { display: none; }
+}
 
 @media (min-width: 768px) {
 .page-wrap { padding: 24px 24px 120px; }
@@ -2978,7 +2987,7 @@ function setNavForSummary() {
   document.getElementById('navSub').textContent=APP.quote.id||'';
   document.getElementById('navTabsWrap').style.display='none';
   document.getElementById('navActions').innerHTML=
-    '<button class="nav-btn" onclick="goTo(\'screen-builder\')">← Edit</button>'+
+    '<button class="nav-btn" onclick="goTo(\'screen-builder\')">← Rooms</button>'+
     '<button class="nav-btn primary" onclick="showPrintPicker(\'quote\')" style="font-size:11px">🖨 Print</button>'+
     _navProfileBtn();
 }
@@ -3348,18 +3357,13 @@ function renderBld() {
       +'</div>';
     document.getElementById('roomsWrap').innerHTML=html; return;
   }
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:16px">'
-    +'<button class="btn ghost sm" style="font-size:11px;padding:9px 4px" onclick="openRoomModal()">+ Room</button>'
-    +'<button class="btn ghost sm" style="font-size:11px;padding:9px 4px" onclick="goToAddMeasurements()">📐 Measure</button>'
-    +'<button class="btn ghost sm" style="font-size:11px;padding:9px 4px" onclick="goToAddSelections()">🎨 Select</button>'
-    +'<button class="btn sm" style="font-size:11px;padding:9px 4px" onclick="goTo(\'screen-summary\')">Quote →</button>'
-    +'</div>';
   APP.quote.rooms.forEach(function(room,ri){
     var areas=room.areas||[], sels=room.selections||[], ac=areas.length, sc=sels.length, rt=roomTotal(room);
     html+='<div class="room-ov-card" id="r_'+ri+'">'
       +'<div class="room-ov-hdr">'
       +'<span class="room-ov-name">'+esc(room.name)+'</span>'
       +(rt>0?'<span class="room-ov-total">'+fmt(rt)+'</span>':'')
+      +'<button class="room-ov-del" onclick="delRoom('+ri+')" title="Delete room" style="margin-left:8px">🗑</button>'
       +'</div>'
       +'<div class="room-ov-body">';
     if(ac||sc){
@@ -3434,13 +3438,21 @@ function renderBld() {
       html+='<div class="room-ov-meta" style="margin-bottom:8px">No measurements or selections yet</div>';
     }
     html+='<div class="room-ov-actions">'
-      +'<button class="room-ov-btn" onclick="_activeRoom='+ri+';goTo(\'screen-room-measurements\')">📐 Measurements</button>'
-      +'<button class="room-ov-btn primary" onclick="_activeRoom='+ri+';goTo(\'screen-room-selections\')">🎨 Selections</button>'
-      +'<button class="room-ov-del" onclick="delRoom('+ri+')">🗑</button>'
+      +'<button class="room-ov-btn" onclick="addMeasForRoom('+ri+')">📐 Add Measurements</button>'
+      +'<button class="room-ov-btn primary" onclick="_activeRoom='+ri+';goTo(\'screen-room-selections\')">🎨 Change Selections</button>'
       +'</div></div></div>';
   });
   document.getElementById('roomsWrap').innerHTML=html;
   renderBldSidebar();
+}
+function addMeasForRoom(ri){
+  _activeRoom=ri;
+  var r=APP.quote.rooms[ri]; if(!r) return;
+  var areas=r.areas||[];
+  for(var ai=0;ai<areas.length;ai++){
+    if(!areas[ai].width||!areas[ai].height){ openEditArea(ai); return; }
+  }
+  _editAreaIdx=-1; goTo('screen-add-area');
 }
 function goToAddMeasurements(){
   for(var ri=0;ri<APP.quote.rooms.length;ri++){
@@ -3724,6 +3736,16 @@ function _renderAreaPostSave(area,isNew){
   var linked=room?(room.selections||[]).filter(function(s){
     return s.openingId===area.id||(s.areaIds||[]).indexOf(area.id)!==-1;
   }):[];
+  // Find another area in this room that has selections (to offer copy)
+  var copySrcArea=null;
+  if(isNew&&!linked.length&&room){
+    for(var _ai=0;_ai<(room.areas||[]).length;_ai++){
+      var _a=room.areas[_ai];
+      if(_a.id!==area.id&&(room.selections||[]).some(function(s){ return s.openingId===_a.id||(s.areaIds||[]).indexOf(_a.id)!==-1; })){
+        copySrcArea=_a; break;
+      }
+    }
+  }
   var h='<div class="post-save-card"><div class="post-save-icon">✅</div>'
     +'<div class="post-save-title">'+esc(area.name)+' '+(isNew?'added':'updated')+'</div>'
     +'<div class="post-save-sub">'+area.width+'" W × '+area.height+'" H · Qty '+area.qty+'</div>';
@@ -3735,10 +3757,21 @@ function _renderAreaPostSave(area,isNew){
     });
     h+='</div>';
   }
+  if(copySrcArea){
+    h+='<div id="copySelPrompt" style="background:rgba(39,174,96,0.07);border:1px solid rgba(39,174,96,0.25);border-radius:var(--r-md);padding:12px 14px;margin:10px 0;text-align:left">'
+      +'<div style="font-size:13px;font-weight:800;color:var(--text2);margin-bottom:4px">Copy selections from '+esc(copySrcArea.name)+'?</div>'
+      +'<div style="font-size:11px;color:var(--text3);margin-bottom:10px">Copies fabric, stitching, tracks &amp; all settings</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+      +'<button class="btn" style="margin:0;font-size:12px" onclick="copySelectionsFromArea(\''+copySrcArea.id+'\',\''+area.id+'\')">Yes, copy</button>'
+      +'<button class="btn ghost" style="margin:0;font-size:12px" onclick="document.getElementById(\'copySelPrompt\').style.display=\'none\'">No, skip</button>'
+      +'</div></div>';
+  }
   h+='<div class="post-save-actions">';
-  h+='<button class="btn sm" style="width:100%" onclick="addSelForArea(\''+area.id+'\')">'+(linked.length?'+ Add Another Selection for '+esc(area.name):'+ Add Selection for '+esc(area.name)+' →')+'</button>'
-    +'<button class="btn sm" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--border)" onclick="_editAreaIdx=-1;renderAddArea()">+ Add Another Measurement</button>'
-    +'<button class="btn ghost sm" onclick="openRoomModal()">+ Add Room</button>'
+  h+='<button class="btn sm" style="width:100%" onclick="_editAreaIdx=-1;renderAddArea()">+ Add Another Measurement</button>';
+  if(!copySrcArea){
+    h+='<button class="btn sm" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--border)" onclick="addSelForArea(\''+area.id+'\')">'+(linked.length?'+ Add Another Selection':'+ Add Selection →')+'</button>';
+  }
+  h+='<button class="btn ghost sm" onclick="openRoomModal()">+ Add Room</button>'
     +'<button class="btn ghost sm" style="font-size:12px;color:var(--text3)" onclick="goTo(\'screen-summary\')">View Summary →</button>'
     +'</div></div>';
   document.getElementById('addAreaWrap').innerHTML=h;
@@ -4465,6 +4498,19 @@ function saveSelection(){
   saveDraft(); showToast((editing?'Updated':'Saved')+' ✓');
   _renderSelPostSave(editing);
 }
+function copySelectionsFromArea(srcAreaId,destAreaId){
+  var room=APP.quote.rooms[_activeRoom]; if(!room) return;
+  var srcSels=(room.selections||[]).filter(function(s){ return s.openingId===srcAreaId||(s.areaIds||[]).indexOf(srcAreaId)!==-1; });
+  if(!srcSels.length){ showToast('No selections to copy'); return; }
+  srcSels.forEach(function(s,idx){
+    var clone=JSON.parse(JSON.stringify(s));
+    clone.id='s_'+Date.now()+idx; clone.openingId=destAreaId; clone.areaIds=[destAreaId];
+    room.selections.push(clone);
+  });
+  saveDraft(); showToast(srcSels.length+' selection'+(srcSels.length>1?'s':'')+' copied ✓');
+  var destArea=(room.areas||[]).find(function(a){ return a.id===destAreaId; });
+  if(destArea) _renderAreaPostSave(destArea,false);
+}
 function applySelToAllAreas(selId){
   var room=APP.quote.rooms[_activeRoom]; if(!room) return;
   var srcSel=(room.selections||[]).find(function(s){ return s.id===selId; }); if(!srcSel) return;
@@ -5062,6 +5108,19 @@ function updateProductMRP(ri,selId,pi,val){
   sel.products[pi].product.mrp=parseFloat(val)||0;
   saveDraft(); renderSum();
 }
+function updateSelRate(ri,selId,key,val){
+  var room=APP.quote.rooms[ri]; if(!room) return;
+  var sel=(room.selections||[]).find(function(s){ return s.id===selId; }); if(!sel) return;
+  if(!sel.rates) sel.rates={};
+  var n=parseFloat(val); sel.rates[key]=(isNaN(n)||val==='')?null:n;
+  saveDraft(); renderSum();
+}
+function updateAreaQty(ri,areaId,val){
+  var room=APP.quote.rooms[ri]; if(!room) return;
+  var area=(room.areas||[]).find(function(a){ return a.id===areaId; }); if(!area) return;
+  area.qty=Math.max(1,parseInt(val)||1);
+  saveDraft(); renderSum();
+}
 function renderSum() {
   setNavForSummary();
   var q=APP.quote, gt=grandTotal(), h='';
@@ -5120,7 +5179,40 @@ function renderSum() {
       sh+=_sumBreakdownLines(result);
       sh+='<div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid var(--border);margin-top:4px">'
         +'<span style="font-size:12px;font-weight:700;color:var(--text3)">Total</span>'
-        +'<span style="font-size:14px;font-weight:900;color:var(--red)">'+fmt(result.total)+'</span></div></div>';
+        +'<span style="font-size:14px;font-weight:900;color:var(--red)">'+fmt(result.total)+'</span></div>';
+      // Editable rate overrides
+      var _isFab=sel.category==='curtains_main'||sel.category==='curtains_sheer'||sel.category==='roman_blind';
+      var _isRom=sel.category==='roman_blind';
+      if(_isFab||sel.trackType){
+        sh+='<details style="margin-top:8px"><summary style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;cursor:pointer;user-select:none">Edit Rates</summary>';
+        sh+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">';
+        if(_isFab&&!_isRom){
+          var _sr=sel.rates&&sel.rates.stitchRate!=null?sel.rates.stitchRate:'';
+          sh+='<div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:2px">Stitch ₹/m</label>'
+            +'<input type="number" class="inp" placeholder="default" value="'+_sr+'" style="padding:5px 7px;font-size:12px;font-weight:700" '
+            +'onchange="updateSelRate('+ri+',\''+sel.id+'\',\'stitchRate\',this.value)" onclick="this.select()"></div>';
+        }
+        if(_isRom){
+          var _srR=sel.rates&&sel.rates.stitchRateRoman!=null?sel.rates.stitchRateRoman:'';
+          sh+='<div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:2px">Stitch ₹/win</label>'
+            +'<input type="number" class="inp" placeholder="default" value="'+_srR+'" style="padding:5px 7px;font-size:12px;font-weight:700" '
+            +'onchange="updateSelRate('+ri+',\''+sel.id+'\',\'stitchRateRoman\',this.value)" onclick="this.select()"></div>';
+        }
+        if(_isFab){
+          var _ir=sel.rates&&sel.rates.installRate!=null?sel.rates.installRate:'';
+          sh+='<div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:2px">Install ₹/win</label>'
+            +'<input type="number" class="inp" placeholder="default" value="'+_ir+'" style="padding:5px 7px;font-size:12px;font-weight:700" '
+            +'onchange="updateSelRate('+ri+',\''+sel.id+'\',\'installRate\',this.value)" onclick="this.select()"></div>';
+        }
+        if(sel.trackType){
+          var _tr=sel.rates&&sel.rates.trackInstallRate!=null?sel.rates.trackInstallRate:'';
+          sh+='<div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:2px">Track Install ₹/win</label>'
+            +'<input type="number" class="inp" placeholder="default" value="'+_tr+'" style="padding:5px 7px;font-size:12px;font-weight:700" '
+            +'onchange="updateSelRate('+ri+',\''+sel.id+'\',\'trackInstallRate\',this.value)" onclick="this.select()"></div>';
+        }
+        sh+='</div></details>';
+      }
+      sh+='</div>';
       return sh;
     }
     if(!(room.areas||[]).length){
@@ -5162,11 +5254,16 @@ function renderSum() {
       (room.areas||[]).forEach(function(area){
         var areaSelections=(room.selections||[]).filter(function(sel){ return sel.openingId===area.id||(sel.areaIds||[]).indexOf(area.id)!==-1; });
         h+='<div style="border-top:1px solid var(--border);padding:12px 14px">';
-        h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+        h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">'
           +'<span class="type-badge '+area.type+'">'+areaTypeName(area.type)+'</span>'
-          +'<div style="flex:1"><div style="font-size:15px;font-weight:800;color:var(--text)">'+esc(area.name)+'</div>'
-          +'<div style="font-size:12px;color:var(--text3)">'+area.width+'" W × '+area.height+'" H · Qty '+area.qty+'</div></div>'
-          +'<button class="btn ghost sm" style="font-size:11px;padding:4px 8px;margin:0" onclick="addSelForArea(\''+area.id+'\')">+ Selection</button>'
+          +'<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:800;color:var(--text)">'+esc(area.name)+'</div>'
+          +'<div style="font-size:12px;color:var(--text3);display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
+            +esc(area.width)+'" W × '+esc(area.height)+'" H'
+            +' &nbsp;·&nbsp; Qty&nbsp;<input type="number" min="1" value="'+area.qty+'" '
+            +'style="width:46px;font-size:12px;font-weight:700;padding:2px 5px;border:1px solid var(--border2);border-radius:4px;background:var(--bg);color:var(--text);-webkit-appearance:none" '
+            +'onchange="updateAreaQty('+ri+',\''+area.id+'\',this.value)" onclick="this.select()">'
+          +'</div></div>'
+          +'<button class="btn ghost sm" style="font-size:11px;padding:4px 8px;margin:0;flex-shrink:0" onclick="addSelForArea(\''+area.id+'\')">+ Selection</button>'
           +'</div>';
         if(areaSelections.length){
           areaSelections.forEach(function(sel){ h+=renderSelCard(sel, area); });
