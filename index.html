@@ -693,7 +693,6 @@ function doSearch(){
 
   searchCtx={};
   ci.inputs.forEach(function(label){searchCtx[toFid(label)]=getFieldVal(label);});
-  // Capture optional mechanism for blinds
   if(currentCat==="blinds"){var mel=document.getElementById("f_mechanism");if(mel)searchCtx["mechanism"]=mel.value.trim();}
 
   var brand=searchCtx[toFid(ci.inputs[0])]||"";
@@ -731,16 +730,16 @@ function doSearch(){
         var mv=searchCtx["mechanism"];
         results=results.filter(function(x){return(x.mechanism||gv(x,"mechanism")||"").toLowerCase()===mv.toLowerCase();});
       }
+      // Filter by size for beds
+      if(currentCat==="beds"){
+        var sv=document.getElementById("f_size");
+        if(sv&&sv.value.trim()){
+          var sz=sv.value.trim();
+          results=results.filter(function(x){return(x.size||gv(x,"size")||"").toLowerCase()===sz.toLowerCase();});
+        }
+      }
       renderRows(results,currentCat);
     })
-
-    if(currentCat==="beds"){
-  var sv=document.getElementById("f_size");
-  if(sv&&sv.value.trim()){
-    var sz=sv.value.trim();
-    results=results.filter(function(x){return(x.size||gv(x,"size")||"").toLowerCase()===sz.toLowerCase();});
-  }
-}
     .catch(function(){var r=document.getElementById("results");if(r)r.innerHTML='<div class="nf"><h3>Error</h3><p>Please try again.</p></div>';});
 }
 
