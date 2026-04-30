@@ -3152,6 +3152,16 @@ function delRoom(ri) {
   if(!confirm('Delete this room?')) return;
   APP.quote.rooms.splice(ri,1); saveDraft(); renderBld();
 }
+function delArea(ri, ai){
+  if(!confirm('Delete this area and its selections?')) return;
+  var r=APP.quote.rooms[ri]; if(!r) return;
+  var area=r.areas[ai]; if(!area) return;
+  r.selections=(r.selections||[]).filter(function(s){
+    return s.openingId!==area.id&&(s.areaIds||[]).indexOf(area.id)===-1;
+  });
+  r.areas.splice(ai,1);
+  saveDraft(); renderBld();
+}
 
 // ═══════════════════════════════════════════════════════════
 // WINDOWS
@@ -3441,6 +3451,7 @@ function renderBld() {
                 +'onclick="_activeRoom='+ri+';addSelForArea(\''+area.id+'\')">+ Select</button>'
               : ''
             )+
+            '<button class="room-ov-del" style="font-size:13px;padding:2px 6px;opacity:0.45" title="Delete area" onclick="delArea('+ri+','+ai+')">✕</button>'+
             '</div>'+
           '</div>'+
           '<div style="font-size:12px;color:var(--text3);margin-top:2px;overflow-wrap:anywhere">'+
