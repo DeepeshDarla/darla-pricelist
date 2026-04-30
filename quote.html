@@ -1888,17 +1888,18 @@ border-bottom: 1.5pt solid #000;
 <!-- SCREEN: CUSTOMER -->
 <div id="screen-customer" class="screen">
   <div class="page-wrap">
+    <div id="draftResumeBanner"></div>
     <div class="section-label">Customer Details</div>
     <div class="form-card accent-blue">
       <div class="field">
         <label class="field-label">Mobile Number *</label>
-        <input class="inp" id="cMobile" placeholder="10-digit number" type="tel" maxlength="10" inputmode="numeric" oninput="lookupCustomerByMobile(this.value)">
+        <input class="inp" id="cMobile" placeholder="10-digit number" type="tel" maxlength="10" inputmode="numeric" oninput="lookupCustomerByMobile(this.value);_liveCustomerField('mobile',this.value)">
         <div id="custSearchResults"></div>
       </div>
-      <div class="field"><label class="field-label">Customer Name *</label><input class="inp" id="cName" placeholder="Full name" type="text" autocapitalize="words"></div>
+      <div class="field"><label class="field-label">Customer Name *</label><input class="inp" id="cName" placeholder="Full name" type="text" autocapitalize="words" oninput="_liveCustomerField('name',this.value)"></div>
       <div class="inp-row">
-        <div class="field"><label class="field-label">Architect / Designer</label><input class="inp" id="cArch" placeholder="Optional" type="text" autocapitalize="words"></div>
-        <div class="field"><label class="field-label">Address / Project</label><input class="inp" id="cAddr" placeholder="Optional" type="text"></div>
+        <div class="field"><label class="field-label">Architect / Designer</label><input class="inp" id="cArch" placeholder="Optional" type="text" autocapitalize="words" oninput="_liveCustomerField('arch',this.value)"></div>
+        <div class="field"><label class="field-label">Address / Project</label><input class="inp" id="cAddr" placeholder="Optional" type="text" oninput="_liveCustomerField('addr',this.value)"></div>
       </div>
     </div>
     <div class="section-label">Sales Staff</div>
@@ -2549,6 +2550,20 @@ var _custSearchTimer = null;
 function saveDraftLocal() {
   try{ localStorage.setItem('darla_draft', JSON.stringify(APP.quote)); }catch(e){}
 }
+// Live-save customer form fields as user types
+var _liveCustomerTimer=null;
+function _liveCustomerField(key,val){
+  if(!APP.quote.customer) APP.quote.customer={name:'',mobile:'',arch:'',addr:''};
+  APP.quote.customer[key]=val.trim();
+  clearTimeout(_liveCustomerTimer);
+  _liveCustomerTimer=setTimeout(saveDraftLocal,400);
+}
+// Save to localStorage before the page unloads (browser back, refresh, etc.)
+window.addEventListener('beforeunload',function(){
+  if(APP.quote&&(APP.quote.id||(APP.quote.customer&&APP.quote.customer.name)||(APP.quote.rooms&&APP.quote.rooms.length))){
+    saveDraftLocal();
+  }
+});
 
 var _autoSaveHideTimer = null;
 function _showAutoSave(state) {
@@ -2697,8 +2712,17 @@ window.addEventListener('DOMContentLoaded', function(){
         DB.collection('staff').doc(user.uid).update({ lastLoginAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(function(){});
         var lid = qp('load');
         if(lid){ _dismissLogin(function(){ loadById(lid); }); return; }
+        // Capture any unsaved draft BEFORE clearForm() wipes localStorage
+        var _pendingDraft=null;
+        try{ _pendingDraft=JSON.parse(localStorage.getItem('darla_draft')||'null'); }catch(e){}
         clearForm();
-        _dismissLogin(function(){ setNavForCustomer(); goTo('screen-customer'); });
+        _dismissLogin(function(){
+          setNavForCustomer(); goTo('screen-customer');
+          if(_pendingDraft&&_pendingDraft.customer&&_pendingDraft.customer.name&&
+             (((_pendingDraft.rooms||[]).length>0)||_pendingDraft.id)){
+            _showDraftResume(_pendingDraft);
+          }
+        });
       }
       // else: already past login, auth state refreshed — do nothing
     } else {
@@ -2835,6 +2859,32 @@ function skipLogin() {
     APP.staff = { name:'Staff', uid:'anon' };
     clearForm(); goToCustomer();
   });
+}
+function _showDraftResume(draft){
+  var el=document.getElementById('draftResumeBanner'); if(!el) return;
+  var rooms=(draft.rooms||[]).length;
+  var info=draft.customer.name+(draft.id?' · '+draft.id:'')+(rooms?' · '+rooms+' room'+(rooms>1?'s':''):'');
+  el.innerHTML='<div style="background:rgba(39,174,96,0.08);border:1px solid rgba(39,174,96,0.3);border-radius:var(--r-md);padding:12px 14px;margin-bottom:14px">'
+    +'<div style="font-size:12px;font-weight:800;color:var(--green);margin-bottom:4px">🔄 Unfinished quote found</div>'
+    +'<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">'+esc(info)+'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+    +'<button class="btn" style="margin:0;font-size:13px" onclick="resumeDraft(\''+encodeURIComponent(JSON.stringify(draft))+'\')">Resume →</button>'
+    +'<button class="btn ghost" style="margin:0;font-size:13px" onclick="discardDraft()">Start New</button>'
+    +'</div></div>';
+}
+function resumeDraft(encoded){
+  try{
+    var draft=JSON.parse(decodeURIComponent(encoded));
+    APP.quote=draft;
+    saveDraftLocal();
+    var el=document.getElementById('draftResumeBanner'); if(el) el.innerHTML='';
+    setNavForBuilder(); goTo('screen-builder');
+    if(draft.id) startQuoteSync(draft.id);
+  }catch(e){ showToast('Could not resume — starting fresh'); }
+}
+function discardDraft(){
+  localStorage.removeItem('darla_draft');
+  var el=document.getElementById('draftResumeBanner'); if(el) el.innerHTML='';
 }
 function clearForm() {
   APP.quote=blankQ();
