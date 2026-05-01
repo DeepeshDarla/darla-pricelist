@@ -3803,6 +3803,13 @@ function deleteSelection(ri,si){
   APP.quote.rooms[ri].selections.splice(si,1);
   saveDraft(); renderSelections(); showToast('Deleted ✓');
 }
+function editSelFromSummary(ri, selId){
+  _activeRoom=ri;
+  var room=APP.quote.rooms[ri]; if(!room) return;
+  var si=(room.selections||[]).findIndex(function(s){ return s.id===selId; });
+  if(si<0) return;
+  openEditSel(si);
+}
 // ── ADD AREA SCREEN ──────────────────────────────────────────
 var _areaState={blindMode:'single',rotationAllowed:true,wallpaperMode:'custom'};
 function setAreaField(field,val,btn){
@@ -5537,10 +5544,14 @@ function _renderSumRoomExpanded(room, ri){
       return '<button onclick="toggleHiddenLine('+ri+',\''+gk.replace(/'/g,"\\'")+'\',\''+lineKey+'\')" '
         +'style="border:none;background:none;color:var(--text4);cursor:pointer;font-size:13px;padding:0;line-height:1" title="Remove line">✕</button>';
     }
-    function liMRP(label,qtyStr,mrp,total,gk,lineKey){
+    function editBtn(selId){
+      return '<button onclick="editSelFromSummary('+ri+',\''+selId+'\')" '
+        +'style="border:none;background:none;color:var(--text3);cursor:pointer;font-size:13px;padding:0;line-height:1" title="Edit selection">✏</button>';
+    }
+    function liMRP(label,qtyStr,mrp,total,gk,lineKey,selId){
       if(lineKey&&isLineHidden(ri,gk,lineKey)) return;
       liNum++;
-      h+='<div style="display:grid;grid-template-columns:18px 1fr auto auto 20px;gap:2px 4px;padding:5px 2px;border-bottom:1px solid var(--border);align-items:center">'
+      h+='<div style="display:grid;grid-template-columns:18px 1fr auto auto 20px 20px;gap:2px 4px;padding:5px 2px;border-bottom:1px solid var(--border);align-items:center">'
         +'<div style="font-size:11px;color:var(--text3);text-align:right">'+liNum+'.</div>'
         +'<div style="font-size:12px;font-weight:700;color:var(--text)">'+esc(label)+'</div>'
         +'<div style="font-size:11px;color:var(--text3);text-align:right;white-space:nowrap">'+esc(qtyStr)+' × '
@@ -5548,12 +5559,13 @@ function _renderSumRoomExpanded(room, ri){
         +'onchange="updateGroupMRP('+ri+',\''+gk.replace(/'/g,"\\'")+'\',this.value)" onclick="this.select();event.stopPropagation()"></div>'
         +'<div style="font-size:13px;font-weight:800;color:var(--red);text-align:right;white-space:nowrap">'+fmt(total)+'</div>'
         +(lineKey?delBtn(gk,lineKey):'<div></div>')
+        +(selId?editBtn(selId):'<div></div>')
         +'</div>';
     }
     function liRate(label,qtyStr,rate,total,rateKey,gk,lineKey){
       if(lineKey&&isLineHidden(ri,gk,lineKey)) return;
       liNum++;
-      h+='<div style="display:grid;grid-template-columns:18px 1fr auto auto 20px;gap:2px 4px;padding:5px 2px;border-bottom:1px solid var(--border);align-items:center">'
+      h+='<div style="display:grid;grid-template-columns:18px 1fr auto auto 20px 20px;gap:2px 4px;padding:5px 2px;border-bottom:1px solid var(--border);align-items:center">'
         +'<div style="font-size:11px;color:var(--text3);text-align:right">'+liNum+'.</div>'
         +'<div style="font-size:12px;font-weight:700;color:var(--text)">'+esc(label)+'</div>'
         +'<div style="font-size:11px;color:var(--text3);text-align:right;white-space:nowrap">'+esc(qtyStr)+' × '
@@ -5563,16 +5575,17 @@ function _renderSumRoomExpanded(room, ri){
         +' onclick="this.select();event.stopPropagation()"></div>'
         +'<div style="font-size:13px;font-weight:800;color:var(--red);text-align:right;white-space:nowrap">'+fmt(total)+'</div>'
         +(lineKey?delBtn(gk,lineKey):'<div></div>')
+        +'<div></div>'
         +'</div>';
     }
     function liFixed(label,qtyStr,total){
       liNum++;
-      h+='<div style="display:grid;grid-template-columns:18px 1fr auto auto 20px;gap:2px 4px;padding:5px 2px;border-bottom:1px solid var(--border);align-items:center">'
+      h+='<div style="display:grid;grid-template-columns:18px 1fr auto auto 20px 20px;gap:2px 4px;padding:5px 2px;border-bottom:1px solid var(--border);align-items:center">'
         +'<div style="font-size:11px;color:var(--text3);text-align:right">'+liNum+'.</div>'
         +'<div style="font-size:12px;font-weight:700;color:var(--text)">'+esc(label)+'</div>'
         +'<div style="font-size:11px;color:var(--text3);text-align:right;white-space:nowrap">'+esc(qtyStr)+'</div>'
         +'<div style="font-size:13px;font-weight:800;color:var(--red);text-align:right;white-space:nowrap">'+fmt(total)+'</div>'
-        +'<div></div>'
+        +'<div></div><div></div>'
         +'</div>';
     }
 
@@ -5662,7 +5675,7 @@ function _renderSumRoomExpanded(room, ri){
       });
       mainOrd.forEach(function(gk){
         var g=mainG[gk];
-        liMRP('Fabric – '+g.name, td(g.fabM)+' m', parseFloat(g.prod&&g.prod.mrp)||0, g.fabricCost, gk, 'fabricMain');
+        liMRP('Fabric – '+g.name, td(g.fabM)+' m', parseFloat(g.prod&&g.prod.mrp)||0, g.fabricCost, gk, 'fabricMain', g.repSel.id);
         var sr=g.repSel.rates&&g.repSel.rates.stitchRate!=null?g.repSel.rates.stitchRate:qrate('curtainStitchPerM');
         liRate('Stitching Charges', td(g.fabM)+' m', sr, g.stitchCost, 'stitchRate', gk, 'stitchMain');
         if(g.beltCost>0)
@@ -5676,7 +5689,7 @@ function _renderSumRoomExpanded(room, ri){
       });
       sheerOrd.forEach(function(gk){
         var g=sheerG[gk];
-        liMRP('Fabric Sheer – '+g.name, td(g.fabM)+' m', parseFloat(g.prod&&g.prod.mrp)||0, g.fabricCost, gk, 'fabricSheer');
+        liMRP('Fabric Sheer – '+g.name, td(g.fabM)+' m', parseFloat(g.prod&&g.prod.mrp)||0, g.fabricCost, gk, 'fabricSheer', g.repSel.id);
         var sr=g.repSel.rates&&g.repSel.rates.stitchRate!=null?g.repSel.rates.stitchRate:qrate('curtainStitchPerM');
         liRate('Stitching Charges', td(g.fabM)+' m', sr, g.stitchCost, 'stitchRate', gk, 'stitchSheer');
         if(g.bottomWeightCost>0)
@@ -5782,7 +5795,7 @@ function _renderSumRoomExpanded(room, ri){
         liRate('Blind Stitching', g.qty+' win', sr, g.stitchCost, 'stitchRateRoman', gk, 'stitchRoman');
         var ir=g.repSel.rates&&g.repSel.rates.installRate!=null?g.repSel.rates.installRate:qrate('romanInstall');
         liRate('Fixing Charges', g.qty+' win', ir, g.installCost, 'installRate', gk, 'fixingRoman');
-        liMRP('Fabric – Main – '+g.name, td(g.fabM)+' m', parseFloat(g.prod&&g.prod.mrp)||0, g.fabricCost, gk, 'fabricRoman');
+        liMRP('Fabric – Main – '+g.name, td(g.fabM)+' m', parseFloat(g.prod&&g.prod.mrp)||0, g.fabricCost, gk, 'fabricRoman', g.repSel.id);
         if(g.liningCost>0){
           var lr=g.repSel.rates&&g.repSel.rates.liningRate!=null?g.repSel.rates.liningRate:getLiningRate('roman_blind',g.liningType);
           liRate('Lining for Main ('+g.liningType+')', td(g.fabM)+' m', lr, g.liningCost, 'liningRate', gk, 'liningRoman');
@@ -5811,7 +5824,7 @@ function _renderSumRoomExpanded(room, ri){
         var g=hbG[gk];
         var mr=g.repSel.rates&&g.repSel.rates.makingRate!=null?g.repSel.rates.makingRate:qrate('headboardAreaRate');
         liRate('Making charge', td(g.sqft)+' sqft', mr, g.makingCharge, 'makingRate', gk);
-        liMRP('Fabric – '+g.name, td(g.fabM)+' m', parseFloat(g.prod&&g.prod.mrp)||0, g.fabricCost, gk);
+        liMRP('Fabric – '+g.name, td(g.fabM)+' m', parseFloat(g.prod&&g.prod.mrp)||0, g.fabricCost, gk, null, g.repSel.id);
       });
 
     } else {
