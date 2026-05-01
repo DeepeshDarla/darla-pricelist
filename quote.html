@@ -2184,6 +2184,16 @@ function updateQuoteRate(key, val){
   APP.quote.rates[key]=parseFloat(val)||0;
   saveDraft(); renderSum();
 }
+function isLineHidden(ri, gk, lineKey){
+  var hl=APP.quote.hiddenLines||(APP.quote.hiddenLines={});
+  return !!hl[ri+'|'+gk+'|'+lineKey];
+}
+function toggleHiddenLine(ri, gk, lineKey){
+  var hl=APP.quote.hiddenLines||(APP.quote.hiddenLines={});
+  var k=ri+'|'+gk+'|'+lineKey;
+  if(hl[k]) delete hl[k]; else hl[k]=true;
+  saveDraft(); renderSum();
+}
 function resetPConfig() {
   if (!confirm('Reset all rates to factory defaults?')) return;
   try { localStorage.removeItem('darla_P_v2'); } catch(e) {}
@@ -2301,6 +2311,7 @@ function calcCurtains(area, sel, fp) {
   var panels, fabricM;
   var rotationUsed = false;
   var panelLen = (H + 16) / 39;  // spec §3.2
+  var displayPanelLen = panelLen; // per-panel length for display (may differ for railroad)
   if (widthType === 'wider') {
     var needsRot = fabricWidthIn > 0 && H > fabricWidthIn;
     if (needsRot && fp.rotationAllowed === true) {
@@ -2313,6 +2324,7 @@ function calcCurtains(area, sel, fp) {
       // Case 1: Height ≤ fabric width (railroad) — spec §3.4 Case 1
       panels = Math.ceil(W / qrate('curtainPanelW')) * qty;
       fabricM = roundTo005(panels * 1.50);
+      displayPanelLen = 1.50;
     }
   } else {
     // Standard width — spec §3.1–3.3
@@ -2345,7 +2357,7 @@ function calcCurtains(area, sel, fp) {
   var installRate = sel.rates && sel.rates.installRate != null ? sel.rates.installRate : qrate('curtainInstall');
   var installCost = Math.round(installRate * qty);
   var total = fabricCost + stitchCost + beltCost + bottomWeightCost + liningCost + liningStitchCost + installCost;
-  return { panels:panels, fabricM:td(fabricM), fabricCost:fabricCost, stitchCost:stitchCost,
+  return { panels:panels, panelLen:displayPanelLen, fabricM:td(fabricM), fabricCost:fabricCost, stitchCost:stitchCost,
            beltCost:beltCost, beltRate:beltRate, bottomWeightCost:bottomWeightCost, bottomWeightRate:bottomWeightRate,
            liningCost:liningCost, liningStitchCost:liningStitchCost, liningStitchRate:liningStitchRate,
            installCost:installCost, total:total,
@@ -2546,7 +2558,7 @@ function blankQ() {
   return { id:null, date:new Date().toLocaleDateString('en-IN'), staff:'', staff2:'',
            customer:{name:'',mobile:'',arch:'',addr:''}, customerId:null,
            rooms:[], status:'draft', saved:false,
-           overallDisc:0, overallDiscType:'pct', tenantId:'darla', rates:{} };
+           overallDisc:0, overallDiscType:'pct', tenantId:'darla', rates:{}, hiddenLines:{} };
 }
 // Blank room with v2 structure
 function blankRoom(name) { return { name: name, areas: [], selections: [] }; }
@@ -5249,7 +5261,7 @@ function _calcSelForArea_detail(sel,area){
     if(cat==='curtains_main'){
       if(!fp) return null;
       var c=calcCurtains(area,sel,fp);
-      r.total=c.total; r._meta={fabricM:c.fabricM,panels:c.panels};
+      r.total=c.total; r._meta={fabricM:c.fabricM,panels:c.panels,panelLen:c.panelLen};
       r.lines=[
         {l:'Fabric'+(c.rotationUsed?' (rotated)':c.widthType==='wider'?' (wider)':''),v:c.fabricM+' m',a:c.fabricCost},
         {l:'Stitching',v:c.fabricM+' m',a:c.stitchCost},
@@ -5267,7 +5279,7 @@ function _calcSelForArea_detail(sel,area){
     } else if(cat==='curtains_sheer'){
       if(!fp) return null;
       var c=calcCurtains(area,sel,fp);
-      r.total=c.total; r._meta={fabricM:c.fabricM,panels:c.panels};
+      r.total=c.total; r._meta={fabricM:c.fabricM,panels:c.panels,panelLen:c.panelLen};
       r.lines=[
         {l:'Fabric (Sheer)'+(c.rotationUsed?' (rotated)':c.widthType==='wider'?' (wider)':''),v:c.fabricM+' m',a:c.fabricCost},
         {l:'Stitching',v:c.fabricM+' m',a:c.stitchCost},
@@ -5479,78 +5491,6 @@ function _renderSumRoomExpanded(room, ri){
 
   var h='';
 
-  // ── MEASUREMENTS TABLE ───────────────────────────────────────────────
-  var measCats=['curtains_main','curtains_sheer','roman_blind'];
-  var measSels=activeSels.filter(function(s){ return measCats.indexOf(s.category)!==-1; });
-  if(measSels.length){
-    var afMap={}, afOrder=[];
-    areas.forEach(function(area){
-      measSels.forEach(function(sel){
-        var linked=sel.openingId===area.id||(sel.areaIds||[]).indexOf(area.id)!==-1;
-        if(!linked) return;
-        if(!afMap[area.id]){ afMap[area.id]={area:area,items:[]}; afOrder.push(area.id); }
-        var d=area.width&&area.height?_calcSelForArea_detail(sel,area):null;
-        afMap[area.id].items.push({sel:sel,d:d});
-      });
-    });
-    if(afOrder.length){
-      var totMain=0, totSheer=0, totRomFab=0;
-      h+='<table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden">';
-      h+='<thead><tr style="background:var(--bg2);border-bottom:1px solid var(--border)">'
-        +'<th style="text-align:left;padding:5px 8px;font-size:10px;font-weight:700;color:var(--text3)">Area</th>'
-        +'<th style="text-align:center;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text3)">W × H</th>'
-        +'<th style="text-align:center;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text3)">Qty</th>'
-        +'<th style="text-align:right;padding:5px 8px;font-size:10px;font-weight:700;color:var(--text3)">Fabric Req</th>'
-        +'</tr></thead><tbody>';
-      afOrder.forEach(function(aid){
-        var entry=afMap[aid], area=entry.area;
-        var qty=parseInt(area.qty)||1, isMeas=area.width&&area.height;
-        var fabParts=[];
-        entry.items.forEach(function(item){
-          if(!item.d) return;
-          var meta=item.d._meta||{}, cat=item.sel.category;
-          if(cat==='curtains_main'&&meta.fabricM!=null&&meta.panels){
-            var pp=meta.panels>0?roundTo005(meta.fabricM/meta.panels):0;
-            fabParts.push(meta.fabricM+' m ('+meta.panels+'p × '+pp.toFixed(2)+' m)');
-            totMain=roundTo005(totMain+meta.fabricM);
-          } else if(cat==='curtains_sheer'&&meta.fabricM!=null){
-            fabParts.push('Sheer: '+meta.fabricM+' m');
-            totSheer=roundTo005(totSheer+meta.fabricM);
-          } else if(cat==='roman_blind'&&meta.sqft!=null){
-            fabParts.push((meta.fabricM!=null?meta.fabricM+' m / ':'')+meta.sqft.toFixed(2)+' sqft');
-            if(meta.fabricM) totRomFab=roundTo005(totRomFab+meta.fabricM);
-          }
-        });
-        h+='<tr style="border-bottom:1px solid var(--border)">';
-        h+='<td style="padding:6px 8px;font-size:13px;font-weight:700;color:var(--text)">'+esc(area.name)+'</td>';
-        if(isMeas){
-          h+='<td style="padding:6px;text-align:center;white-space:nowrap;color:var(--text2)">'+area.width+'" × '+area.height+'"</td>';
-          h+='<td style="padding:6px;text-align:center;white-space:nowrap">'
-            +'<input type="number" min="1" value="'+qty+'" '
-            +'style="width:30px;font-size:11px;padding:2px;border:1px solid var(--border2);border-radius:3px;background:var(--bg);color:var(--text);-webkit-appearance:none;text-align:center" '
-            +'onchange="updateAreaQty('+ri+',\''+area.id+'\',this.value)" onclick="this.select();event.stopPropagation()"> Nos</td>';
-          h+='<td style="padding:6px 8px;text-align:right;color:var(--text2);line-height:1.7">'+(fabParts.join('<br>')||'—')+'</td>';
-        } else {
-          h+='<td colspan="3" style="padding:6px 8px;text-align:center;color:var(--text3);font-style:italic">Not measured</td>';
-        }
-        h+='</tr>';
-      });
-      // Total Fabric row
-      var totParts=[];
-      if(totMain>0) totParts.push('Main: '+totMain+' m');
-      if(totSheer>0) totParts.push('Sheer: '+totSheer+' m');
-      if(totRomFab>0) totParts.push('Roman: '+totRomFab+' m');
-      if(totParts.length){
-        h+='<tr style="background:var(--bg2)">'
-          +'<td colspan="3" style="padding:6px 8px;font-size:11px;font-weight:800;color:var(--text3)">Total Fabric</td>'
-          +'<td style="padding:6px 8px;text-align:right;font-size:12px;font-weight:900;color:var(--text)">'+totParts.join(' · ')+'</td>'
-          +'</tr>';
-      }
-      h+='</tbody></table>';
-    }
-  }
-
-  // ── CATEGORY SECTIONS ────────────────────────────────────────────────
   var displayCats=[
     {dc:'curtains',   label:'Curtains',     cats:['curtains_main','curtains_sheer']},
     {dc:'roman_blind',label:'Roman Blinds', cats:['roman_blind']},
@@ -5585,21 +5525,27 @@ function _renderSumRoomExpanded(room, ri){
     h+='<div style="font-size:11px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:var(--text);padding:5px 0;border-bottom:2px solid var(--red);margin-bottom:8px">'+esc(info.label)+'</div>';
 
     var liNum=0;
-
-    function liMRP(label,qtyStr,mrp,total,gk){
+    function delBtn(gk,lineKey){
+      return '<button onclick="toggleHiddenLine('+ri+',\''+gk.replace(/'/g,"\\'")+'\',\''+lineKey+'\')" '
+        +'style="border:none;background:none;color:var(--text4);cursor:pointer;font-size:13px;padding:0;line-height:1" title="Remove line">✕</button>';
+    }
+    function liMRP(label,qtyStr,mrp,total,gk,lineKey){
+      if(lineKey&&isLineHidden(ri,gk,lineKey)) return;
       liNum++;
-      h+='<div style="display:grid;grid-template-columns:18px 1fr auto auto;gap:2px 6px;padding:5px 2px;border-bottom:1px solid var(--border);align-items:center">'
+      h+='<div style="display:grid;grid-template-columns:18px 1fr auto auto 20px;gap:2px 4px;padding:5px 2px;border-bottom:1px solid var(--border);align-items:center">'
         +'<div style="font-size:11px;color:var(--text3);text-align:right">'+liNum+'.</div>'
         +'<div style="font-size:12px;font-weight:700;color:var(--text)">'+esc(label)+'</div>'
         +'<div style="font-size:11px;color:var(--text3);text-align:right;white-space:nowrap">'+esc(qtyStr)+' × '
         +'<input type="number" value="'+mrp+'" style="width:52px;font-size:11px;padding:2px 3px;border:1px solid var(--border2);border-radius:3px;background:var(--bg2);color:var(--text);-webkit-appearance:none;text-align:right" '
         +'onchange="updateGroupMRP('+ri+',\''+gk.replace(/'/g,"\\'")+'\',this.value)" onclick="this.select();event.stopPropagation()"></div>'
         +'<div style="font-size:13px;font-weight:800;color:var(--red);text-align:right;white-space:nowrap">'+fmt(total)+'</div>'
+        +(lineKey?delBtn(gk,lineKey):'<div></div>')
         +'</div>';
     }
-    function liRate(label,qtyStr,rate,total,rateKey,gk){
+    function liRate(label,qtyStr,rate,total,rateKey,gk,lineKey){
+      if(lineKey&&isLineHidden(ri,gk,lineKey)) return;
       liNum++;
-      h+='<div style="display:grid;grid-template-columns:18px 1fr auto auto;gap:2px 6px;padding:5px 2px;border-bottom:1px solid var(--border);align-items:center">'
+      h+='<div style="display:grid;grid-template-columns:18px 1fr auto auto 20px;gap:2px 4px;padding:5px 2px;border-bottom:1px solid var(--border);align-items:center">'
         +'<div style="font-size:11px;color:var(--text3);text-align:right">'+liNum+'.</div>'
         +'<div style="font-size:12px;font-weight:700;color:var(--text)">'+esc(label)+'</div>'
         +'<div style="font-size:11px;color:var(--text3);text-align:right;white-space:nowrap">'+esc(qtyStr)+' × '
@@ -5608,19 +5554,81 @@ function _renderSumRoomExpanded(room, ri){
             :'onchange="updateQuoteRate(\''+rateKey+'\',this.value)"')
         +' onclick="this.select();event.stopPropagation()"></div>'
         +'<div style="font-size:13px;font-weight:800;color:var(--red);text-align:right;white-space:nowrap">'+fmt(total)+'</div>'
+        +(lineKey?delBtn(gk,lineKey):'<div></div>')
         +'</div>';
     }
     function liFixed(label,qtyStr,total){
       liNum++;
-      h+='<div style="display:grid;grid-template-columns:18px 1fr auto auto;gap:2px 6px;padding:5px 2px;border-bottom:1px solid var(--border);align-items:center">'
+      h+='<div style="display:grid;grid-template-columns:18px 1fr auto auto 20px;gap:2px 4px;padding:5px 2px;border-bottom:1px solid var(--border);align-items:center">'
         +'<div style="font-size:11px;color:var(--text3);text-align:right">'+liNum+'.</div>'
         +'<div style="font-size:12px;font-weight:700;color:var(--text)">'+esc(label)+'</div>'
         +'<div style="font-size:11px;color:var(--text3);text-align:right;white-space:nowrap">'+esc(qtyStr)+'</div>'
         +'<div style="font-size:13px;font-weight:800;color:var(--red);text-align:right;white-space:nowrap">'+fmt(total)+'</div>'
+        +'<div></div>'
         +'</div>';
     }
 
+    var catTotal=-1; // -1 = section total rendered inline; ≥0 = render below
+
     if(info.dc==='curtains'){
+      // ── Measurement table: curtain areas only ──────────────────────────
+      var curtMeasMap={}, curtMeasOrd=[];
+      areaItems.forEach(function(item){
+        if(!curtMeasMap[item.area.id]){ curtMeasMap[item.area.id]={area:item.area,mainMeta:null,sheerMeta:null}; curtMeasOrd.push(item.area.id); }
+        var e=curtMeasMap[item.area.id];
+        if(item.d&&item.d._meta){
+          if(item.sel.category==='curtains_main') e.mainMeta=item.d._meta;
+          else if(item.sel.category==='curtains_sheer') e.sheerMeta=item.d._meta;
+        }
+      });
+      if(curtMeasOrd.length){
+        h+='<table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden">';
+        h+='<thead><tr style="background:var(--bg2);border-bottom:1px solid var(--border)">'
+          +'<th style="text-align:left;padding:5px 8px;font-size:10px;font-weight:700;color:var(--text3)">Area</th>'
+          +'<th style="text-align:center;padding:5px 4px;font-size:10px;font-weight:700;color:var(--text3)">W × H</th>'
+          +'<th style="text-align:center;padding:5px 4px;font-size:10px;font-weight:700;color:var(--text3)">Qty</th>'
+          +'<th style="text-align:right;padding:5px 8px;font-size:10px;font-weight:700;color:var(--text3)">Fabric Req</th>'
+          +'</tr></thead><tbody>';
+        var totMain=0, totSheer=0;
+        curtMeasOrd.forEach(function(aid){
+          var e=curtMeasMap[aid], area=e.area;
+          var qty=parseInt(area.qty)||1, isMeas=area.width&&area.height;
+          var fabParts=[];
+          if(e.mainMeta&&e.mainMeta.fabricM!=null){
+            var pl=e.mainMeta.panelLen||0;
+            fabParts.push(e.mainMeta.panels+'p × '+roundTo005(pl).toFixed(2)+'m = '+e.mainMeta.fabricM+'m');
+            totMain=roundTo005(totMain+(parseFloat(e.mainMeta.fabricM)||0));
+          }
+          if(e.sheerMeta&&e.sheerMeta.fabricM!=null){
+            var pl2=e.sheerMeta.panelLen||0;
+            fabParts.push('Sheer: '+e.sheerMeta.panels+'p × '+roundTo005(pl2).toFixed(2)+'m = '+e.sheerMeta.fabricM+'m');
+            totSheer=roundTo005(totSheer+(parseFloat(e.sheerMeta.fabricM)||0));
+          }
+          h+='<tr style="border-bottom:1px solid var(--border)">';
+          h+='<td style="padding:6px 8px;font-size:13px;font-weight:700;color:var(--text)">'+esc(area.name)+'</td>';
+          if(isMeas){
+            h+='<td style="padding:6px;text-align:center;white-space:nowrap;color:var(--text2)">'+area.width+'" × '+area.height+'"</td>';
+            h+='<td style="padding:6px;text-align:center;white-space:nowrap">'
+              +'<input type="number" min="1" value="'+qty+'" '
+              +'style="width:30px;font-size:11px;padding:2px;border:1px solid var(--border2);border-radius:3px;background:var(--bg);color:var(--text);-webkit-appearance:none;text-align:center" '
+              +'onchange="updateAreaQty('+ri+',\''+area.id+'\',this.value)" onclick="this.select();event.stopPropagation()"> Nos</td>';
+            h+='<td style="padding:6px 8px;text-align:right;color:var(--text2);font-size:11px;line-height:1.7">'+(fabParts.join('<br>')||'—')+'</td>';
+          } else {
+            h+='<td colspan="3" style="padding:6px 8px;text-align:center;color:var(--text3);font-style:italic">Not measured</td>';
+          }
+          h+='</tr>';
+        });
+        var totParts=[];
+        if(totMain>0) totParts.push('Main: '+totMain+' m');
+        if(totSheer>0) totParts.push('Sheer: '+totSheer+' m');
+        if(totParts.length){
+          h+='<tr style="background:var(--bg2)"><td colspan="3" style="padding:5px 8px;font-size:10px;font-weight:800;color:var(--text3)">Total Fabric</td>'
+            +'<td style="padding:5px 8px;text-align:right;font-size:11px;font-weight:900;color:var(--text)">'+totParts.join(' · ')+'</td></tr>';
+        }
+        h+='</tbody></table>';
+      }
+
+      // ── Line items: flat combined (main first, sheer after) ─────────────
       var mainG={}, mainOrd=[], sheerG={}, sheerOrd=[];
       areaItems.forEach(function(item){
         if(!item.d||!item.fp) return;
@@ -5632,8 +5640,7 @@ function _renderSumRoomExpanded(room, ri){
             fabM:0,fabricCost:0,stitchCost:0,
             beltCost:0,totalPanels:0,beltRate:0,
             bottomWeightCost:0,bottomWeightRate:0,
-            liningCost:0,liningStitchCost:0,liningStitchRate:0,
-            installCost:0,qty:0,liningType:'none'};
+            liningCost:0,liningStitchCost:0,liningStitchRate:0,qty:0,liningType:'none'};
           ord.push(gk);
         }
         var g=map[gk], c=calcCurtains(item.area,item.sel,item.fp);
@@ -5642,62 +5649,106 @@ function _renderSumRoomExpanded(room, ri){
         g.beltCost+=c.beltCost||0; g.totalPanels+=c.panels||0; g.beltRate=c.beltRate||0;
         g.bottomWeightCost+=c.bottomWeightCost||0; g.bottomWeightRate=c.bottomWeightRate||0;
         g.liningCost+=c.liningCost; g.liningStitchCost+=c.liningStitchCost||0; g.liningStitchRate=c.liningStitchRate||0;
-        g.installCost+=c.installCost; g.qty+=(parseInt(item.area.qty)||1);
+        g.qty+=(parseInt(item.area.qty)||1);
         if(c.liningType&&c.liningType!=='none') g.liningType=c.liningType;
       });
-      if(mainOrd.length){
-        h+='<div style="font-size:10px;font-weight:900;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;padding:4px 0 2px;margin-top:2px">Main</div>';
-        mainOrd.forEach(function(gk){
-          var g=mainG[gk];
-          liMRP('Curtain Fabric – '+g.name, td(g.fabM)+' m', parseFloat(g.prod&&g.prod.mrp)||0, g.fabricCost, gk);
-          var sr=g.repSel.rates&&g.repSel.rates.stitchRate!=null?g.repSel.rates.stitchRate:qrate('curtainStitchPerM');
-          liRate('Stitching Charges', td(g.fabM)+' m', sr, g.stitchCost, 'stitchRate', gk);
-          if(g.beltCost>0)
-            liRate('Belt Making Charges', g.totalPanels+' pcs', g.beltRate, g.beltCost, 'beltRate', gk);
-          if(g.liningCost>0){
-            var lr=g.repSel.rates&&g.repSel.rates.liningRate!=null?g.repSel.rates.liningRate:getLiningRate('curtains_main',g.liningType);
-            liRate('Lining Charges ('+g.liningType+')', td(g.fabM)+' m', lr, g.liningCost, 'liningRate', gk);
-          }
+      mainOrd.forEach(function(gk){
+        var g=mainG[gk];
+        liMRP('Fabric – '+g.name, td(g.fabM)+' m', parseFloat(g.prod&&g.prod.mrp)||0, g.fabricCost, gk, 'fabricMain');
+        var sr=g.repSel.rates&&g.repSel.rates.stitchRate!=null?g.repSel.rates.stitchRate:qrate('curtainStitchPerM');
+        liRate('Stitching Charges', td(g.fabM)+' m', sr, g.stitchCost, 'stitchRate', gk, 'stitchMain');
+        if(g.beltCost>0)
+          liRate('Belt Making Charges', g.totalPanels+' pcs', g.beltRate, g.beltCost, 'beltRate', gk, 'belt');
+        if(g.liningCost>0){
+          var lr=g.repSel.rates&&g.repSel.rates.liningRate!=null?g.repSel.rates.liningRate:getLiningRate('curtains_main',g.liningType);
+          liRate('Lining Charges ('+g.liningType+')', td(g.fabM)+' m', lr, g.liningCost, 'liningRate', gk, 'liningMain');
           if(g.liningStitchCost>0)
-            liRate('Lining Stitching Charges', td(g.fabM)+' m', g.liningStitchRate, g.liningStitchCost, 'liningStitchRate', gk);
-        });
-      }
-      if(sheerOrd.length){
-        h+='<div style="font-size:10px;font-weight:900;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;padding:4px 0 2px;margin-top:6px;border-top:1px solid var(--border)">Sheer</div>';
-        sheerOrd.forEach(function(gk){
-          var g=sheerG[gk];
-          liMRP('Curtain Fabric – Sheer – '+g.name, td(g.fabM)+' m', parseFloat(g.prod&&g.prod.mrp)||0, g.fabricCost, gk);
-          var sr=g.repSel.rates&&g.repSel.rates.stitchRate!=null?g.repSel.rates.stitchRate:qrate('curtainStitchPerM');
-          liRate('Stitching Charges', td(g.fabM)+' m', sr, g.stitchCost, 'stitchRate', gk);
-          if(g.bottomWeightCost>0)
-            liRate('Bottom Weight', g.totalPanels+' pcs × 1.5m', g.bottomWeightRate, g.bottomWeightCost, 'bottomWeightRate', gk);
-          if(g.beltCost>0)
-            liRate('Belt Making Charges', g.totalPanels+' pcs', g.beltRate, g.beltCost, 'beltRate', gk);
-          if(g.liningCost>0){
-            var lr=g.repSel.rates&&g.repSel.rates.liningRate!=null?g.repSel.rates.liningRate:getLiningRate('curtains_sheer',g.liningType);
-            liRate('Lining Charges ('+g.liningType+')', td(g.fabM)+' m', lr, g.liningCost, 'liningRate', gk);
-          }
-          if(g.liningStitchCost>0)
-            liRate('Lining Stitching Charges', td(g.fabM)+' m', g.liningStitchRate, g.liningStitchCost, 'liningStitchRate', gk);
-        });
-      }
-      // Install — aggregate across main + sheer
-      var totalInstall=0, instQty=0, repInstSel=null, instGk=mainOrd[0]||sheerOrd[0]||'';
-      areaItems.forEach(function(item){
-        if(!item.d||!item.fp) return;
-        var isMn=item.sel.category==='curtains_main', isSh=item.sel.category==='curtains_sheer';
-        if(!isMn&&!isSh) return;
-        var c=calcCurtains(item.area,item.sel,item.fp);
-        totalInstall+=c.installCost;
-        if(isMn){ instQty+=(parseInt(item.area.qty)||1); if(!repInstSel) repInstSel=item.sel; }
+            liRate('Lining Stitching Charges', td(g.fabM)+' m', g.liningStitchRate, g.liningStitchCost, 'liningStitchRate', gk, 'liningStitchMain');
+        }
       });
-      if(totalInstall>0){
-        h+='<div style="font-size:10px;font-weight:900;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;padding:4px 0 2px;margin-top:6px;border-top:1px solid var(--border)"></div>';
-        var ir=repInstSel&&repInstSel.rates&&repInstSel.rates.installRate!=null?repInstSel.rates.installRate:qrate('curtainInstall');
-        liRate('Install', instQty+' win', ir, totalInstall, 'installRate', instGk);
-      }
+      sheerOrd.forEach(function(gk){
+        var g=sheerG[gk];
+        liMRP('Fabric Sheer – '+g.name, td(g.fabM)+' m', parseFloat(g.prod&&g.prod.mrp)||0, g.fabricCost, gk, 'fabricSheer');
+        var sr=g.repSel.rates&&g.repSel.rates.stitchRate!=null?g.repSel.rates.stitchRate:qrate('curtainStitchPerM');
+        liRate('Stitching Charges', td(g.fabM)+' m', sr, g.stitchCost, 'stitchRate', gk, 'stitchSheer');
+        if(g.bottomWeightCost>0)
+          liRate('Bottom Weight', g.totalPanels+' pcs × 1.5m', g.bottomWeightRate, g.bottomWeightCost, 'bottomWeightRate', gk, 'bottomWeight');
+        if(g.beltCost>0)
+          liRate('Belt Making Charges', g.totalPanels+' pcs', g.beltRate, g.beltCost, 'beltRate', gk, 'beltSheer');
+        if(g.liningCost>0){
+          var lr=g.repSel.rates&&g.repSel.rates.liningRate!=null?g.repSel.rates.liningRate:getLiningRate('curtains_sheer',g.liningType);
+          liRate('Lining Charges ('+g.liningType+')', td(g.fabM)+' m', lr, g.liningCost, 'liningRate', gk, 'liningSheer');
+          if(g.liningStitchCost>0)
+            liRate('Lining Stitching Charges', td(g.fabM)+' m', g.liningStitchRate, g.liningStitchCost, 'liningStitchRate', gk, 'liningStitchSheer');
+        }
+      });
+      // Section total: sum visible costs only (install excluded from curtains)
+      catTotal=0;
+      mainOrd.forEach(function(gk){
+        var g=mainG[gk];
+        if(!isLineHidden(ri,gk,'fabricMain')) catTotal+=g.fabricCost;
+        if(!isLineHidden(ri,gk,'stitchMain')) catTotal+=g.stitchCost;
+        if(!isLineHidden(ri,gk,'belt')) catTotal+=g.beltCost;
+        if(!isLineHidden(ri,gk,'liningMain')) catTotal+=g.liningCost;
+        if(!isLineHidden(ri,gk,'liningStitchMain')) catTotal+=g.liningStitchCost;
+      });
+      sheerOrd.forEach(function(gk){
+        var g=sheerG[gk];
+        if(!isLineHidden(ri,gk,'fabricSheer')) catTotal+=g.fabricCost;
+        if(!isLineHidden(ri,gk,'stitchSheer')) catTotal+=g.stitchCost;
+        if(!isLineHidden(ri,gk,'bottomWeight')) catTotal+=g.bottomWeightCost;
+        if(!isLineHidden(ri,gk,'beltSheer')) catTotal+=g.beltCost;
+        if(!isLineHidden(ri,gk,'liningSheer')) catTotal+=g.liningCost;
+        if(!isLineHidden(ri,gk,'liningStitchSheer')) catTotal+=g.liningStitchCost;
+      });
 
     } else if(info.dc==='roman_blind'){
+      // ── Measurement table: roman areas only ────────────────────────────
+      var romMeasMap={}, romMeasOrd=[];
+      areaItems.forEach(function(item){
+        if(!romMeasMap[item.area.id]){ romMeasMap[item.area.id]={area:item.area,sqft:0,fabM:0}; romMeasOrd.push(item.area.id); }
+        var e=romMeasMap[item.area.id];
+        if(item.d&&item.d._meta){
+          e.sqft=item.d._meta.sqft||0;
+          if(item.d._meta.fabricM) e.fabM=roundTo005(e.fabM+(parseFloat(item.d._meta.fabricM)||0));
+        }
+      });
+      if(romMeasOrd.length){
+        h+='<table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden">';
+        h+='<thead><tr style="background:var(--bg2);border-bottom:1px solid var(--border)">'
+          +'<th style="text-align:left;padding:5px 8px;font-size:10px;font-weight:700;color:var(--text3)">Area</th>'
+          +'<th style="text-align:center;padding:5px 4px;font-size:10px;font-weight:700;color:var(--text3)">W × H</th>'
+          +'<th style="text-align:center;padding:5px 4px;font-size:10px;font-weight:700;color:var(--text3)">Qty</th>'
+          +'<th style="text-align:right;padding:5px 8px;font-size:10px;font-weight:700;color:var(--text3)">Area / Fabric</th>'
+          +'</tr></thead><tbody>';
+        var totRomSqft=0, totRomFab=0;
+        romMeasOrd.forEach(function(aid){
+          var e=romMeasMap[aid], area=e.area;
+          var qty=parseInt(area.qty)||1, isMeas=area.width&&area.height;
+          h+='<tr style="border-bottom:1px solid var(--border)">';
+          h+='<td style="padding:6px 8px;font-size:13px;font-weight:700;color:var(--text)">'+esc(area.name)+'</td>';
+          if(isMeas){
+            h+='<td style="padding:6px;text-align:center;white-space:nowrap;color:var(--text2)">'+area.width+'" × '+area.height+'"</td>';
+            h+='<td style="padding:6px;text-align:center;white-space:nowrap">'
+              +'<input type="number" min="1" value="'+qty+'" '
+              +'style="width:30px;font-size:11px;padding:2px;border:1px solid var(--border2);border-radius:3px;background:var(--bg);color:var(--text);-webkit-appearance:none;text-align:center" '
+              +'onchange="updateAreaQty('+ri+',\''+area.id+'\',this.value)" onclick="this.select();event.stopPropagation()"> Nos</td>';
+            h+='<td style="padding:6px 8px;text-align:right;color:var(--text2);font-size:11px">'
+              +td(e.sqft).toFixed(2)+' sqft'+(e.fabM>0?' / '+e.fabM+' m':'')+'</td>';
+            totRomSqft=td(totRomSqft+e.sqft); totRomFab=roundTo005(totRomFab+e.fabM);
+          } else {
+            h+='<td colspan="3" style="padding:6px 8px;text-align:center;color:var(--text3);font-style:italic">Not measured</td>';
+          }
+          h+='</tr>';
+        });
+        if(totRomSqft>0){
+          h+='<tr style="background:var(--bg2)"><td colspan="3" style="padding:5px 8px;font-size:10px;font-weight:800;color:var(--text3)">Total</td>'
+            +'<td style="padding:5px 8px;text-align:right;font-size:11px;font-weight:900;color:var(--text)">'+totRomSqft.toFixed(2)+' sqft'+(totRomFab>0?' / '+totRomFab+' m':'')+'</td></tr>';
+        }
+        h+='</tbody></table>';
+      }
+
+      // ── Roman line items ───────────────────────────────────────────────
       var romG={}, romOrd=[];
       areaItems.forEach(function(item){
         if(!item.d||!item.fp) return;
@@ -5714,19 +5765,25 @@ function _renderSumRoomExpanded(room, ri){
         g.liningCost+=rb.liningCost; g.qty+=(parseInt(item.area.qty)||1);
         if(rb.liningType&&rb.liningType!=='none') g.liningType=rb.liningType;
       });
+      catTotal=0;
       romOrd.forEach(function(gk){
         var g=romG[gk];
         var mr=g.repSel.rates&&g.repSel.rates.mechRate!=null?g.repSel.rates.mechRate:qrate('romanMech');
-        liRate('Mechanism', td(g.sqft)+' sqft', mr, g.mechCost, 'mechRate', gk);
+        liRate('Mechanism', td(g.sqft)+' sqft', mr, g.mechCost, 'mechRate', gk, 'mechanism');
         var sr=g.repSel.rates&&g.repSel.rates.stitchRateRoman!=null?g.repSel.rates.stitchRateRoman:qrate('romanStitch');
-        liRate('Stitching', g.qty+' win', sr, g.stitchCost, 'stitchRateRoman', gk);
+        liRate('Blind Stitching', g.qty+' win', sr, g.stitchCost, 'stitchRateRoman', gk, 'stitchRoman');
         var ir=g.repSel.rates&&g.repSel.rates.installRate!=null?g.repSel.rates.installRate:qrate('romanInstall');
-        liRate('Installation', g.qty+' win', ir, g.installCost, 'installRate', gk);
-        liMRP('Fabric – '+g.name, td(g.fabM)+' m', parseFloat(g.prod&&g.prod.mrp)||0, g.fabricCost, gk);
+        liRate('Fixing Charges', g.qty+' win', ir, g.installCost, 'installRate', gk, 'fixingRoman');
+        liMRP('Fabric – Main – '+g.name, td(g.fabM)+' m', parseFloat(g.prod&&g.prod.mrp)||0, g.fabricCost, gk, 'fabricRoman');
         if(g.liningCost>0){
           var lr=g.repSel.rates&&g.repSel.rates.liningRate!=null?g.repSel.rates.liningRate:getLiningRate('roman_blind',g.liningType);
-          liRate('Lining cloth ('+g.liningType+')', td(g.fabM)+' m', lr, g.liningCost, 'liningRate', gk);
+          liRate('Lining for Main ('+g.liningType+')', td(g.fabM)+' m', lr, g.liningCost, 'liningRate', gk, 'liningRoman');
         }
+        if(!isLineHidden(ri,gk,'mechanism')) catTotal+=g.mechCost;
+        if(!isLineHidden(ri,gk,'stitchRoman')) catTotal+=g.stitchCost;
+        if(!isLineHidden(ri,gk,'fixingRoman')) catTotal+=g.installCost;
+        if(!isLineHidden(ri,gk,'fabricRoman')) catTotal+=g.fabricCost;
+        if(!isLineHidden(ri,gk,'liningRoman')) catTotal+=g.liningCost;
       });
 
     } else if(info.dc==='headboard'){
@@ -5760,8 +5817,8 @@ function _renderSumRoomExpanded(room, ri){
       });
     }
 
-    // Section total
-    var catTotal=areaItems.reduce(function(s,item){ return s+(item.d?item.d.total:0); },0);
+    // Section total (curtains/roman compute their own above; others fall through here)
+    if(catTotal<0) catTotal=areaItems.reduce(function(s,item){ return s+(item.d?item.d.total:0); },0);
     h+='<div style="display:flex;justify-content:flex-end;align-items:center;padding:6px 2px;border-top:2px solid var(--border);margin-top:2px">'
       +'<span style="font-size:11px;color:var(--text3);margin-right:10px">'+esc(info.label)+' Total</span>'
       +'<span style="font-size:15px;font-weight:900;color:var(--red)">'+fmt(catTotal)+'</span>'
