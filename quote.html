@@ -2169,7 +2169,11 @@ var P_DEFAULTS = {
 var P = (function(){
   try {
     var saved = JSON.parse(localStorage.getItem('darla_P_v2'));
-    if (saved && typeof saved === 'object') return Object.assign({}, P_DEFAULTS, saved);
+    if (saved && typeof saved === 'object') {
+      // V3 migration: curtainPanelW was 52 (full width) but spec §3.1 changed to 22 (coverage)
+      if (saved.curtainPanelW === 52) delete saved.curtainPanelW;
+      return Object.assign({}, P_DEFAULTS, saved);
+    }
   } catch(e) {}
   return Object.assign({}, P_DEFAULTS);
 })();
@@ -2356,6 +2360,7 @@ function calcCurtains(area, sel, fp) {
   var liningStitchCost = liningType!=='none' ? Math.round(fabricM * liningStitchRate) : 0;
   var installRate = sel.rates && sel.rates.installRate != null ? sel.rates.installRate : qrate('curtainInstall');
   var installCost = Math.round(installRate * qty);
+  beltCost=beltCost||0; bottomWeightCost=bottomWeightCost||0; liningStitchCost=liningStitchCost||0;
   var total = fabricCost + stitchCost + beltCost + bottomWeightCost + liningCost + liningStitchCost + installCost;
   return { panels:panels, panelLen:displayPanelLen, fabricM:td(fabricM), fabricCost:fabricCost, stitchCost:stitchCost,
            beltCost:beltCost, beltRate:beltRate, bottomWeightCost:bottomWeightCost, bottomWeightRate:bottomWeightRate,
@@ -5645,10 +5650,10 @@ function _renderSumRoomExpanded(room, ri){
         }
         var g=map[gk], c=calcCurtains(item.area,item.sel,item.fp);
         g.fabM=roundTo005(g.fabM+c.fabricM);
-        g.fabricCost+=c.fabricCost; g.stitchCost+=c.stitchCost;
+        g.fabricCost+=c.fabricCost||0; g.stitchCost+=c.stitchCost||0;
         g.beltCost+=c.beltCost||0; g.totalPanels+=c.panels||0; g.beltRate=c.beltRate||0;
         g.bottomWeightCost+=c.bottomWeightCost||0; g.bottomWeightRate=c.bottomWeightRate||0;
-        g.liningCost+=c.liningCost; g.liningStitchCost+=c.liningStitchCost||0; g.liningStitchRate=c.liningStitchRate||0;
+        g.liningCost+=c.liningCost||0; g.liningStitchCost+=c.liningStitchCost||0; g.liningStitchRate=c.liningStitchRate||0;
         g.qty+=(parseInt(item.area.qty)||1);
         if(c.liningType&&c.liningType!=='none') g.liningType=c.liningType;
       });
