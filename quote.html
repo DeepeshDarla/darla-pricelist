@@ -2147,6 +2147,7 @@ var P_DEFAULTS = {
   romanMech:            180,   // per sqft
   romanInstall:         600,   // per window
   romanStitch:          300,   // per window
+  blindMinSqft:       16.15,   // minimum chargeable area per unit (roman + blind)
   // ── Headboard ──
   headboardAreaRate:    750,   // per sqft (making charge)
   headboardOverhang:     10,   // inches added to W and H
@@ -2374,7 +2375,8 @@ function calcRomanBlind(area, sel, fp) {
   var W = parseFloat(area.width)||0, H = parseFloat(area.height)||0, qty = parseInt(area.qty)||1;
   // Area: ceiling to nearest 0.25 ft — spec §4.1
   var Wft = roundUpTo025(W/12), Hft = roundUpTo025(H/12);
-  var sqft = td(Wft * Hft * qty);
+  var unitSqft = Math.max(td(Wft * Hft), qrate('blindMinSqft'));
+  var sqft = td(unitSqft * qty);
   var mechRate = sel.rates && sel.rates.mechRate != null ? sel.rates.mechRate : qrate('romanMech');
   var mechCost = Math.round(sqft * mechRate);
   // Fabric — spec §4.2 / §4.3
@@ -2407,7 +2409,8 @@ function calcRomanBlind(area, sel, fp) {
 
 function calcBlind(area, fp) {
   var W = parseFloat(area.width)||0, H = parseFloat(area.height)||0, qty = parseInt(area.qty)||1;
-  var sqft = td(r2(W/12,0.25) * r2(H/12,0.25) * qty);
+  var unitSqft = Math.max(td(r2(W/12,0.25) * r2(H/12,0.25)), qrate('blindMinSqft'));
+  var sqft = td(unitSqft * qty);
   var mrp = parseFloat(fp.product.mrp)||0, disc = parseFloat(fp.discount)||0;
   var cost = Math.round(sqft * mrp * (1 - disc/100));
   return { sqft:sqft, cost:cost, total:cost };
@@ -5925,7 +5928,8 @@ function _renderSumConstantsTab(){
   h+=cRow('Lining – Regular','curtainLiningRegular','₹/m');
   h+=cRow('Lining – Blackout','curtainLiningBlackout','₹/m');
   h+=cRow('Lining – Dimout','curtainLiningDimout','₹/m');
-  h+=cSection('Roman Blind');
+  h+=cSection('Roman Blind & Blind');
+  h+=cRow('Min chargeable area','blindMinSqft','sqft');
   h+=cRow('Stitch','romanStitch','₹/window');
   h+=cRow('Mechanism','romanMech','₹/sqft');
   h+=cRow('Install','romanInstall','₹/window');
