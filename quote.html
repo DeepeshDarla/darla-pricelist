@@ -2673,6 +2673,7 @@ var _replaceSelProdIdx = -1;    // index of product to replace (-1 = add new)
 var _selRomanType = '';          // 'single'|'double' for roman_blind
 var _selRomanLayerTarget = 1;   // 1|2 — which layer the next product search goes into
 var _selAreaLocked = false;     // true when area was pre-set from area card; hides checklist
+var _editFromSummary = false;   // true when editing a selection launched from the summary screen
 
 // Customer search state
 var _custResults = [];
@@ -3808,6 +3809,7 @@ function editSelFromSummary(ri, selId){
   var room=APP.quote.rooms[ri]; if(!room) return;
   var si=(room.selections||[]).findIndex(function(s){ return s.id===selId; });
   if(si<0) return;
+  _editFromSummary=true;
   openEditSel(si);
 }
 // ── ADD AREA SCREEN ──────────────────────────────────────────
@@ -4449,7 +4451,164 @@ function _selStepBar(){
         +(done?' onclick="_selStep='+n+';renderAddSelection()"':'')+'>'+s+'</div>';
     }).join('')+'</div>';
 }
+function _renderCompactEditView(){
+  var cat=_selCategory;
+  var isCurtainMain=cat==='curtains_main';
+  var isCurtainSheer=cat==='curtains_sheer';
+  var isCurtain=isCurtainMain||isCurtainSheer;
+  var isRoman=cat==='roman_blind';
+  var isFabricCat=isCurtain||isRoman||cat==='headboard';
+  var room=APP.quote.rooms[_activeRoom];
+  var area=room&&(room.areas||[]).find(function(a){ return a.id===(_selOpeningId||(_selAreaIds[0]||null)); });
+
+  var h='<div style="padding:0 0 80px">';
+  // Back link
+  h+='<button class="btn ghost sm" style="margin-bottom:14px" onclick="_editFromSummary=false;goTo(\'screen-summary\')">'
+    +'← Back to Summary</button>';
+  // Header: category + area
+  h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">'
+    +'<span class="type-badge '+cat+'">'+selCatLabel(cat)+'</span>';
+  if(area){
+    h+='<span style="font-size:12px;color:var(--text2);font-weight:700">'+esc(area.name)
+      +(area.width?'  '+area.width+'"×'+area.height+'"':'')+'</span>';
+  }
+  h+='</div>';
+
+  // ── Products ─────────────────────────────────────────────────
+  h+='<div style="margin-bottom:16px">';
+  h+='<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">'
+    +(isCurtainMain?'Main Fabric':isCurtainSheer?'Sheer Fabric':isRoman?'Fabric':'Product')+'</div>';
+  if(_selProducts.length){
+    _selProducts.forEach(function(p,i){
+      var prod=p.product||{};
+      var nameParts=[prod.brand,prod.catalog,prod.s_no].filter(Boolean);
+      var pname=nameParts.join(' / ')||(prod.manualName||'—');
+      var wCm=p.widthCm||parseFloat(prod.width)||0;
+      h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;margin-bottom:8px">';
+      h+='<div style="font-size:14px;font-weight:900;color:var(--text);margin-bottom:10px">'+esc(pname)+'</div>';
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+      h+='<div><label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:3px">MRP (₹/m)</label>'
+        +'<input class="inp" type="number" value="'+esc(String(prod.mrp||0))+'" '
+        +'style="padding:9px;font-size:16px;font-weight:900;border:2px solid var(--border2)" '
+        +'onchange="_selProducts['+i+'].product.mrp=parseFloat(this.value)||0;renderAddSelection()" onclick="this.select()"></div>';
+      if(isFabricCat){
+        h+='<div><label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:3px">Width (cm)</label>'
+          +'<input class="inp" type="number" value="'+esc(String(wCm||''))+'" placeholder="e.g. 280" '
+          +'style="padding:9px;font-size:16px;font-weight:900;border:2px solid var(--border2)" '
+          +'onchange="setSelProdWidthCm('+i+',this.value)" onclick="this.select()"></div>';
+      }
+      h+='</div>';
+      h+='</div>';
+    });
+  } else {
+    h+='<div style="color:var(--text3);font-size:13px;padding:12px;text-align:center">No product selected</div>';
+  }
+  h+='</div>';
+
+  // ── Sheer products (curtains_main with sheer) ─────────────────
+  if(isCurtainMain && _selSheerEnabled && _selSheerProducts.length){
+    h+='<div style="margin-bottom:16px">';
+    h+='<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Sheer Fabric</div>';
+    _selSheerProducts.forEach(function(p,i){
+      var prod=p.product||{};
+      var nameParts=[prod.brand,prod.catalog,prod.s_no].filter(Boolean);
+      var pname=nameParts.join(' / ')||(prod.manualName||'—');
+      var wCm=p.widthCm||parseFloat(prod.width)||0;
+      h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;margin-bottom:8px">';
+      h+='<div style="font-size:14px;font-weight:900;color:var(--text);margin-bottom:10px">'+esc(pname)+'</div>';
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+      h+='<div><label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:3px">MRP (₹/m)</label>'
+        +'<input class="inp" type="number" value="'+esc(String(prod.mrp||0))+'" '
+        +'style="padding:9px;font-size:16px;font-weight:900;border:2px solid var(--border2)" '
+        +'onchange="_selSheerProducts['+i+'].product.mrp=parseFloat(this.value)||0;renderAddSelection()" onclick="this.select()"></div>';
+      h+='<div><label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:3px">Width (cm)</label>'
+        +'<input class="inp" type="number" value="'+esc(String(wCm||''))+'" placeholder="e.g. 280" '
+        +'style="padding:9px;font-size:16px;font-weight:900;border:2px solid var(--border2)" '
+        +'onchange="setSheerProdWidthCm('+i+',this.value)" onclick="this.select()"></div>';
+      h+='</div>';
+      h+='</div>';
+    });
+    h+='</div>';
+  }
+
+  // ── Stitch Pattern ────────────────────────────────────────────
+  if(isCurtain){
+    h+='<div style="margin-bottom:16px">';
+    h+='<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Stitch Pattern</div>';
+    h+='<div class="stitch-pills">';
+    ['pleated','eyelet','ripple','pinch','eliza','plain'].forEach(function(s){
+      h+='<button class="stitch-pill'+(_selStitch===s?' on':'')+'" onclick="_selStitch=\''+s+'\';renderAddSelection()">'+s.charAt(0).toUpperCase()+s.slice(1)+'</button>';
+    });
+    h+='</div>';
+    if(isCurtainMain && _selSheerEnabled && _selSheerProducts.length){
+      h+='<div style="margin-top:10px"><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">Sheer Stitch Pattern</div>';
+      h+='<div class="stitch-pills">';
+      ['pleated','eyelet','ripple','pinch','eliza','plain'].forEach(function(s){
+        h+='<button class="stitch-pill'+(_selSheerStitch===s?' on':'')+'" onclick="_selSheerStitch=\''+s+'\';renderAddSelection()">'+s.charAt(0).toUpperCase()+s.slice(1)+'</button>';
+      });
+      h+='</div></div>';
+    }
+    h+='</div>';
+  }
+
+  // ── Lining ────────────────────────────────────────────────────
+  if(isCurtain||isRoman){
+    var liningTypes=[{v:'none',l:'No Lining'},{v:'regular',l:'Regular'},{v:'blackout',l:'Blackout'},{v:'dimout',l:'Dim-out'}];
+    h+='<div style="margin-bottom:16px">';
+    h+='<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Lining</div>';
+    h+='<div style="display:flex;flex-wrap:wrap;gap:6px">';
+    liningTypes.forEach(function(lt){
+      h+='<button class="mode-btn'+(_selLining===lt.v?' on':'')+'" style="font-size:12px;padding:8px 14px" onclick="_selLining=\''+lt.v+'\';renderAddSelection()">'+lt.l+'</button>';
+    });
+    h+='</div>';
+    h+='</div>';
+  }
+
+  // ── Rate Overrides (always expanded) ─────────────────────────
+  var rateFields=[];
+  if(isCurtainMain||isCurtainSheer){
+    var isMixR=['panel_mix','border','horizontal_mix'].indexOf(_selStitchStyle||'regular')!==-1;
+    var stitchDef=isMixR?P.curtainStitchMixPerM:P.curtainStitchPerM;
+    rateFields=[{k:'stitchRate',l:'Stitch Rate (₹/m)',def:stitchDef},
+                {k:'liningRate',l:'Lining Rate (₹/m)',def:P.curtainLining},
+                {k:'installRate',l:'Install (₹/window)',def:P.curtainInstall}];
+  } else if(isRoman){
+    rateFields=[{k:'mechRate',l:'Mechanism (₹/sqft)',def:P.romanMech},
+                {k:'stitchRateRoman',l:'Stitching (₹/window)',def:P.romanStitch},
+                {k:'installRate',l:'Install (₹/window)',def:P.romanInstall}];
+  } else if(cat==='headboard'){
+    rateFields=[{k:'makingRate',l:'Making Rate (₹/sqft)',def:P.headboardAreaRate}];
+  } else if(cat==='flooring'){
+    rateFields=[{k:'floorInstallRate',l:'Install (₹/sqft)',def:P.floorInstallWooden}];
+  } else if(cat==='tracks_rods'){
+    rateFields=[{k:'installRate',l:'Install (₹/window)',def:P.trackInstall}];
+  }
+  if(rateFields.length){
+    h+='<div style="margin-bottom:16px">';
+    h+='<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Rate Overrides</div>';
+    rateFields.forEach(function(f){
+      var cv=(_selRates[f.k]!=null)?_selRates[f.k]:f.def;
+      h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+        +'<label style="font-size:13px;color:var(--text2);flex:1">'+f.l+'</label>'
+        +'<input class="inp" type="number" value="'+cv+'" placeholder="'+f.def+'" '
+        +'style="width:100px;padding:8px;font-size:14px;font-weight:700;text-align:right" '
+        +'onchange="setSelRate(\''+f.k+'\',this.value,'+f.def+')" onclick="this.select()"></div>';
+    });
+    h+='</div>';
+  }
+
+  // ── Save button ───────────────────────────────────────────────
+  h+='<button class="btn" style="width:100%;margin-top:8px;font-size:15px;padding:14px" onclick="saveSelection()">Save Changes ✓</button>';
+  h+='<div style="text-align:center;margin-top:12px">'
+    +'<button class="btn ghost sm" style="font-size:12px;color:var(--text3)" '
+    +'onclick="_editFromSummary=false;_selStep=2;renderAddSelection()">Full Edit (change fabric, sheer, stitching) →</button>'
+    +'</div>';
+
+  h+='</div>';
+  document.getElementById('addSelWrap').innerHTML=h;
+}
 function renderAddSelection(){
+  if(_editFromSummary){ _renderCompactEditView(); return; }
   var h='<div style="padding:0 0 80px">';
   if(_selStep===1){
     h+='<div class="field-label" style="margin-bottom:12px;font-size:14px">What are you selecting?</div>';
@@ -4755,6 +4914,11 @@ function saveSelection(){
   _lastSavedAreaIds = aids.slice();
   _lastSavedOpeningId = oid;
   saveDraft(); showToast((editing?'Updated':'Saved')+' ✓');
+  if(_editFromSummary){
+    _editFromSummary=false;
+    renderSum(); goTo('screen-summary');
+    return;
+  }
   _renderSelPostSave(editing);
 }
 function copySelectionsFromArea(srcAreaId,destAreaId){
