@@ -2214,6 +2214,46 @@ function flooringInstallRate(type) {
 
 var TRACK_TYPES = ['M Track','Delac Track','Ripple Track','Silent Gliss','Wooden Rod','Metal Rod','Bay Rod','Other'];
 
+// ─── Curtain Track / Rod — hardware embedded in curtain selections ─────────────
+var CURTAIN_TRACKS_HAS_COLOR = ['Delac Track','KS Track'];
+var CURTAIN_ROD_NAMES        = ['Elan Rod','Wooden Rod','Antq Brass Rod'];
+var CURTAIN_ALL_HW           = ['M Track','Easy Track','Easy Track Heavy',
+                                'Delac Track','KS Track',
+                                'Nexty Track','Legato Track','Selfie Track','Hospital Track',
+                                'Elan Rod','Wooden Rod','Antq Brass Rod'];
+var CURTAIN_ROD_RING_VARIANTS= ['With Rings','With Plastic Rings','Without Rings'];
+var CURTAIN_TRACK_COLORS     = {'Delac Track':[],'KS Track':[]};
+var FINIALS                  = [];  // [{code,name,price}] — price per pair; 1 pair per window
+var CURTAIN_DOUBLE_BRACKETS  = {
+  'M Track':{name:'',price:0},'Easy Track':{name:'',price:0},'Easy Track Heavy':{name:'',price:0},
+  'Delac Track':{name:'',price:0},'KS Track':{name:'',price:0},
+  'Nexty Track':{name:'',price:0},'Legato Track':{name:'',price:0},
+  'Selfie Track':{name:'',price:0},'Hospital Track':{name:'',price:0},
+  'Elan Rod':{name:'',price:0},'Wooden Rod':{name:'',price:0},'Antq Brass Rod':{name:'',price:0}
+};
+// 14 width brackets in inches; M Track / Easy Track cap at 180", others at 192"
+var _CTRK_BKS=[36,48,60,72,84,96,108,120,132,144,156,168,180,192];
+var _STITCHES =['pleated','eyelet','ripple','pinch','eliza','plain'];
+function _mkBk(maxW){return _CTRK_BKS.filter(function(m){return m<=maxW;}).map(function(m){return{maxW:m,p:0};});}
+function _mkSM(maxW,mode){
+  var r={}; _STITCHES.forEach(function(s){r[s]={maxW:maxW,mode:mode||'range',perRft:0,brackets:mode==='per_rft'?[]:_mkBk(maxW)};});
+  return r;
+}
+function _mkRM(maxW){
+  var r={}; _STITCHES.forEach(function(s){
+    var rv={}; CURTAIN_ROD_RING_VARIANTS.forEach(function(v){rv[v]={maxW:maxW,mode:'range',perRft:0,brackets:_mkBk(maxW)};});
+    r[s]=rv;
+  }); return r;
+}
+function _mkCM(){var r={}; _STITCHES.forEach(function(s){r[s]={};});return r;}  // color sub-keys added via CSV
+var CURTAIN_TRACK_PRICING={
+  'M Track':_mkSM(180),'Easy Track':_mkSM(180),'Easy Track Heavy':_mkSM(192),
+  'Delac Track':_mkCM(),'KS Track':_mkCM(),
+  'Nexty Track':_mkSM(192,'per_rft'),'Legato Track':_mkSM(192,'per_rft'),
+  'Selfie Track':_mkSM(192,'per_rft'),'Hospital Track':_mkSM(192,'per_rft'),
+  'Elan Rod':_mkRM(192),'Wooden Rod':_mkRM(192),'Antq Brass Rod':_mkRM(192)
+};
+
 // ═══════════════════════════════════════════════════════════
 // CATEGORY DEFINITIONS
 // ═══════════════════════════════════════════════════════════
@@ -2493,6 +2533,59 @@ function calcTracks(area, sel) {
   return { qty:qty, trackWidth:trackWidth, materialCost:materialCost, installCost:installCost, total:total };
 }
 
+// ─── Curtain Track / Rod pricing helpers ──────────────────────────────────────
+function _ctrkLookup(trackType, stitchStyle, colorOrVariant) {
+  var cfg=CURTAIN_TRACK_PRICING[trackType]; if(!cfg) return null;
+  var sCfg=cfg[stitchStyle]||cfg['plain']; if(!sCfg) return null;
+  if(CURTAIN_TRACKS_HAS_COLOR.indexOf(trackType)>=0||CURTAIN_ROD_NAMES.indexOf(trackType)>=0)
+    return sCfg[colorOrVariant]||null;
+  return sCfg;
+}
+function getCurtainTrackPrice(trackType, stitchStyle, colorOrVariant, widthInches) {
+  var pCfg=_ctrkLookup(trackType,stitchStyle,colorOrVariant); if(!pCfg) return 0;
+  var maxW=pCfg.maxW||9999, eff=widthInches, mult=1;
+  if(widthInches>maxW){eff=Math.ceil(widthInches/2);mult=2;}
+  if(pCfg.mode==='per_rft') return Math.round((eff/12)*(pCfg.perRft||0))*mult;
+  var bks=pCfg.brackets||[], p=0;
+  for(var i=0;i<bks.length;i++){if(eff<=bks[i].maxW){p=bks[i].p;break;}}
+  if(!p&&bks.length) p=bks[bks.length-1].p;
+  return p*mult;
+}
+function getDoubleBracketCost(trackType, widthInches) {
+  var db=CURTAIN_DOUBLE_BRACKETS[trackType]; if(!db||!db.price) return 0;
+  return Math.ceil(widthInches/24)*db.price;
+}
+function _ctrkWinData(mainSel, sheerSel, wi) {
+  var mo=mainSel?((mainSel.ctrkOvr||{})[String(wi)]||{}):{};
+  var so=sheerSel?((sheerSel.ctrkOvr||{})[String(wi)]||{}):{};
+  return {
+    mt: mo.type  !==undefined?mo.type  :(mainSel ?(mainSel.ctrkType  ||''):''),
+    mc: mo.color !==undefined?mo.color :(mainSel ?(mainSel.ctrkColor ||''):''),
+    mrv:mo.ring  !==undefined?mo.ring  :(mainSel ?(mainSel.ctrkRing  ||''):''),
+    mf: mo.finial!==undefined?mo.finial:(mainSel ?(mainSel.ctrkFinial||null):null),
+    st: so.type  !==undefined?so.type  :(sheerSel?(sheerSel.ctrkType  ||''):''),
+    sc: so.color !==undefined?so.color :(sheerSel?(sheerSel.ctrkColor ||''):''),
+    srv:so.ring  !==undefined?so.ring  :(sheerSel?(sheerSel.ctrkRing  ||''):''),
+    sf: so.finial!==undefined?so.finial:(sheerSel?(sheerSel.ctrkFinial||null):null)
+  };
+}
+function calcCurtainHWBreakdown(area, mainSel, sheerSel) {
+  var qty=parseInt(area.qty)||1, w=parseFloat(area.width)||0;
+  var trackMain=0,trackSheer=0,dblBkt=0,finialMain=0,finialSheer=0;
+  var mStitch=(mainSel&&mainSel.stitchStyle)||'plain';
+  var sStitch=(sheerSel&&sheerSel.stitchStyle)||'plain';
+  for(var i=0;i<qty;i++){
+    var d=_ctrkWinData(mainSel,sheerSel,i);
+    if(d.mt) trackMain+=getCurtainTrackPrice(d.mt,mStitch,d.mc||d.mrv,w);
+    if(d.st) trackSheer+=getCurtainTrackPrice(d.st,sStitch,d.sc||d.srv,w);
+    if(d.mt&&d.st) dblBkt+=getDoubleBracketCost(d.mt,w);
+    if(d.mf){var mfR=FINIALS.find(function(x){return x.code===d.mf;});if(mfR)finialMain+=mfR.price||0;}
+    if(d.sf){var sfR=FINIALS.find(function(x){return x.code===d.sf;});if(sfR)finialSheer+=sfR.price||0;}
+  }
+  return{trackMain:trackMain,trackSheer:trackSheer,dblBkt:dblBkt,finialMain:finialMain,finialSheer:finialSheer,
+         total:trackMain+trackSheer+dblBkt+finialMain+finialSheer};
+}
+
 function calcOthers(sel) {
   var total = activeProds(sel).reduce(function(s,p){ return s + (parseFloat(p.product && p.product.mrp)||0) * (1 - (parseFloat(p.discount)||0)/100); }, 0);
   return { total: Math.round(total) };
@@ -2577,6 +2670,7 @@ var _editAreaIdx = -1;   // -1 = add new area, ≥0 = edit existing
 var _editSelIdx  = -1;   // -1 = add new selection, ≥0 = edit existing
 var _postSaveArea = null;      // area object just saved (for post-save card)
 var _sumTab = 'quote';         // 'quote' | 'constants'
+var _ctrkOvrOpen = {};         // key: ri+'|'+selId → boolean (per-window expand state)
 var _sumOpenRoom = null;       // index of expanded room in summary, or null
 var _sumCatFilter = [];        // [] = all; filled = show only these display-cats
 function setSumTab(t){ _sumTab=t; renderSum(); }
@@ -5624,6 +5718,33 @@ function updateAreaQty(ri,areaId,val){
   area.qty=Math.max(1,parseInt(val)||1);
   saveDraft(); renderSum();
 }
+
+// ─── Curtain track / rod setters ──────────────────────────────────────────────
+function _ctrkGetSel(ri,sid){return((APP.quote.rooms[ri]||{}).selections||[]).find(function(s){return s.id===sid;})||null;}
+function _ctrkSibSheer(ri,mainSel){
+  return((APP.quote.rooms[ri]||{}).selections||[]).find(function(s){
+    return s.category==='curtains_sheer'&&JSON.stringify(s.areaIds)===JSON.stringify(mainSel.areaIds);
+  })||null;
+}
+function setCtrkType(ri,sid,val){
+  var s=_ctrkGetSel(ri,sid); if(!s) return;
+  s.ctrkType=val;
+  if(!val){s.ctrkColor='';s.ctrkRing='';s.ctrkFinial=null;s.ctrkOvr={};}
+  if(s.category==='curtains_main'){var sh=_ctrkSibSheer(ri,s);if(sh&&!sh.ctrkType)sh.ctrkType=val;}
+  saveDraft(); renderSum();
+}
+function setCtrkColor(ri,sid,val) {var s=_ctrkGetSel(ri,sid);if(s){s.ctrkColor=val; saveDraft();renderSum();}}
+function setCtrkRing(ri,sid,val)  {var s=_ctrkGetSel(ri,sid);if(s){s.ctrkRing=val;  saveDraft();renderSum();}}
+function setCtrkFinial(ri,sid,val){var s=_ctrkGetSel(ri,sid);if(s){s.ctrkFinial=val; saveDraft();renderSum();}}
+function toggleCtrkOvr(ri,sid){var k=ri+'|'+sid;_ctrkOvrOpen[k]=!_ctrkOvrOpen[k];renderSum();}
+function setCtrkOvr(ri,sid,wi,field,val){
+  var s=_ctrkGetSel(ri,sid); if(!s) return;
+  if(!s.ctrkOvr)s.ctrkOvr={};
+  if(!s.ctrkOvr[String(wi)])s.ctrkOvr[String(wi)]={};
+  s.ctrkOvr[String(wi)][field]=val;
+  saveDraft(); renderSum();
+}
+
 function renderSum(){
   setNavForSummary();
   var q=APP.quote;
@@ -5713,6 +5834,135 @@ function _renderSumQuoteTab(q){
     }
     h+='</div>';
   });
+  return h;
+}
+
+// ─── Track/Rod card renderer ──────────────────────────────────────────────────
+function _ctrkDDRow(label, curVal, opts, onChange, disabled) {
+  var h='<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">'
+    +'<span style="font-size:11px;color:var(--text3);min-width:90px">'+label+'</span>'
+    +'<select style="flex:1;font-size:12px;padding:4px 6px;border:1px solid var(--border2);border-radius:4px;background:var(--bg2);color:var(--text)"'
+    +(onChange?' onchange="'+onChange+'"':'')+(disabled?' disabled':'')+'>'+
+    '<option value="">— Select —</option>';
+  opts.forEach(function(o){h+='<option value="'+esc(o)+'"'+(curVal===o?' selected':'')+'>'+esc(o)+'</option>';});
+  return h+'</select></div>';
+}
+function _ctrkCard(ri, area, mainSel, sheerSel) {
+  var qty=parseInt(area.qty)||1, w=parseFloat(area.width)||0;
+  var msid="'"+mainSel.id.replace(/'/g,"\\'")+"'";
+  var ssid=sheerSel?"'"+sheerSel.id.replace(/'/g,"\\'")+"'":null;
+  var mStitch=mainSel.stitchStyle||'plain', sStitch=sheerSel?(sheerSel.stitchStyle||'plain'):'plain';
+  var isRodM=CURTAIN_ROD_NAMES.indexOf(mainSel.ctrkType||'')>=0;
+  var isColM=CURTAIN_TRACKS_HAS_COLOR.indexOf(mainSel.ctrkType||'')>=0;
+  var isRodS=sheerSel&&CURTAIN_ROD_NAMES.indexOf(sheerSel.ctrkType||'')>=0;
+  var isColS=sheerSel&&CURTAIN_TRACKS_HAS_COLOR.indexOf(sheerSel.ctrkType||'')>=0;
+  var eyeletM=mStitch==='eyelet', eyeletS=sStitch==='eyelet';
+  var bd=calcCurtainHWBreakdown(area,mainSel,sheerSel);
+  var ovrKey=ri+'|'+mainSel.id, ovrOpen=!!_ctrkOvrOpen[ovrKey];
+  var h='<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:10px;margin:10px 0">';
+  h+='<div style="font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Track / Rod</div>';
+  // Main track
+  h+=_ctrkDDRow('Main track',mainSel.ctrkType||'',CURTAIN_ALL_HW,'setCtrkType('+ri+','+msid+',this.value)');
+  if(isColM&&(CURTAIN_TRACK_COLORS[mainSel.ctrkType]||[]).length)
+    h+=_ctrkDDRow('↳ Color',mainSel.ctrkColor||'',CURTAIN_TRACK_COLORS[mainSel.ctrkType],'setCtrkColor('+ri+','+msid+',this.value)');
+  if(isRodM){
+    var rmOpts=eyeletM?['Without Rings']:CURTAIN_ROD_RING_VARIANTS;
+    var rmVal=eyeletM?'Without Rings':(mainSel.ctrkRing||'');
+    h+=_ctrkDDRow('↳ Ring type',rmVal,rmOpts,eyeletM?'':('setCtrkRing('+ri+','+msid+',this.value)'),eyeletM);
+    if(FINIALS.length){
+      h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">'
+        +'<span style="font-size:11px;color:var(--text3);min-width:90px">↳ Finial</span>'
+        +'<select style="flex:1;font-size:12px;padding:4px 6px;border:1px solid var(--border2);border-radius:4px;background:var(--bg2);color:var(--text)" onchange="setCtrkFinial('+ri+','+msid+',this.value)">'
+        +'<option value="">— None (client provides) —</option>';
+      FINIALS.forEach(function(f){h+='<option value="'+esc(f.code)+'"'+(mainSel.ctrkFinial===f.code?' selected':'')+'>'+esc(f.name)+' – ₹'+f.price+'/pair</option>';});
+      h+='</select>';
+      if(mainSel.ctrkFinial)h+='<button style="font-size:11px;padding:2px 6px;border:1px solid var(--border2);border-radius:3px;background:var(--bg2);color:var(--text3);cursor:pointer;flex-shrink:0" onclick="setCtrkFinial('+ri+','+msid+',null)">✕</button>';
+      h+='</div>';
+    }
+  }
+  // Sheer track
+  if(sheerSel&&ssid){
+    h+='<div style="border-top:1px dashed var(--border2);margin:6px 0"></div>';
+    h+=_ctrkDDRow('Sheer track',sheerSel.ctrkType||'',CURTAIN_ALL_HW,'setCtrkType('+ri+','+ssid+',this.value)');
+    if(isColS&&(CURTAIN_TRACK_COLORS[sheerSel.ctrkType]||[]).length)
+      h+=_ctrkDDRow('↳ Color',sheerSel.ctrkColor||'',CURTAIN_TRACK_COLORS[sheerSel.ctrkType],'setCtrkColor('+ri+','+ssid+',this.value)');
+    if(isRodS){
+      var rsOpts=eyeletS?['Without Rings']:CURTAIN_ROD_RING_VARIANTS;
+      var rsVal=eyeletS?'Without Rings':(sheerSel.ctrkRing||'');
+      h+=_ctrkDDRow('↳ Ring type',rsVal,rsOpts,eyeletS?'':('setCtrkRing('+ri+','+ssid+',this.value)'),eyeletS);
+      if(FINIALS.length){
+        h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">'
+          +'<span style="font-size:11px;color:var(--text3);min-width:90px">↳ Finial</span>'
+          +'<select style="flex:1;font-size:12px;padding:4px 6px;border:1px solid var(--border2);border-radius:4px;background:var(--bg2);color:var(--text)" onchange="setCtrkFinial('+ri+','+ssid+',this.value)">'
+          +'<option value="">— None (client provides) —</option>';
+        FINIALS.forEach(function(f){h+='<option value="'+esc(f.code)+'"'+(sheerSel.ctrkFinial===f.code?' selected':'')+'>'+esc(f.name)+' – ₹'+f.price+'/pair</option>';});
+        h+='</select>';
+        if(sheerSel.ctrkFinial)h+='<button style="font-size:11px;padding:2px 6px;border:1px solid var(--border2);border-radius:3px;background:var(--bg2);color:var(--text3);cursor:pointer;flex-shrink:0" onclick="setCtrkFinial('+ri+','+ssid+',null)">✕</button>';
+        h+='</div>';
+      }
+    }
+  }
+  // Per-window override (qty > 1)
+  if(qty>1&&mainSel.ctrkType){
+    h+='<button style="font-size:11px;padding:2px 8px;border:1px solid var(--border2);border-radius:3px;background:var(--bg2);color:var(--text3);cursor:pointer;margin:4px 0 6px" onclick="toggleCtrkOvr('+ri+','+msid+')">'+(ovrOpen?'▲ Hide per-window':'▼ Override per window')+'</button>';
+    if(ovrOpen){
+      h+='<div style="border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:6px">';
+      for(var wi=0;wi<qty;wi++){
+        var d=_ctrkWinData(mainSel,sheerSel,wi);
+        var wbg=wi%2===0?'var(--bg3)':'var(--bg2)';
+        var wMain=d.mt?getCurtainTrackPrice(d.mt,mStitch,d.mc||d.mrv,w):0;
+        var wSheer=d.st?getCurtainTrackPrice(d.st,sStitch,d.sc||d.srv,w):0;
+        var wDbl=(d.mt&&d.st)?getDoubleBracketCost(d.mt,w):0;
+        var wTot=wMain+wSheer+wDbl;
+        h+='<div style="padding:6px 8px;background:'+wbg+'">'
+          +'<div style="font-size:10px;font-weight:800;color:var(--text3);margin-bottom:3px">Window '+(wi+1)+'</div>'
+          +'<div style="display:flex;flex-direction:column;gap:3px">'
+          +'<div style="display:flex;align-items:center;gap:6px">'
+          +'<span style="font-size:10px;color:var(--text3);min-width:56px">Main</span>'
+          +'<select style="flex:1;font-size:11px;padding:2px 4px;border:1px solid var(--border2);border-radius:3px;background:var(--bg2);color:var(--text)" onchange="setCtrkOvr('+ri+','+msid+','+wi+',\'type\',this.value)">'
+          +'<option value="">↑ Default ('+esc(mainSel.ctrkType||'—')+')</option>';
+        CURTAIN_ALL_HW.forEach(function(t){h+='<option value="'+esc(t)+'"'+((mainSel.ctrkOvr||{})[String(wi)]&&(mainSel.ctrkOvr||{})[String(wi)].type===t?' selected':'')+'>'+esc(t)+'</option>';});
+        h+='</select></div>';
+        if(sheerSel&&ssid){
+          h+='<div style="display:flex;align-items:center;gap:6px">'
+            +'<span style="font-size:10px;color:var(--text3);min-width:56px">Sheer</span>'
+            +'<select style="flex:1;font-size:11px;padding:2px 4px;border:1px solid var(--border2);border-radius:3px;background:var(--bg2);color:var(--text)" onchange="setCtrkOvr('+ri+','+ssid+','+wi+',\'type\',this.value)">'
+            +'<option value="">↑ Default ('+esc(sheerSel.ctrkType||'—')+')</option>';
+          CURTAIN_ALL_HW.forEach(function(t){h+='<option value="'+esc(t)+'"'+((sheerSel.ctrkOvr||{})[String(wi)]&&(sheerSel.ctrkOvr||{})[String(wi)].type===t?' selected':'')+'>'+esc(t)+'</option>';});
+          h+='</select></div>';
+        }
+        if(wTot>0)h+='<div style="font-size:11px;font-weight:800;color:var(--red);text-align:right">'+fmt(wTot)+'</div>';
+        h+='</div></div>';
+      }
+      h+='</div>';
+    }
+  }
+  // Cost summary lines (each independently removable via ✕)
+  if(bd.total>0){
+    h+='<div style="border-top:1px solid var(--border);padding-top:5px;margin-top:4px;display:flex;flex-direction:column;gap:3px">';
+    if(bd.trackMain>0)
+      h+='<div style="display:flex;justify-content:space-between;font-size:12px"><span>Main track × '+qty+' win'+(qty>1?'s':'')+'</span><span style="font-weight:800;color:var(--red)">'+fmt(bd.trackMain)+'</span></div>';
+    if(bd.trackSheer>0)
+      h+='<div style="display:flex;justify-content:space-between;font-size:12px"><span>Sheer track × '+qty+' win'+(qty>1?'s':'')+'</span><span style="font-weight:800;color:var(--red)">'+fmt(bd.trackSheer)+'</span></div>';
+    if(bd.dblBkt>0)
+      h+='<div style="display:flex;justify-content:space-between;font-size:12px"><span>Double brackets ('+Math.ceil(w/24)+'/win × '+qty+')</span><span style="font-weight:800;color:var(--red)">'+fmt(bd.dblBkt)+'</span></div>';
+    if(bd.finialMain>0){
+      var mfName=(FINIALS.find(function(f){return f.code===mainSel.ctrkFinial;})||{}).name||'';
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">'
+        +'<span>Finial'+(mfName?' – '+esc(mfName):'')+' × '+qty+' pair'+(qty>1?'s':'')+'</span>'
+        +'<div style="display:flex;align-items:center;gap:4px"><span style="font-weight:800;color:var(--red)">'+fmt(bd.finialMain)+'</span>'
+        +'<button style="font-size:10px;padding:1px 5px;border:1px solid var(--border2);border-radius:3px;background:var(--bg2);color:var(--text3);cursor:pointer" onclick="setCtrkFinial('+ri+','+msid+',null)">✕</button></div></div>';
+    }
+    if(bd.finialSheer>0&&ssid){
+      var sfName=(FINIALS.find(function(f){return f.code===sheerSel.ctrkFinial;})||{}).name||'';
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">'
+        +'<span>Finial (sheer)'+(sfName?' – '+esc(sfName):'')+' × '+qty+' pair'+(qty>1?'s':'')+'</span>'
+        +'<div style="display:flex;align-items:center;gap:4px"><span style="font-weight:800;color:var(--red)">'+fmt(bd.finialSheer)+'</span>'
+        +'<button style="font-size:10px;padding:1px 5px;border:1px solid var(--border2);border-radius:3px;background:var(--bg2);color:var(--text3);cursor:pointer" onclick="setCtrkFinial('+ri+','+ssid+',null)">✕</button></div></div>';
+    }
+    h+='</div>';
+  }
+  h+='</div>';
   return h;
 }
 
@@ -5870,6 +6120,15 @@ function _renderSumRoomExpanded(room, ri){
         h+='</tbody></table>';
       }
 
+      // ── Track/Rod area map (for hardware card) ──────────────────────────
+      var ctrkMap={}, ctrkOrd=[];
+      areaItems.forEach(function(item){
+        var aid=item.area.id;
+        if(!ctrkMap[aid]){ctrkMap[aid]={area:item.area,mainSel:null,sheerSel:null};ctrkOrd.push(aid);}
+        if(item.sel.category==='curtains_main')  ctrkMap[aid].mainSel =item.sel;
+        if(item.sel.category==='curtains_sheer') ctrkMap[aid].sheerSel=item.sel;
+      });
+
       // ── Line items: flat combined (main first, sheer after) ─────────────
       var mainG={}, mainOrd=[], sheerG={}, sheerOrd=[];
       areaItems.forEach(function(item){
@@ -5924,6 +6183,12 @@ function _renderSumRoomExpanded(room, ri){
             liRate('Lining Stitching Charges', td(g.fabM)+' m', g.liningStitchRate, g.liningStitchCost, 'liningStitchRate', gk, 'liningStitchSheer');
         }
       });
+      // ── Track / Rod card (per area) ─────────────────────────────────────
+      ctrkOrd.forEach(function(aid){
+        var m=ctrkMap[aid]; if(!m.mainSel) return;
+        if(ctrkOrd.length>1) h+='<div style="font-size:11px;font-weight:700;color:var(--text2);margin-top:4px">'+esc(m.area.name)+'</div>';
+        h+=_ctrkCard(ri, m.area, m.mainSel, m.sheerSel);
+      });
       // Section total: sum visible costs only (install excluded from curtains)
       catTotal=0;
       mainOrd.forEach(function(gk){
@@ -5942,6 +6207,11 @@ function _renderSumRoomExpanded(room, ri){
         if(!isLineHidden(ri,gk,'beltSheer')) catTotal+=g.beltCost;
         if(!isLineHidden(ri,gk,'liningSheer')) catTotal+=g.liningCost;
         if(!isLineHidden(ri,gk,'liningStitchSheer')) catTotal+=g.liningStitchCost;
+      });
+      // Add track / rod hardware costs to catTotal
+      ctrkOrd.forEach(function(aid){
+        var m=ctrkMap[aid]; if(!m.mainSel) return;
+        catTotal+=calcCurtainHWBreakdown(m.area,m.mainSel,m.sheerSel).total;
       });
 
     } else if(info.dc==='roman_blind'){
