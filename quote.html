@@ -3814,6 +3814,10 @@ function editSelFromSummary(ri, selId){
 }
 // ── ADD AREA SCREEN ──────────────────────────────────────────
 var _areaState={blindMode:'single',rotationAllowed:true,wallpaperMode:'custom'};
+var _presetAreaType=null; // pre-fills area type on first render of new area
+function startAddAreaWithType(type){
+  _presetAreaType=type; _editAreaIdx=-1; renderAddArea();
+}
 function setAreaField(field,val,btn){
   _areaState[field]=val;
   if(btn){
@@ -3836,7 +3840,8 @@ function renderAddArea(){
   var typeEl=document.getElementById('areaType');
   var wEl=document.getElementById('areaW'), hEl=document.getElementById('areaH');
   var qtyEl=document.getElementById('areaQty'), remEl=document.getElementById('areaRemarks');
-  var curType=typeEl?typeEl.value:(base.type||'curtains');
+  var curType=typeEl?typeEl.value:(_presetAreaType||(base.type||'curtains'));
+  if(!typeEl) _presetAreaType=null;
   var curW=wEl?wEl.value:(base.width!=null?String(base.width):'');
   var curH=hEl?hEl.value:(base.height!=null?String(base.height):'');
   var curQty=qtyEl?qtyEl.value:(base.qty!=null?String(base.qty):'1');
@@ -4003,7 +4008,18 @@ function _renderAreaPostSave(area,isNew){
   }
   h+='<div class="post-save-actions">';
   var addNewLabel='+ Add New '+(areaTypeLabel[area.type]||'Area');
-  h+='<button class="btn sm" style="width:100%" onclick="_editAreaIdx=-1;renderAddArea()">'+addNewLabel+'</button>';
+  h+='<button class="btn sm" style="width:100%" onclick="startAddAreaWithType(\''+area.type+'\')">'+addNewLabel+'</button>';
+  // Type-change strip — small pills to add a window of a different type
+  h+='<div style="display:flex;flex-wrap:wrap;gap:5px;margin:-2px 0 4px;justify-content:center">'
+    +'<span style="font-size:11px;color:var(--text3);align-self:center">Different type:</span>';
+  var _allAreaTypes=[['curtains','Curtains'],['roman_blinds','Roman Blind'],['blinds','Blind'],
+    ['headboard','Headboard'],['flooring','Flooring'],['wallpaper','Wallpaper']];
+  _allAreaTypes.forEach(function(tv){
+    if(tv[0]===area.type) return; // skip current type
+    h+='<button class="btn ghost sm" style="font-size:11px;padding:4px 10px;margin:0" '
+      +'onclick="startAddAreaWithType(\''+tv[0]+'\')">'+tv[1]+'</button>';
+  });
+  h+='</div>';
   if(!copySrcArea){
     h+='<button class="btn sm" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--border)" onclick="addSelForArea(\''+area.id+'\')">'+(linked.length?'+ Add Another Selection':'+ Add Selection →')+'</button>';
   }
