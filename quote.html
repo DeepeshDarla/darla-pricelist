@@ -2698,6 +2698,43 @@ window.addEventListener('beforeunload',function(){
   }
 });
 
+// ── 5-second autosave interval ────────────────────────────────
+// Flushes APP.quote to localStorage every 5s so mid-session edits
+// survive a refresh even if the user hasn't tapped a Save button.
+var _autoSaveInterval = null;
+function _startAutoSave(){
+  if(_autoSaveInterval) return;
+  _autoSaveInterval = setInterval(function(){
+    if(!APP.quote) return;
+    _captureAreaFormToDraft();
+    saveDraftLocal();
+    _showAutoSave('saved');
+  }, 5000);
+}
+function _stopAutoSave(){
+  clearInterval(_autoSaveInterval);
+  _autoSaveInterval = null;
+}
+// Read live values from the add-area form (if visible) into a transient
+// draft so a refresh never loses the half-entered dimensions.
+function _captureAreaFormToDraft(){
+  var nameEl=document.getElementById('areaName');
+  var wEl=document.getElementById('areaW');
+  var hEl=document.getElementById('areaH');
+  var qtyEl=document.getElementById('areaQty');
+  if(!nameEl&&!wEl) return; // form not on screen
+  var room=APP.quote.rooms&&APP.quote.rooms[_activeRoom];
+  if(!room) return;
+  // Store as a transient pending area so it survives a reload
+  APP.quote._pendingArea={
+    roomIdx:_activeRoom,
+    name:nameEl?nameEl.value:'',
+    w:wEl?wEl.value:'',
+    h:hEl?hEl.value:'',
+    qty:qtyEl?qtyEl.value:'1'
+  };
+}
+
 var _autoSaveHideTimer = null;
 function _showAutoSave(state) {
   var el = document.getElementById('autoSaveStatus');
@@ -3120,6 +3157,10 @@ function goTo(screenId) {
   window.scrollTo(0,0);
   document.getElementById('bldBar').classList.toggle('visible', _bldScreens.indexOf(screenId)!==-1);
   document.getElementById('sumBar').classList.toggle('visible', screenId==='screen-summary');
+  // Start autosave while inside a quote; stop when on non-quote screens
+  var quoteScreens=['screen-builder','screen-summary','screen-room-measurements',
+    'screen-room-selections','screen-add-area','screen-add-selection','screen-add-hardware'];
+  if(quoteScreens.indexOf(screenId)!==-1) _startAutoSave(); else _stopAutoSave();
   if(screenId==='screen-builder')           { renderBld(); setNavForBuilder(); }
   else if(screenId==='screen-summary')      { renderSum(); setNavForSummary(); }
   else if(screenId==='screen-quotes')       { renderQList(); setNavForQuotes(); }
@@ -3868,9 +3909,9 @@ function renderAddArea(){
   });
   h+='</select></div>';
   h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">'
-    +'<div class="field"><label class="field-label">Width (in)</label><input class="inp" id="areaW" type="number" value="'+esc(curW)+'" placeholder="96" inputmode="decimal"></div>'
-    +'<div class="field"><label class="field-label">Height (in)</label><input class="inp" id="areaH" type="number" value="'+esc(curH)+'" placeholder="84" inputmode="decimal"></div>'
-    +'<div class="field"><label class="field-label">Qty</label><input class="inp" id="areaQty" type="number" value="'+esc(curQty)+'" placeholder="1" min="1" inputmode="numeric"></div>'
+    +'<div class="field"><label class="field-label">Width (in)</label><input class="inp" id="areaW" type="number" value="'+esc(curW)+'" placeholder="96" inputmode="decimal" oninput="_captureAreaFormToDraft()"></div>'
+    +'<div class="field"><label class="field-label">Height (in)</label><input class="inp" id="areaH" type="number" value="'+esc(curH)+'" placeholder="84" inputmode="decimal" oninput="_captureAreaFormToDraft()"></div>'
+    +'<div class="field"><label class="field-label">Qty</label><input class="inp" id="areaQty" type="number" value="'+esc(curQty)+'" placeholder="1" min="1" inputmode="numeric" oninput="_captureAreaFormToDraft()"></div>'
     +'</div>';
   var otherSameTypeCount=(room.areas||[]).filter(function(a){ return a.type===t&&(!editing||a.id!==base.id); }).length;
   if(!editing&&otherSameTypeCount>0){
