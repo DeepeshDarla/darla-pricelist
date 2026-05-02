@@ -2221,37 +2221,122 @@ var CURTAIN_ALL_HW           = ['M Track','Easy Track','Easy Track Heavy',
                                 'Delac Track','KS Track',
                                 'Nexty Track','Legato Track','Selfie Track','Hospital Track',
                                 'Elan Rod','Wooden Rod','Antq Brass Rod'];
-var CURTAIN_ROD_RING_VARIANTS= ['With Rings','With Plastic Rings','Without Rings'];
-var CURTAIN_TRACK_COLORS     = {'Delac Track':[],'KS Track':[]};
-var FINIALS                  = [];  // [{code,name,price}] — price per pair; 1 pair per window
-var CURTAIN_DOUBLE_BRACKETS  = {
-  'M Track':{name:'',price:0},'Easy Track':{name:'',price:0},'Easy Track Heavy':{name:'',price:0},
-  'Delac Track':{name:'',price:0},'KS Track':{name:'',price:0},
-  'Nexty Track':{name:'',price:0},'Legato Track':{name:'',price:0},
-  'Selfie Track':{name:'',price:0},'Hospital Track':{name:'',price:0},
-  'Elan Rod':{name:'',price:0},'Wooden Rod':{name:'',price:0},'Antq Brass Rod':{name:'',price:0}
+var CURTAIN_ROD_RING_VARIANTS= ['Steel (L)','Steel','No Rings'];
+var CURTAIN_TRACK_COLORS     = {'Delac Track':['Standard','Antq Brass','Black'],'KS Track':['White','Brown','Black']};
+var FINIALS=[
+  {code:'H4019',           name:'H4019 Finials',           price:799},
+  {code:'CR2007',          name:'CR2007 Finials',           price:799},
+  {code:'CRE2011',         name:'CRE2011 Finials',          price:599},
+  {code:'H045',            name:'H045 Finials',             price:1667},
+  {code:'HBS4049',         name:'HBS4049 Finials',          price:2002},
+  {code:'HBS2003',         name:'HBS2003 Finials',          price:575},
+  {code:'OvalRosewood',    name:'Oval Rosewood Finials',    price:350},
+  {code:'OvalWalnut',      name:'Oval Walnut Finials',      price:350},
+  {code:'HalfconeRosewood',name:'Halfcone Rosewood Finials',price:350},
+  {code:'HalfconeWalnut',  name:'Halfcone Walnut Finials',  price:350}
+];
+var CURTAIN_DOUBLE_BRACKETS={
+  'M Track':          {name:'M Track Double Bracket',          price:125},
+  'Easy Track':       {name:'Easy Track Double Bracket',       price:350},
+  'Easy Track Heavy': {name:'Easy Track Heavy Double Bracket', price:450},
+  'Delac Track':      {name:'Delac Track Double Bracket',      price:350},
+  'KS Track':{
+    'White':{name:'KS Track White Double Bracket',price:900},
+    'Brown':{name:'KS Track Brown Double Bracket',price:1000},
+    'Black':{name:'KS Track Black Double Bracket',price:1000}
+  },
+  'Nexty Track':   {name:'Nexty Track Double Bracket',price:571},
+  'Legato Track':  {name:'',price:0},'Selfie Track':{name:'',price:0},'Hospital Track':{name:'',price:0},
+  'Elan Rod':      {name:'Elan Rod Double Bracket',   price:300},
+  'Wooden Rod':    {name:'',price:0},
+  'Antq Brass Rod':{name:'Antq Brass Rod Double Bracket',price:625}
 };
-// 14 width brackets in inches; M Track / Easy Track cap at 180", others at 192"
-var _CTRK_BKS=[36,48,60,72,84,96,108,120,132,144,156,168,180,192];
-var _STITCHES =['pleated','eyelet','ripple','pinch','eliza','plain'];
-function _mkBk(maxW){return _CTRK_BKS.filter(function(m){return m<=maxW;}).map(function(m){return{maxW:m,p:0};});}
-function _mkSM(maxW,mode){
-  var r={}; _STITCHES.forEach(function(s){r[s]={maxW:maxW,mode:mode||'range',perRft:0,brackets:mode==='per_rft'?[]:_mkBk(maxW)};});
-  return r;
-}
-function _mkRM(maxW){
-  var r={}; _STITCHES.forEach(function(s){
-    var rv={}; CURTAIN_ROD_RING_VARIANTS.forEach(function(v){rv[v]={maxW:maxW,mode:'range',perRft:0,brackets:_mkBk(maxW)};});
-    r[s]=rv;
-  }); return r;
-}
-function _mkCM(){var r={}; _STITCHES.forEach(function(s){r[s]={};});return r;}  // color sub-keys added via CSV
+// Runner prices (₹/pc) — used for Eliza ring cost on tracks
+var CURTAIN_RUNNERS={
+  'M Track':5,'Easy Track':26,'Easy Track Heavy':26,'Delac Track':21,'KS Track':23,
+  'Nexty Track':31,'Legato Track':0,'Selfie Track':0,'Hospital Track':0,
+  'Elan Rod':0,'Wooden Rod':0,'Antq Brass Rod':0
+};
+// Ring prices per rod variant (₹/pc) — used for Eliza ring cost on rods
+var CURTAIN_RINGS={
+  'Elan Rod':{'Steel (L)':35,'Steel':48,'No Rings':0},
+  'Antq Brass Rod':{'Steel (L)':50,'No Rings':0},
+  'Wooden Rod':{}
+};
+// Width-bracket builder helpers
+function _p15(a){return[{maxW:36,p:a[0]},{maxW:48,p:a[1]},{maxW:60,p:a[2]},{maxW:72,p:a[3]},{maxW:84,p:a[4]},{maxW:96,p:a[5]},{maxW:108,p:a[6]},{maxW:120,p:a[7]},{maxW:132,p:a[8]},{maxW:144,p:a[9]},{maxW:156,p:a[10]},{maxW:168,p:a[11]},{maxW:180,p:a[12]},{maxW:192,p:a[13]},{maxW:196,p:a[14]}];}
+function _p14(a){return[{maxW:36,p:a[0]},{maxW:48,p:a[1]},{maxW:60,p:a[2]},{maxW:72,p:a[3]},{maxW:84,p:a[4]},{maxW:96,p:a[5]},{maxW:108,p:a[6]},{maxW:120,p:a[7]},{maxW:132,p:a[8]},{maxW:144,p:a[9]},{maxW:156,p:a[10]},{maxW:168,p:a[11]},{maxW:180,p:a[12]},{maxW:192,p:a[13]}];}
+function _p13(a){return[{maxW:36,p:a[0]},{maxW:48,p:a[1]},{maxW:60,p:a[2]},{maxW:72,p:a[3]},{maxW:84,p:a[4]},{maxW:96,p:a[5]},{maxW:108,p:a[6]},{maxW:120,p:a[7]},{maxW:132,p:a[8]},{maxW:144,p:a[9]},{maxW:156,p:a[10]},{maxW:168,p:a[11]},{maxW:180,p:a[12]}];}
 var CURTAIN_TRACK_PRICING={
-  'M Track':_mkSM(180),'Easy Track':_mkSM(180),'Easy Track Heavy':_mkSM(192),
-  'Delac Track':_mkCM(),'KS Track':_mkCM(),
-  'Nexty Track':_mkSM(192,'per_rft'),'Legato Track':_mkSM(192,'per_rft'),
-  'Selfie Track':_mkSM(192,'per_rft'),'Hospital Track':_mkSM(192,'per_rft'),
-  'Elan Rod':_mkRM(192),'Wooden Rod':_mkRM(192),'Antq Brass Rod':_mkRM(192)
+  'M Track':{
+    pleated:{maxW:196,brackets:_p15([448,551,711,844,973,1107,1235,1369,1498,1631,1791,1894,2053,2156,2316])},
+    ripple: {maxW:196,brackets:_p15([724,894,1090,1327,1523,1761,1957,2127,2391,2561,2824,2994,3190,3428,3505])}
+  },
+  'Easy Track':{
+    pleated:{maxW:180,brackets:_p13([987,1113,1512,1794,2037,2320,2563,2845,3088,3370,3769,3895,4294])},
+    ripple: {maxW:180,brackets:_p13([1152,1373,1723,2024,2375,2676,3026,3247,3677,3898,4329,4550,4900])}
+  },
+  'Easy Track Heavy':{
+    pleated:{maxW:180,brackets:_p13([1545,1751,2389,2750,3233,3594,4077,4438,4921,5282,5921,6126,6764])},
+    ripple: {maxW:180,brackets:_p13([1592,1938,2431,2868,3361,3798,4291,4638,5221,5568,6151,6498,6991])}
+  },
+  'Delac Track':{
+    pleated:{
+      'Standard':  {maxW:196,brackets:_p15([1257,1613,2076,2384,2714,3021,3351,3659,3988,4296,4760,4934,5397,5571,6034])},
+      'Antq Brass':{maxW:196,brackets:_p15([1710,2072,2691,3005,3491,3804,4290,4604,5090,5403,6023,6202,6822,7002,7621])},
+      'Black':     {maxW:196,brackets:_p15([1710,2072,2691,3005,3491,3804,4290,4604,5090,5403,6023,6202,6822,7002,7621])}
+    },
+    ripple:{
+      'Standard':  {maxW:196,brackets:_p15([2526,3007,3644,4433,5070,5858,6495,6977,7921,8402,9346,9828,10465,11253,11496])},
+      'Antq Brass':{maxW:196,brackets:_p15([2979,3466,4259,5054,5847,6641,7434,7921,9022,9509,10609,11096,11890,12684,13080])},
+      'Black':     {maxW:196,brackets:_p15([2979,3466,4259,5054,5847,6641,7434,7921,9022,9509,10609,11096,11890,12684,13080])}
+    }
+  },
+  'KS Track':{
+    pleated:{
+      'White':{maxW:196,brackets:_p15([1824,2129,2780,3223,3735,4178,4690,5133,5646,6089,6739,7044,7694,7999,8406])},
+      'Brown':{maxW:196,brackets:_p15([2107,2497,3246,3774,4385,4914,5525,6053,6664,7192,7941,8332,9081,9471,9908])},
+      'Black':{maxW:196,brackets:_p15([2107,2497,3246,3774,4385,4914,5525,6053,6664,7192,7941,8332,9081,9471,9908])}
+    },
+    ripple:{
+      'White':{maxW:196,brackets:_p15([2385,2857,3536,4176,4856,5495,6175,6647,7494,7966,8813,9285,9965,10604,10964])},
+      'Brown':{maxW:196,brackets:_p15([2628,3208,4008,4749,5550,6290,7091,7671,8632,9212,10174,10753,11554,12295,12725])},
+      'Black':{maxW:196,brackets:_p15([2628,3208,4008,4749,5550,6290,7091,7671,8632,9212,10174,10753,11554,12295,12725])}
+    }
+  },
+  'Nexty Track':{
+    pleated:{maxW:196,brackets:_p15([2491,2736,3531,3979,4572,5019,5612,6060,6653,7100,7896,8141,8936,9181,9977])},
+    ripple: {maxW:196,brackets:_p15([3290,3843,4743,5603,6503,7363,8263,8816,10023,10576,11783,12336,13236,14096,14566])}
+  },
+  'Legato Track': {pleated:{maxW:192,brackets:[]},ripple:{maxW:192,brackets:[]}},
+  'Selfie Track': {pleated:{maxW:192,brackets:[]},ripple:{maxW:192,brackets:[]}},
+  'Hospital Track':{pleated:{maxW:192,brackets:[]},ripple:{maxW:192,brackets:[]}},
+  'Elan Rod':{
+    pleated:{
+      'Steel (L)':{maxW:180,brackets:_p13([1175,1324,1707,2220,2369,2752,2902,3284,3434,3817,4200,4349,4732])},
+      'Steel':    {maxW:180,brackets:_p13([1487,1636,2175,2843,2992,3531,3680,4219,4368,4907,5446,5595,6134])},
+      'No Rings': {maxW:180,brackets:_p13([0,0,0,0,0,0,0,0,0,0,0,0,0])}
+    },
+    eyelet:{
+      'No Rings': {maxW:180,brackets:_p13([708,857,1006,1286,1435,1584,1733,1883,2032,2181,2330,2480,2629])},
+      'Steel (L)':{maxW:180,brackets:_p13([0,0,0,0,0,0,0,0,0,0,0,0,0])},
+      'Steel':    {maxW:180,brackets:_p13([0,0,0,0,0,0,0,0,0,0,0,0,0])}
+    }
+  },
+  'Wooden Rod':{
+    pleated:{'Steel (L)':{maxW:180,brackets:_p13([0,0,0,0,0,0,0,0,0,0,0,0,0])},'Steel':{maxW:180,brackets:_p13([0,0,0,0,0,0,0,0,0,0,0,0,0])},'No Rings':{maxW:180,brackets:_p13([0,0,0,0,0,0,0,0,0,0,0,0,0])}},
+    eyelet: {'No Rings':{maxW:180,brackets:_p13([0,0,0,0,0,0,0,0,0,0,0,0,0])}}
+  },
+  'Antq Brass Rod':{
+    pleated:{
+      'Steel (L)':{maxW:192,brackets:_p14([3290,3827,4676,6052,6589,7438,7975,8824,9362,10211,11059,11597,12446,12983])},
+      'No Rings': {maxW:192,brackets:_p14([0,0,0,0,0,0,0,0,0,0,0,0,0,0])}
+    },
+    eyelet:{
+      'No Rings': {maxW:192,brackets:_p14([2667,3204,3741,4806,5343,5880,6418,6955,7493,8030,8567,9105,9642,10179])},
+      'Steel (L)':{maxW:192,brackets:_p14([0,0,0,0,0,0,0,0,0,0,0,0,0,0])}
+    }
+  }
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -2536,7 +2621,9 @@ function calcTracks(area, sel) {
 // ─── Curtain Track / Rod pricing helpers ──────────────────────────────────────
 function _ctrkLookup(trackType, stitchStyle, colorOrVariant) {
   var cfg=CURTAIN_TRACK_PRICING[trackType]; if(!cfg) return null;
-  var sCfg=cfg[stitchStyle]||cfg['plain']; if(!sCfg) return null;
+  var s=(stitchStyle||'pleated').toLowerCase();
+  if(s==='plain'||s==='eliza'||s==='pinch') s='pleated';
+  var sCfg=cfg[s]||cfg['pleated']; if(!sCfg) return null;
   if(CURTAIN_TRACKS_HAS_COLOR.indexOf(trackType)>=0||CURTAIN_ROD_NAMES.indexOf(trackType)>=0)
     return sCfg[colorOrVariant]||null;
   return sCfg;
@@ -2551,9 +2638,18 @@ function getCurtainTrackPrice(trackType, stitchStyle, colorOrVariant, widthInche
   if(!p&&bks.length) p=bks[bks.length-1].p;
   return p*mult;
 }
-function getDoubleBracketCost(trackType, widthInches) {
-  var db=CURTAIN_DOUBLE_BRACKETS[trackType]; if(!db||!db.price) return 0;
+function getDoubleBracketCost(trackType, color, widthInches) {
+  var db=CURTAIN_DOUBLE_BRACKETS[trackType]; if(!db) return 0;
+  if(color&&db[color]!==undefined&&typeof db[color]==='object') db=db[color];
+  if(!db.price) return 0;
   return Math.ceil(widthInches/24)*db.price;
+}
+function calcElizaRings(trackType, ringOrColor, widthInches) {
+  var panels=Math.ceil((widthInches+10)/24);
+  var ppp=CURTAIN_ROD_NAMES.indexOf(trackType)>=0
+    ? ((CURTAIN_RINGS[trackType]||{})[ringOrColor]||0)
+    : (CURTAIN_RUNNERS[trackType]||0);
+  return panels*6*ppp;
 }
 function _ctrkWinData(mainSel, sheerSel, wi) {
   var mo=mainSel?((mainSel.ctrkOvr||{})[String(wi)]||{}):{};
@@ -2571,19 +2667,27 @@ function _ctrkWinData(mainSel, sheerSel, wi) {
 }
 function calcCurtainHWBreakdown(area, mainSel, sheerSel) {
   var qty=parseInt(area.qty)||1, w=parseFloat(area.width)||0;
-  var trackMain=0,trackSheer=0,dblBkt=0,finialMain=0,finialSheer=0;
+  var trackMain=0,trackSheer=0,dblBkt=0,finialMain=0,finialSheer=0,elizaMain=0,elizaSheer=0;
   var mStitch=(mainSel&&mainSel.stitchStyle)||'plain';
   var sStitch=(sheerSel&&sheerSel.stitchStyle)||'plain';
+  var mEliza=mStitch.toLowerCase()==='eliza', sEliza=sStitch.toLowerCase()==='eliza';
   for(var i=0;i<qty;i++){
     var d=_ctrkWinData(mainSel,sheerSel,i);
-    if(d.mt) trackMain+=getCurtainTrackPrice(d.mt,mStitch,d.mc||d.mrv,w);
-    if(d.st) trackSheer+=getCurtainTrackPrice(d.st,sStitch,d.sc||d.srv,w);
-    if(d.mt&&d.st) dblBkt+=getDoubleBracketCost(d.mt,w);
+    if(d.mt){
+      trackMain+=getCurtainTrackPrice(d.mt,mStitch,d.mc||d.mrv,w);
+      if(mEliza) elizaMain+=calcElizaRings(d.mt,d.mc||d.mrv,w);
+    }
+    if(d.st){
+      trackSheer+=getCurtainTrackPrice(d.st,sStitch,d.sc||d.srv,w);
+      if(sEliza) elizaSheer+=calcElizaRings(d.st,d.sc||d.srv,w);
+    }
+    if(d.mt&&d.st) dblBkt+=getDoubleBracketCost(d.mt,d.mc||d.mrv,w);
     if(d.mf){var mfR=FINIALS.find(function(x){return x.code===d.mf;});if(mfR)finialMain+=mfR.price||0;}
     if(d.sf){var sfR=FINIALS.find(function(x){return x.code===d.sf;});if(sfR)finialSheer+=sfR.price||0;}
   }
-  return{trackMain:trackMain,trackSheer:trackSheer,dblBkt:dblBkt,finialMain:finialMain,finialSheer:finialSheer,
-         total:trackMain+trackSheer+dblBkt+finialMain+finialSheer};
+  return{trackMain:trackMain,trackSheer:trackSheer,dblBkt:dblBkt,
+         finialMain:finialMain,finialSheer:finialSheer,elizaMain:elizaMain,elizaSheer:elizaSheer,
+         total:trackMain+trackSheer+dblBkt+finialMain+finialSheer+elizaMain+elizaSheer};
 }
 
 function calcOthers(sel) {
@@ -5866,8 +5970,8 @@ function _ctrkCard(ri, area, mainSel, sheerSel) {
   if(isColM&&(CURTAIN_TRACK_COLORS[mainSel.ctrkType]||[]).length)
     h+=_ctrkDDRow('↳ Color',mainSel.ctrkColor||'',CURTAIN_TRACK_COLORS[mainSel.ctrkType],'setCtrkColor('+ri+','+msid+',this.value)');
   if(isRodM){
-    var rmOpts=eyeletM?['Without Rings']:CURTAIN_ROD_RING_VARIANTS;
-    var rmVal=eyeletM?'Without Rings':(mainSel.ctrkRing||'');
+    var rmOpts=eyeletM?['No Rings']:(CURTAIN_ROD_NAMES.indexOf(mainSel.ctrkType)>=0&&mainSel.ctrkType==='Antq Brass Rod'?['Steel (L)','No Rings']:CURTAIN_ROD_RING_VARIANTS);
+    var rmVal=eyeletM?'No Rings':(mainSel.ctrkRing||'');
     h+=_ctrkDDRow('↳ Ring type',rmVal,rmOpts,eyeletM?'':('setCtrkRing('+ri+','+msid+',this.value)'),eyeletM);
     if(FINIALS.length){
       h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">'
@@ -5887,8 +5991,8 @@ function _ctrkCard(ri, area, mainSel, sheerSel) {
     if(isColS&&(CURTAIN_TRACK_COLORS[sheerSel.ctrkType]||[]).length)
       h+=_ctrkDDRow('↳ Color',sheerSel.ctrkColor||'',CURTAIN_TRACK_COLORS[sheerSel.ctrkType],'setCtrkColor('+ri+','+ssid+',this.value)');
     if(isRodS){
-      var rsOpts=eyeletS?['Without Rings']:CURTAIN_ROD_RING_VARIANTS;
-      var rsVal=eyeletS?'Without Rings':(sheerSel.ctrkRing||'');
+      var rsOpts=eyeletS?['No Rings']:(sheerSel.ctrkType==='Antq Brass Rod'?['Steel (L)','No Rings']:CURTAIN_ROD_RING_VARIANTS);
+      var rsVal=eyeletS?'No Rings':(sheerSel.ctrkRing||'');
       h+=_ctrkDDRow('↳ Ring type',rsVal,rsOpts,eyeletS?'':('setCtrkRing('+ri+','+ssid+',this.value)'),eyeletS);
       if(FINIALS.length){
         h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">'
@@ -5912,7 +6016,7 @@ function _ctrkCard(ri, area, mainSel, sheerSel) {
         var wbg=wi%2===0?'var(--bg3)':'var(--bg2)';
         var wMain=d.mt?getCurtainTrackPrice(d.mt,mStitch,d.mc||d.mrv,w):0;
         var wSheer=d.st?getCurtainTrackPrice(d.st,sStitch,d.sc||d.srv,w):0;
-        var wDbl=(d.mt&&d.st)?getDoubleBracketCost(d.mt,w):0;
+        var wDbl=(d.mt&&d.st)?getDoubleBracketCost(d.mt,d.mc||d.mrv,w):0;
         var wTot=wMain+wSheer+wDbl;
         h+='<div style="padding:6px 8px;background:'+wbg+'">'
           +'<div style="font-size:10px;font-weight:800;color:var(--text3);margin-bottom:3px">Window '+(wi+1)+'</div>'
@@ -5960,6 +6064,10 @@ function _ctrkCard(ri, area, mainSel, sheerSel) {
         +'<div style="display:flex;align-items:center;gap:4px"><span style="font-weight:800;color:var(--red)">'+fmt(bd.finialSheer)+'</span>'
         +'<button style="font-size:10px;padding:1px 5px;border:1px solid var(--border2);border-radius:3px;background:var(--bg2);color:var(--text3);cursor:pointer" onclick="setCtrkFinial('+ri+','+ssid+',null)">✕</button></div></div>';
     }
+    if(bd.elizaMain>0)
+      h+='<div style="display:flex;justify-content:space-between;font-size:12px"><span>Eliza rings (main) – '+Math.ceil((w+10)/24)+' panels × 6</span><span style="font-weight:800;color:var(--red)">'+fmt(bd.elizaMain)+'</span></div>';
+    if(bd.elizaSheer>0)
+      h+='<div style="display:flex;justify-content:space-between;font-size:12px"><span>Eliza rings (sheer) – '+Math.ceil((w+10)/24)+' panels × 6</span><span style="font-weight:800;color:var(--red)">'+fmt(bd.elizaSheer)+'</span></div>';
     h+='</div>';
   }
   h+='</div>';
