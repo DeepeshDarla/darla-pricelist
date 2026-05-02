@@ -1,0 +1,360 @@
+﻿Type,Product,Colour,Size,Amount,Stitching Pattern
+Track,Easy Track,Standard,36,987,"Pleated, Plain, Eliza"
+Track,Easy Track,Standard,48,1113,"Pleated, Plain, Eliza"
+Track,Easy Track,Standard,60,1512,"Pleated, Plain, Eliza"
+Track,Easy Track,Standard,72,1794,"Pleated, Plain, Eliza"
+Track,Easy Track,Standard,84,2037,"Pleated, Plain, Eliza"
+Track,Easy Track,Standard,96,2320,"Pleated, Plain, Eliza"
+Track,Easy Track,Standard,108,2563,"Pleated, Plain, Eliza"
+Track,Easy Track,Standard,120,2845,"Pleated, Plain, Eliza"
+Track,Easy Track,Standard,132,3088,"Pleated, Plain, Eliza"
+Track,Easy Track,Standard,144,3370,"Pleated, Plain, Eliza"
+Track,Easy Track,Standard,156,3769,"Pleated, Plain, Eliza"
+Track,Easy Track,Standard,168,3895,"Pleated, Plain, Eliza"
+Track,Easy Track,Standard,180,4294,"Pleated, Plain, Eliza"
+Track,Easy Track Heavy,Standard,36,1545,"Pleated, Plain, Eliza"
+Track,Easy Track Heavy,Standard,48,1751,"Pleated, Plain, Eliza"
+Track,Easy Track Heavy,Standard,60,2389,"Pleated, Plain, Eliza"
+Track,Easy Track Heavy,Standard,72,2750,"Pleated, Plain, Eliza"
+Track,Easy Track Heavy,Standard,84,3233,"Pleated, Plain, Eliza"
+Track,Easy Track Heavy,Standard,96,3594,"Pleated, Plain, Eliza"
+Track,Easy Track Heavy,Standard,108,4077,"Pleated, Plain, Eliza"
+Track,Easy Track Heavy,Standard,120,4438,"Pleated, Plain, Eliza"
+Track,Easy Track Heavy,Standard,132,4921,"Pleated, Plain, Eliza"
+Track,Easy Track Heavy,Standard,144,5282,"Pleated, Plain, Eliza"
+Track,Easy Track Heavy,Standard,156,5921,"Pleated, Plain, Eliza"
+Track,Easy Track Heavy,Standard,168,6126,"Pleated, Plain, Eliza"
+Track,Easy Track Heavy,Standard,180,6764,"Pleated, Plain, Eliza"
+Track,Delac Track,Standard,36,1257,"Pleated, Plain, Eliza"
+Track,Delac Track,Standard,48,1613,"Pleated, Plain, Eliza"
+Track,Delac Track,Standard,60,2076,"Pleated, Plain, Eliza"
+Track,Delac Track,Standard,72,2384,"Pleated, Plain, Eliza"
+Track,Delac Track,Standard,84,2714,"Pleated, Plain, Eliza"
+Track,Delac Track,Standard,96,3021,"Pleated, Plain, Eliza"
+Track,Delac Track,Standard,108,3351,"Pleated, Plain, Eliza"
+Track,Delac Track,Standard,120,3659,"Pleated, Plain, Eliza"
+Track,Delac Track,Standard,132,3988,"Pleated, Plain, Eliza"
+Track,Delac Track,Standard,144,4296,"Pleated, Plain, Eliza"
+Track,Delac Track,Standard,156,4760,"Pleated, Plain, Eliza"
+Track,Delac Track,Standard,168,4934,"Pleated, Plain, Eliza"
+Track,Delac Track,Standard,180,5397,"Pleated, Plain, Eliza"
+Track,Delac Track,Standard,192,5571,"Pleated, Plain, Eliza"
+Track,Delac Track,Standard,196,6034,"Pleated, Plain, Eliza"
+Track,Delac Track,Antq Brass,36,1710,"Pleated, Plain, Eliza"
+Track,Delac Track,Antq Brass,48,2072,"Pleated, Plain, Eliza"
+Track,Delac Track,Antq Brass,60,2691,"Pleated, Plain, Eliza"
+Track,Delac Track,Antq Brass,72,3005,"Pleated, Plain, Eliza"
+Track,Delac Track,Antq Brass,84,3491,"Pleated, Plain, Eliza"
+Track,Delac Track,Antq Brass,96,3804,"Pleated, Plain, Eliza"
+Track,Delac Track,Antq Brass,108,4290,"Pleated, Plain, Eliza"
+Track,Delac Track,Antq Brass,120,4604,"Pleated, Plain, Eliza"
+Track,Delac Track,Antq Brass,132,5090,"Pleated, Plain, Eliza"
+Track,Delac Track,Antq Brass,144,5403,"Pleated, Plain, Eliza"
+Track,Delac Track,Antq Brass,156,6023,"Pleated, Plain, Eliza"
+Track,Delac Track,Antq Brass,168,6202,"Pleated, Plain, Eliza"
+Track,Delac Track,Antq Brass,180,6822,"Pleated, Plain, Eliza"
+Track,Delac Track,Antq Brass,192,7002,"Pleated, Plain, Eliza"
+Track,Delac Track,Antq Brass,196,7621,"Pleated, Plain, Eliza"
+Track,Delac Track,Black,36,1710,"Pleated, Plain, Eliza"
+Track,Delac Track,Black,48,2072,"Pleated, Plain, Eliza"
+Track,Delac Track,Black,60,2691,"Pleated, Plain, Eliza"
+Track,Delac Track,Black,72,3005,"Pleated, Plain, Eliza"
+Track,Delac Track,Black,84,3491,"Pleated, Plain, Eliza"
+Track,Delac Track,Black,96,3804,"Pleated, Plain, Eliza"
+Track,Delac Track,Black,108,4290,"Pleated, Plain, Eliza"
+Track,Delac Track,Black,120,4604,"Pleated, Plain, Eliza"
+Track,Delac Track,Black,132,5090,"Pleated, Plain, Eliza"
+Track,Delac Track,Black,144,5403,"Pleated, Plain, Eliza"
+Track,Delac Track,Black,156,6023,"Pleated, Plain, Eliza"
+Track,Delac Track,Black,168,6202,"Pleated, Plain, Eliza"
+Track,Delac Track,Black,180,6822,"Pleated, Plain, Eliza"
+Track,Delac Track,Black,192,7002,"Pleated, Plain, Eliza"
+Track,Delac Track,Black,196,7621,"Pleated, Plain, Eliza"
+Track,Nexty Track,,36,2491,"Pleated, Plain, Eliza"
+Track,Nexty Track,,48,2736,"Pleated, Plain, Eliza"
+Track,Nexty Track,,60,3531,"Pleated, Plain, Eliza"
+Track,Nexty Track,,72,3979,"Pleated, Plain, Eliza"
+Track,Nexty Track,,84,4572,"Pleated, Plain, Eliza"
+Track,Nexty Track,,96,5019,"Pleated, Plain, Eliza"
+Track,Nexty Track,,108,5612,"Pleated, Plain, Eliza"
+Track,Nexty Track,,120,6060,"Pleated, Plain, Eliza"
+Track,Nexty Track,,132,6653,"Pleated, Plain, Eliza"
+Track,Nexty Track,,144,7100,"Pleated, Plain, Eliza"
+Track,Nexty Track,,156,7896,"Pleated, Plain, Eliza"
+Track,Nexty Track,,168,8141,"Pleated, Plain, Eliza"
+Track,Nexty Track,,180,8936,"Pleated, Plain, Eliza"
+Track,Nexty Track,,192,9181,"Pleated, Plain, Eliza"
+Track,Nexty Track,,196,9977,"Pleated, Plain, Eliza"
+Track,KS Track,White,36,1824,"Pleated, Plain, Eliza"
+Track,KS Track,White,48,2129,"Pleated, Plain, Eliza"
+Track,KS Track,White,60,2780,"Pleated, Plain, Eliza"
+Track,KS Track,White,72,3223,"Pleated, Plain, Eliza"
+Track,KS Track,White,84,3735,"Pleated, Plain, Eliza"
+Track,KS Track,White,96,4178,"Pleated, Plain, Eliza"
+Track,KS Track,White,108,4690,"Pleated, Plain, Eliza"
+Track,KS Track,White,120,5133,"Pleated, Plain, Eliza"
+Track,KS Track,White,132,5646,"Pleated, Plain, Eliza"
+Track,KS Track,White,144,6089,"Pleated, Plain, Eliza"
+Track,KS Track,White,156,6739,"Pleated, Plain, Eliza"
+Track,KS Track,White,168,7044,"Pleated, Plain, Eliza"
+Track,KS Track,White,180,7694,"Pleated, Plain, Eliza"
+Track,KS Track,White,192,7999,"Pleated, Plain, Eliza"
+Track,KS Track,White,196,8406,"Pleated, Plain, Eliza"
+Track,KS Track,Brown,36,2107,"Pleated, Plain, Eliza"
+Track,KS Track,Brown,48,2497,"Pleated, Plain, Eliza"
+Track,KS Track,Brown,60,3246,"Pleated, Plain, Eliza"
+Track,KS Track,Brown,72,3774,"Pleated, Plain, Eliza"
+Track,KS Track,Brown,84,4385,"Pleated, Plain, Eliza"
+Track,KS Track,Brown,96,4914,"Pleated, Plain, Eliza"
+Track,KS Track,Brown,108,5525,"Pleated, Plain, Eliza"
+Track,KS Track,Brown,120,6053,"Pleated, Plain, Eliza"
+Track,KS Track,Brown,132,6664,"Pleated, Plain, Eliza"
+Track,KS Track,Brown,144,7192,"Pleated, Plain, Eliza"
+Track,KS Track,Brown,156,7941,"Pleated, Plain, Eliza"
+Track,KS Track,Brown,168,8332,"Pleated, Plain, Eliza"
+Track,KS Track,Brown,180,9081,"Pleated, Plain, Eliza"
+Track,KS Track,Brown,192,9471,"Pleated, Plain, Eliza"
+Track,KS Track,Brown,196,9908,"Pleated, Plain, Eliza"
+Track,KS Track,Black,36,2107,"Pleated, Plain, Eliza"
+Track,KS Track,Black,48,2497,"Pleated, Plain, Eliza"
+Track,KS Track,Black,60,3246,"Pleated, Plain, Eliza"
+Track,KS Track,Black,72,3774,"Pleated, Plain, Eliza"
+Track,KS Track,Black,84,4385,"Pleated, Plain, Eliza"
+Track,KS Track,Black,96,4914,"Pleated, Plain, Eliza"
+Track,KS Track,Black,108,5525,"Pleated, Plain, Eliza"
+Track,KS Track,Black,120,6053,"Pleated, Plain, Eliza"
+Track,KS Track,Black,132,6664,"Pleated, Plain, Eliza"
+Track,KS Track,Black,144,7192,"Pleated, Plain, Eliza"
+Track,KS Track,Black,156,7941,"Pleated, Plain, Eliza"
+Track,KS Track,Black,168,8332,"Pleated, Plain, Eliza"
+Track,KS Track,Black,180,9081,"Pleated, Plain, Eliza"
+Track,KS Track,Black,192,9471,"Pleated, Plain, Eliza"
+Track,KS Track,Black,196,9908,"Pleated, Plain, Eliza"
+Track,Easy Track,,36,1152,Ripple
+Track,Easy Track,,48,1373,Ripple
+Track,Easy Track,,60,1723,Ripple
+Track,Easy Track,,72,2024,Ripple
+Track,Easy Track,,84,2375,Ripple
+Track,Easy Track,,96,2676,Ripple
+Track,Easy Track,,108,3026,Ripple
+Track,Easy Track,,120,3247,Ripple
+Track,Easy Track,,132,3677,Ripple
+Track,Easy Track,,144,3898,Ripple
+Track,Easy Track,,156,4329,Ripple
+Track,Easy Track,,168,4550,Ripple
+Track,Easy Track,,180,4900,Ripple
+Track,Easy Track Heavy,,36,1592,Ripple
+Track,Easy Track Heavy,,48,1938,Ripple
+Track,Easy Track Heavy,,60,2431,Ripple
+Track,Easy Track Heavy,,72,2868,Ripple
+Track,Easy Track Heavy,,84,3361,Ripple
+Track,Easy Track Heavy,,96,3798,Ripple
+Track,Easy Track Heavy,,108,4291,Ripple
+Track,Easy Track Heavy,,120,4638,Ripple
+Track,Easy Track Heavy,,132,5221,Ripple
+Track,Easy Track Heavy,,144,5568,Ripple
+Track,Easy Track Heavy,,156,6151,Ripple
+Track,Easy Track Heavy,,168,6498,Ripple
+Track,Easy Track Heavy,,180,6991,Ripple
+Track,Delac Track,Standard,36,2526,Ripple
+Track,Delac Track,Standard,48,3007,Ripple
+Track,Delac Track,Standard,60,3644,Ripple
+Track,Delac Track,Standard,72,4433,Ripple
+Track,Delac Track,Standard,84,5070,Ripple
+Track,Delac Track,Standard,96,5858,Ripple
+Track,Delac Track,Standard,108,6495,Ripple
+Track,Delac Track,Standard,120,6977,Ripple
+Track,Delac Track,Standard,132,7921,Ripple
+Track,Delac Track,Standard,144,8402,Ripple
+Track,Delac Track,Standard,156,9346,Ripple
+Track,Delac Track,Standard,168,9828,Ripple
+Track,Delac Track,Standard,180,10465,Ripple
+Track,Delac Track,Standard,192,11253,Ripple
+Track,Delac Track,Standard,196,11496,Ripple
+Track,Delac Track,Antq Brass,36,2979,Ripple
+Track,Delac Track,Antq Brass,48,3466,Ripple
+Track,Delac Track,Antq Brass,60,4259,Ripple
+Track,Delac Track,Antq Brass,72,5054,Ripple
+Track,Delac Track,Antq Brass,84,5847,Ripple
+Track,Delac Track,Antq Brass,96,6641,Ripple
+Track,Delac Track,Antq Brass,108,7434,Ripple
+Track,Delac Track,Antq Brass,120,7921,Ripple
+Track,Delac Track,Antq Brass,132,9022,Ripple
+Track,Delac Track,Antq Brass,144,9509,Ripple
+Track,Delac Track,Antq Brass,156,10609,Ripple
+Track,Delac Track,Antq Brass,168,11096,Ripple
+Track,Delac Track,Antq Brass,180,11890,Ripple
+Track,Delac Track,Antq Brass,192,12684,Ripple
+Track,Delac Track,Antq Brass,196,13080,Ripple
+Track,Delac Track,Black,36,2979,Ripple
+Track,Delac Track,Black,48,3466,Ripple
+Track,Delac Track,Black,60,4259,Ripple
+Track,Delac Track,Black,72,5054,Ripple
+Track,Delac Track,Black,84,5847,Ripple
+Track,Delac Track,Black,96,6641,Ripple
+Track,Delac Track,Black,108,7434,Ripple
+Track,Delac Track,Black,120,7921,Ripple
+Track,Delac Track,Black,132,9022,Ripple
+Track,Delac Track,Black,144,9509,Ripple
+Track,Delac Track,Black,156,10609,Ripple
+Track,Delac Track,Black,168,11096,Ripple
+Track,Delac Track,Black,180,11890,Ripple
+Track,Delac Track,Black,192,12684,Ripple
+Track,Delac Track,Black,196,13080,Ripple
+Track,Nexty Track,,36,3290,Ripple
+Track,Nexty Track,,48,3843,Ripple
+Track,Nexty Track,,60,4743,Ripple
+Track,Nexty Track,,72,5603,Ripple
+Track,Nexty Track,,84,6503,Ripple
+Track,Nexty Track,,96,7363,Ripple
+Track,Nexty Track,,108,8263,Ripple
+Track,Nexty Track,,120,8816,Ripple
+Track,Nexty Track,,132,10023,Ripple
+Track,Nexty Track,,144,10576,Ripple
+Track,Nexty Track,,156,11783,Ripple
+Track,Nexty Track,,168,12336,Ripple
+Track,Nexty Track,,180,13236,Ripple
+Track,Nexty Track,,192,14096,Ripple
+Track,Nexty Track,,196,14566,Ripple
+Track,KS Track,White,36,2385,Ripple
+Track,KS Track,White,48,2857,Ripple
+Track,KS Track,White,60,3536,Ripple
+Track,KS Track,White,72,4176,Ripple
+Track,KS Track,White,84,4856,Ripple
+Track,KS Track,White,96,5495,Ripple
+Track,KS Track,White,108,6175,Ripple
+Track,KS Track,White,120,6647,Ripple
+Track,KS Track,White,132,7494,Ripple
+Track,KS Track,White,144,7966,Ripple
+Track,KS Track,White,156,8813,Ripple
+Track,KS Track,White,168,9285,Ripple
+Track,KS Track,White,180,9965,Ripple
+Track,KS Track,White,192,10604,Ripple
+Track,KS Track,White,196,10964,Ripple
+Track,KS Track,Brown,36,2628,Ripple
+Track,KS Track,Brown,48,3208,Ripple
+Track,KS Track,Brown,60,4008,Ripple
+Track,KS Track,Brown,72,4749,Ripple
+Track,KS Track,Brown,84,5550,Ripple
+Track,KS Track,Brown,96,6290,Ripple
+Track,KS Track,Brown,108,7091,Ripple
+Track,KS Track,Brown,120,7671,Ripple
+Track,KS Track,Brown,132,8632,Ripple
+Track,KS Track,Brown,144,9212,Ripple
+Track,KS Track,Brown,156,10174,Ripple
+Track,KS Track,Brown,168,10753,Ripple
+Track,KS Track,Brown,180,11554,Ripple
+Track,KS Track,Brown,192,12295,Ripple
+Track,KS Track,Brown,196,12725,Ripple
+Track,KS Track,Black,36,2628,Ripple
+Track,KS Track,Black,48,3208,Ripple
+Track,KS Track,Black,60,4008,Ripple
+Track,KS Track,Black,72,4749,Ripple
+Track,KS Track,Black,84,5550,Ripple
+Track,KS Track,Black,96,6290,Ripple
+Track,KS Track,Black,108,7091,Ripple
+Track,KS Track,Black,120,7671,Ripple
+Track,KS Track,Black,132,8632,Ripple
+Track,KS Track,Black,144,9212,Ripple
+Track,KS Track,Black,156,10174,Ripple
+Track,KS Track,Black,168,10753,Ripple
+Track,KS Track,Black,180,11554,Ripple
+Track,KS Track,Black,192,12295,Ripple
+Track,KS Track,Black,196,12725,Ripple
+Track,M Track,,36,448,"Pleated, Plain"
+Track,M Track,,48,551,"Pleated, Plain"
+Track,M Track,,60,711,"Pleated, Plain"
+Track,M Track,,72,844,"Pleated, Plain"
+Track,M Track,,84,973,"Pleated, Plain"
+Track,M Track,,96,1107,"Pleated, Plain"
+Track,M Track,,108,1235,"Pleated, Plain"
+Track,M Track,,120,1369,"Pleated, Plain"
+Track,M Track,,132,1498,"Pleated, Plain"
+Track,M Track,,144,1631,"Pleated, Plain"
+Track,M Track,,156,1791,"Pleated, Plain"
+Track,M Track,,168,1894,"Pleated, Plain"
+Track,M Track,,180,2053,"Pleated, Plain"
+Track,M Track,,192,2156,"Pleated, Plain"
+Track,M Track,,196,2316,"Pleated, Plain"
+Track,M Track,,36,724,Ripple
+Track,M Track,,48,894,Ripple
+Track,M Track,,60,1090,Ripple
+Track,M Track,,72,1327,Ripple
+Track,M Track,,84,1523,Ripple
+Track,M Track,,96,1761,Ripple
+Track,M Track,,108,1957,Ripple
+Track,M Track,,120,2127,Ripple
+Track,M Track,,132,2391,Ripple
+Track,M Track,,144,2561,Ripple
+Track,M Track,,156,2824,Ripple
+Track,M Track,,168,2994,Ripple
+Track,M Track,,180,3190,Ripple
+Track,M Track,,192,3428,Ripple
+Track,M Track,,196,3505,Ripple
+Rod,Elan Rod ,No Rings,36,708,Eyelet
+Rod,Elan Rod ,No Rings,48,857,Eyelet
+Rod,Elan Rod ,No Rings,60,1006,Eyelet
+Rod,Elan Rod ,No Rings,72,1286,Eyelet
+Rod,Elan Rod ,No Rings,84,1435,Eyelet
+Rod,Elan Rod ,No Rings,96,1584,Eyelet
+Rod,Elan Rod ,No Rings,108,1733,Eyelet
+Rod,Elan Rod ,No Rings,120,1883,Eyelet
+Rod,Elan Rod ,No Rings,132,2032,Eyelet
+Rod,Elan Rod ,No Rings,144,2181,Eyelet
+Rod,Elan Rod ,No Rings,156,2330,Eyelet
+Rod,Elan Rod ,No Rings,168,2480,Eyelet
+Rod,Elan Rod ,No Rings,180,2629,Eyelet
+Rod,Elan Rod ,Steel (L),36,1175,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel (L),48,1324,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel (L),60,1707,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel (L),72,2220,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel (L),84,2369,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel (L),96,2752,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel (L),108,2902,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel (L),120,3284,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel (L),132,3434,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel (L),144,3817,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel (L),156,4200,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel (L),168,4349,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel (L),180,4732,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel,36,1487,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel,48,1636,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel,60,2175,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel,72,2843,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel,84,2992,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel,96,3531,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel,108,3680,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel,120,4219,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel,132,4368,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel,144,4907,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel,156,5446,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel,168,5595,"Pleated, Plain, Eliza"
+Rod,Elan Rod ,Steel,180,6134,"Pleated, Plain, Eliza"
+Rod,Antq Brass Rod ,No Rings,36,2667,Eyelet
+Rod,Antq Brass Rod ,No Rings,48,3204,Eyelet
+Rod,Antq Brass Rod ,No Rings,60,3741,Eyelet
+Rod,Antq Brass Rod ,No Rings,72,4806,Eyelet
+Rod,Antq Brass Rod ,No Rings,84,5343,Eyelet
+Rod,Antq Brass Rod ,No Rings,96,5880,Eyelet
+Rod,Antq Brass Rod ,No Rings,108,6418,Eyelet
+Rod,Antq Brass Rod ,No Rings,120,6955,Eyelet
+Rod,Antq Brass Rod ,No Rings,132,7493,Eyelet
+Rod,Antq Brass Rod ,No Rings,144,8030,Eyelet
+Rod,Antq Brass Rod ,No Rings,156,8567,Eyelet
+Rod,Antq Brass Rod ,No Rings,168,9105,Eyelet
+Rod,Antq Brass Rod ,No Rings,180,9642,Eyelet
+Rod,Antq Brass Rod ,No Rings,192,10179,Eyelet
+Rod,Antq Brass Rod ,Steel (L),36,3290,"Pleated, Plain, Eliza"
+Rod,Antq Brass Rod ,Steel (L),48,3827,"Pleated, Plain, Eliza"
+Rod,Antq Brass Rod ,Steel (L),60,4676,"Pleated, Plain, Eliza"
+Rod,Antq Brass Rod ,Steel (L),72,6052,"Pleated, Plain, Eliza"
+Rod,Antq Brass Rod ,Steel (L),84,6589,"Pleated, Plain, Eliza"
+Rod,Antq Brass Rod ,Steel (L),96,7438,"Pleated, Plain, Eliza"
+Rod,Antq Brass Rod ,Steel (L),108,7975,"Pleated, Plain, Eliza"
+Rod,Antq Brass Rod ,Steel (L),120,8824,"Pleated, Plain, Eliza"
+Rod,Antq Brass Rod ,Steel (L),132,9362,"Pleated, Plain, Eliza"
+Rod,Antq Brass Rod ,Steel (L),144,10211,"Pleated, Plain, Eliza"
+Rod,Antq Brass Rod ,Steel (L),156,11059,"Pleated, Plain, Eliza"
+Rod,Antq Brass Rod ,Steel (L),168,11597,"Pleated, Plain, Eliza"
+Rod,Antq Brass Rod ,Steel (L),180,12446,"Pleated, Plain, Eliza"
+Rod,Antq Brass Rod ,Steel (L),192,12983,"Pleated, Plain, Eliza"
