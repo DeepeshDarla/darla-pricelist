@@ -2842,6 +2842,15 @@ function updateGroupRate(ri, groupKey, rateKey, val){
   });
   saveDraft(); renderSum();
 }
+function updateSelRate(ri, selId, rateKey, val){
+  var room=APP.quote.rooms[ri]; if(!room) return;
+  var sel=(room.selections||[]).find(function(s){return s.id===selId;});
+  if(!sel) return;
+  if(!sel.rates) sel.rates={};
+  var num=parseFloat(val);
+  if(num) sel.rates[rateKey]=num; else delete sel.rates[rateKey];
+  saveDraft(); renderSum();
+}
 var _lastSavedAreaIds = [];   // areaIds of the most recently saved selection
 var _lastSavedOpeningId = null; // openingId of the most recently saved selection
 
@@ -4561,6 +4570,18 @@ function _renderSheerProdRows(){
     var pname=nameParts.join(' / ')||(prod.manualName||'—');
     var h=(roleLabel?'<div style="font-size:10px;font-weight:900;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-top:14px;margin-bottom:4px;padding-left:2px">'+roleLabel+'</div>':'')
       +'<div class="prod-row"'+(isOption?' style="border-left:3px solid var(--border2)"':'')+'>';
+    if(p._manual&&!prod.mrp){
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+        +'<div style="font-size:11px;color:var(--text3);font-weight:700">MANUAL ENTRY</div>'
+        +'<button class="icon-btn danger" onclick="_selSheerProducts.splice('+i+',1);renderAddSelection()">🗑</button></div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">'
+        +'<input class="inp" style="font-size:12px;padding:7px" placeholder="Brand *" onchange="_selSheerProducts['+i+'].product.brand=this.value">'
+        +'<input class="inp" style="font-size:12px;padding:7px" placeholder="Catalog" onchange="_selSheerProducts['+i+'].product.catalog=this.value;_selSheerProducts['+i+'].product.manualName=this.value">'
+        +'<input class="inp" style="font-size:12px;padding:7px" placeholder="S.No / Code (opt)" onchange="_selSheerProducts['+i+'].product.s_no=this.value">'
+        +'<input class="inp" type="number" style="font-size:12px;padding:7px" placeholder="MRP (₹) *" inputmode="decimal" onchange="_selSheerProducts['+i+'].product.mrp=parseFloat(this.value)||0">'
+        +'</div></div>';
+      return h;
+    }
     h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px">'
       +'<div style="flex:1;min-width:0">'
       +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px">'
@@ -6349,38 +6370,47 @@ function _renderSumRoomExpanded(room, ri){
       });
 
       // ── Track / Rod line items (FIRST, before fabric) ──────────────────
+      var _liInp='width:52px;font-size:11px;padding:2px 3px;border:1px solid var(--border2);border-radius:3px;background:var(--bg2);color:var(--text);-webkit-appearance:none;text-align:right';
       ctrkOrd.forEach(function(aid){
         var m=ctrkMap[aid]; if(!m.mainSel||!m.mainSel.ctrkType) return;
         var bd=calcCurtainHWBreakdown(m.area,m.mainSel,m.sheerSel);
         var qty=parseInt(m.area.qty)||1;
+        var mSid=m.mainSel.id.replace(/'/g,"\\'");
         var mLabel=m.mainSel.ctrkType+(m.mainSel.ctrkColor?' ('+m.mainSel.ctrkColor+')':'');
-        if(bd.trackMain>0)
-          h+='<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px">'
-            +'<span style="color:var(--text2)">Track – '+esc(mLabel)+' × '+qty+' win'+(qty>1?'s':'')+'</span>'
-            +'<span style="font-weight:800;color:var(--red)">'+fmt(bd.trackMain)+'</span></div>';
-        if(bd.trackSheer>0){
+        // Main track — always show when ctrkType set, rate editable
+        var mRateComp=qty>0?Math.round(bd.trackMain/qty):0;
+        var mRate=(m.mainSel.rates&&m.mainSel.rates.ctrkMainRate!=null)?m.mainSel.rates.ctrkMainRate:mRateComp;
+        liNum++;
+        h+='<div style="display:grid;grid-template-columns:18px 1fr auto auto 20px 20px;gap:2px 4px;padding:5px 2px;border-bottom:1px solid var(--border);align-items:center">'
+          +'<div style="font-size:11px;color:var(--text3);text-align:right">'+liNum+'.</div>'
+          +'<div style="font-size:12px;font-weight:700;color:var(--text)">Track – '+esc(mLabel)+'</div>'
+          +'<div style="font-size:11px;color:var(--text3);text-align:right;white-space:nowrap">'+qty+' win'+(qty>1?'s':'')+' × '
+          +'<input type="number" value="'+mRate+'" style="'+_liInp+'" '
+          +'onchange="updateSelRate('+ri+',\''+mSid+'\',\'ctrkMainRate\',this.value)" onclick="this.select();event.stopPropagation()"></div>'
+          +'<div style="font-size:13px;font-weight:800;color:var(--red);text-align:right;white-space:nowrap">'+fmt(mRate*qty)+'</div>'
+          +'<div></div><div></div></div>';
+        // Sheer track — show when sheer has a ctrkType
+        if(m.sheerSel&&m.sheerSel.ctrkType){
+          var sSid=m.sheerSel.id.replace(/'/g,"\\'");
           var sLabel=m.sheerSel.ctrkType+(m.sheerSel.ctrkColor?' ('+m.sheerSel.ctrkColor+')':'');
-          h+='<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px">'
-            +'<span style="color:var(--text2)">Sheer track – '+esc(sLabel)+' × '+qty+' win'+(qty>1?'s':'')+'</span>'
-            +'<span style="font-weight:800;color:var(--red)">'+fmt(bd.trackSheer)+'</span></div>';
+          var sRateComp=qty>0?Math.round(bd.trackSheer/qty):0;
+          var sRate=(m.sheerSel.rates&&m.sheerSel.rates.ctrkRate!=null)?m.sheerSel.rates.ctrkRate:sRateComp;
+          liNum++;
+          h+='<div style="display:grid;grid-template-columns:18px 1fr auto auto 20px 20px;gap:2px 4px;padding:5px 2px;border-bottom:1px solid var(--border);align-items:center">'
+            +'<div style="font-size:11px;color:var(--text3);text-align:right">'+liNum+'.</div>'
+            +'<div style="font-size:12px;font-weight:700;color:var(--text)">Sheer track – '+esc(sLabel)+'</div>'
+            +'<div style="font-size:11px;color:var(--text3);text-align:right;white-space:nowrap">'+qty+' win'+(qty>1?'s':'')+' × '
+            +'<input type="number" value="'+sRate+'" style="'+_liInp+'" '
+            +'onchange="updateSelRate('+ri+',\''+sSid+'\',\'ctrkRate\',this.value)" onclick="this.select();event.stopPropagation()"></div>'
+            +'<div style="font-size:13px;font-weight:800;color:var(--red);text-align:right;white-space:nowrap">'+fmt(sRate*qty)+'</div>'
+            +'<div></div><div></div></div>';
         }
-        if(bd.dblBkt>0)
-          h+='<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px">'
-            +'<span style="color:var(--text2)">Double brackets ('+Math.ceil((parseFloat(m.area.width)||0)/24)+'/win × '+qty+')</span>'
-            +'<span style="font-weight:800;color:var(--red)">'+fmt(bd.dblBkt)+'</span></div>';
-        if(bd.elizaMain>0)
-          h+='<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px">'
-            +'<span style="color:var(--text2)">Eliza rings (main) – '+Math.ceil(((parseFloat(m.area.width)||0)+10)/24)+' panels × 6</span>'
-            +'<span style="font-weight:800;color:var(--red)">'+fmt(bd.elizaMain)+'</span></div>';
-        if(bd.elizaSheer>0)
-          h+='<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px">'
-            +'<span style="color:var(--text2)">Eliza rings (sheer) – '+Math.ceil(((parseFloat(m.area.width)||0)+10)/24)+' panels × 6</span>'
-            +'<span style="font-weight:800;color:var(--red)">'+fmt(bd.elizaSheer)+'</span></div>';
+        if(bd.dblBkt>0) liFixed('Double brackets ('+Math.ceil((parseFloat(m.area.width)||0)/24)+'/win × '+qty+')', '', bd.dblBkt);
+        if(bd.elizaMain>0) liFixed('Eliza rings (main) – '+Math.ceil(((parseFloat(m.area.width)||0)+10)/24)+' panels × 6', '', bd.elizaMain);
+        if(bd.elizaSheer>0) liFixed('Eliza rings (sheer) – '+Math.ceil(((parseFloat(m.area.width)||0)+10)/24)+' panels × 6', '', bd.elizaSheer);
         if(bd.finialMain>0){
           var mfN=(FINIALS.find(function(f){return f.code===m.mainSel.ctrkFinial;})||{}).name||'Finial';
-          h+='<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px">'
-            +'<span style="color:var(--text2)">'+esc(mfN)+' × '+qty+' pair'+(qty>1?'s':'')+'</span>'
-            +'<span style="font-weight:800;color:var(--red)">'+fmt(bd.finialMain)+'</span></div>';
+          liFixed(esc(mfN)+' × '+qty+' pair'+(qty>1?'s':''), '', bd.finialMain);
         }
       });
       // ── Installation line item ──────────────────────────────────────────
@@ -6441,7 +6471,19 @@ function _renderSumRoomExpanded(room, ri){
       // Track HW + installation
       ctrkOrd.forEach(function(aid){
         var m=ctrkMap[aid]; if(!m.mainSel) return;
-        catTotal+=calcCurtainHWBreakdown(m.area,m.mainSel,m.sheerSel).total;
+        var bd=calcCurtainHWBreakdown(m.area,m.mainSel,m.sheerSel);
+        var qty=parseInt(m.area.qty)||1;
+        if(m.mainSel.ctrkType){
+          var mRc=qty>0?Math.round(bd.trackMain/qty):0;
+          var mR=(m.mainSel.rates&&m.mainSel.rates.ctrkMainRate!=null)?m.mainSel.rates.ctrkMainRate:mRc;
+          catTotal+=mR*qty;
+        }
+        if(m.sheerSel&&m.sheerSel.ctrkType){
+          var sRc=qty>0?Math.round(bd.trackSheer/qty):0;
+          var sR=(m.sheerSel.rates&&m.sheerSel.rates.ctrkRate!=null)?m.sheerSel.rates.ctrkRate:sRc;
+          catTotal+=sR*qty;
+        }
+        catTotal+=bd.dblBkt+bd.elizaMain+bd.elizaSheer+bd.finialMain+bd.finialSheer;
       });
       catTotal+=totalInstallCost;
 
