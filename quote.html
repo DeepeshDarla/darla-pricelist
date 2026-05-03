@@ -6366,7 +6366,13 @@ function _renderSumRoomExpanded(room, ri){
         g.liningCost+=c.liningCost||0; g.liningStitchCost+=c.liningStitchCost||0; g.liningStitchRate=c.liningStitchRate||0;
         g.qty+=(parseInt(item.area.qty)||1);
         if(c.liningType&&c.liningType!=='none') g.liningType=c.liningType;
-        if(isMn){ totalInstallCost+=c.installCost||0; totalInstallWins+=parseInt(item.area.qty)||1; }
+        if(isMn){
+          var _aid=item.area.id;
+          // Count installs: 1 for main track + 1 if sheer also has a track
+          var _numTracks=1+(ctrkMap[_aid]&&ctrkMap[_aid].sheerSel&&ctrkMap[_aid].sheerSel.ctrkType?1:0);
+          totalInstallCost+=Math.round((c.installCost||0)*_numTracks);
+          totalInstallWins+=(parseInt(item.area.qty)||1)*_numTracks;
+        }
       });
 
       // ── Track / Rod line items (FIRST, before fabric) ──────────────────
