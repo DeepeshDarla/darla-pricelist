@@ -6932,53 +6932,239 @@ function _buildPrintSelect(roomFilter) {
 
 // ── PRINT MODE 3: FULL QUOTE ──────────────────────────────────
 function _buildPrintQuote(roomFilter) {
-  var q=APP.quote, rooms=_filteredRooms(roomFilter), h=_printHdr(q)+_printCust(q);
-  h+='<div style="font-size:7pt;font-weight:800;letter-spacing:2pt;text-transform:uppercase;color:#999;margin-bottom:3mm">QUOTATION</div>';
-  var grandNt=_grandNetFiltered(rooms);
+  var q=APP.quote, rooms=_filteredRooms(roomFilter);
+  var sub=0; rooms.forEach(function(r){ sub+=roomTotal(r); });
+  var disc=q.overallDisc||0;
+  var discAmt=disc>1?Math.round(disc):Math.round(sub*disc);
+  var net=sub-discAmt;
+
+  var h=_printHdr(q)+_printCust(q);
+
+  // ── 1. Summary: room totals + grand total ────────────────────
+  h+='<div style="margin:2mm 0 5mm">';
+  h+='<div style="font-size:7pt;font-weight:800;letter-spacing:2pt;text-transform:uppercase;color:#999;margin-bottom:2mm">QUOTATION SUMMARY</div>';
+  h+='<table style="width:100%;border-collapse:collapse;font-size:9pt">';
   rooms.forEach(function(room){
     var rt=roomTotal(room);
-    h+='<div style="break-inside:avoid;margin-bottom:4mm">'
-      +'<div style="background:#1a1a1a;color:#fff;padding:2mm 3mm;font-size:10pt;font-weight:900;display:flex;justify-content:space-between">'
-      +'<span>'+esc(room.name)+'</span>'+(rt>0?'<span>'+fmt(rt)+'</span>':'')+'</div>';
-    (room.areas||[]).forEach(function(area){
-      var areaSelections=(room.selections||[]).filter(function(sel){ return sel.openingId===area.id||(sel.areaIds||[]).indexOf(area.id)!==-1; });
-      if(!areaSelections.length) return;
-      var areaTot=0; areaSelections.forEach(function(sel){ areaTot+=calcSelForArea(sel,area); });
-      h+='<div style="padding:2mm 3mm;border-bottom:0.75pt solid #ccc;break-inside:avoid">'
-        +'<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1.5mm">'
-        +'<b style="font-size:9pt">'+esc(area.name)+'</b>'
-        +'<span style="font-size:7.5pt;color:#666">'+area.width+'" W × '+area.height+'" H · Qty '+area.qty+'</span>'
-        +'</div>';
-      areaSelections.forEach(function(sel){
-        var result=_calcSelForArea_detail(sel,area); if(!result||!result.total) return;
-        h+='<div style="background:#f9f9f9;border-radius:1.5mm;padding:1.5mm 2mm;margin-bottom:1.5mm">';
-        h+='<div style="display:flex;justify-content:space-between;margin-bottom:0.8mm">'
-          +'<span style="font-size:6.5pt;font-weight:900;color:#555;text-transform:uppercase;letter-spacing:1pt">'+selCatLabel(sel.category)+'</span>'
-          +'<b style="font-size:9pt;color:#000">'+fmt(result.total)+'</b></div>';
-        activeProds(sel).forEach(function(p){
-          var prod=p.product||{};
-          var pname=[prod.brand,prod.catalog,prod.s_no].filter(Boolean).join(' / ')||(prod.manualName||'—');
-          h+='<div style="font-size:8pt;font-weight:800;color:#000">'+esc(pname)+'</div>';
-        });
-        if(sel.trackType) h+='<div style="font-size:8pt;font-weight:800;color:#000">'+esc(sel.trackType)+'</div>';
-        result.lines.filter(function(ln){ return ln.a>0; }).forEach(function(ln){
-          h+='<div style="display:flex;justify-content:space-between;font-size:6.5pt;color:#555;border-top:0.5pt dashed #ccc;padding:0.4mm 0">'
-            +'<span>'+esc(ln.l)+(ln.v?' ('+esc(ln.v)+')':'')+'</span><span>'+fmt(ln.a)+'</span></div>';
-        });
-        h+='</div>';
-      });
-      if(areaTot>0) h+='<div style="display:flex;justify-content:space-between;font-size:8pt;font-weight:800;border-top:0.75pt solid #bbb;padding:1mm 0"><span>'+esc(area.name)+' Total</span><span>'+fmt(areaTot)+'</span></div>';
-      h+='</div>';
-    });
-    if(rt>0) h+='<div style="display:flex;justify-content:space-between;background:#f0f0f0;padding:2mm 3mm;font-size:9pt;font-weight:800"><span>'+esc(room.name)+' Sub-total</span><span>'+fmt(rt)+'</span></div>';
-    h+='</div>';
+    h+='<tr><td style="padding:1.5mm 0;color:#333">'+esc(room.name)+'</td>'
+      +'<td style="padding:1.5mm 0;text-align:right;font-weight:700">'+fmt(rt)+'</td></tr>';
   });
-  h+='<div style="background:#1a1a1a;color:#fff;border-radius:2mm;padding:3.5mm;margin:3mm 0;text-align:center;break-inside:avoid">'
-    +'<div style="font-size:7pt;color:#bbb;margin-bottom:1mm">GRAND TOTAL</div>'
-    +'<div style="font-size:24pt;font-weight:900;color:#fff">'+Number(Math.round(grandNt)).toLocaleString('en-IN')+'</div>'
-    +'</div>';
-  h+='<div style="border:0.75pt solid #ccc;padding:2.5mm"><div style="font-size:6.5pt;color:#444;font-weight:800;text-transform:uppercase;margin-bottom:1mm">Terms &amp; Notes</div>';
-  CFG.terms.forEach(function(t){ h+='<div style="font-size:6.5pt;color:#555;line-height:1.55">· '+esc(t)+'</div>'; });
+  if(rooms.length>1){
+    h+='<tr style="border-top:0.5pt solid #ccc">'
+      +'<td style="padding:1.5mm 0;font-weight:800;color:#000">Subtotal</td>'
+      +'<td style="padding:1.5mm 0;text-align:right;font-weight:800">'+fmt(sub)+'</td></tr>';
+  }
+  if(discAmt>0){
+    var dl=disc>1?('₹'+fmt(disc)):Math.round(disc*100)+'%';
+    h+='<tr><td style="padding:1mm 0;color:#666">Less Discount ('+dl+')</td>'
+      +'<td style="padding:1mm 0;text-align:right;color:#c0392b">− '+fmt(discAmt)+'</td></tr>';
+  }
+  h+='<tr style="border-top:1.5pt solid #000">'
+    +'<td style="padding:2mm 0;font-size:11pt;font-weight:900;color:#000">NET TOTAL</td>'
+    +'<td style="padding:2mm 0;text-align:right;font-size:11pt;font-weight:900;color:#000">'+fmt(net)+'</td></tr>';
+  h+='</table></div>';
+
+  // ── 2. Per-room line item detail ─────────────────────────────
+  rooms.forEach(function(room,ri){ h+=_buildPrintRoomDetail(room,ri); });
+
+  // ── 3. Terms ─────────────────────────────────────────────────
+  if(CFG.terms&&CFG.terms.length){
+    h+='<div style="border:0.75pt solid #ccc;padding:2.5mm;margin-top:4mm;break-inside:avoid">'
+      +'<div style="font-size:6.5pt;color:#444;font-weight:800;text-transform:uppercase;margin-bottom:1mm">Terms &amp; Notes</div>';
+    CFG.terms.forEach(function(t){ h+='<div style="font-size:6.5pt;color:#555;line-height:1.55">· '+esc(t)+'</div>'; });
+    h+='</div>';
+  }
+  return h;
+}
+
+// ── Per-room print detail: one section per category ───────────
+function _buildPrintRoomDetail(room, ri) {
+  var h='', areas=room.areas||[], sels=room.selections||[];
+  var rt=roomTotal(room);
+  h+='<div style="margin-top:5mm">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1.5pt solid #000;padding-bottom:1mm;margin-bottom:3mm">'
+    +'<span style="font-size:10.5pt;font-weight:900;text-transform:uppercase;color:#000">'+esc(room.name)+'</span>'
+    +'<span style="font-size:10pt;font-weight:900;color:#c0392b">'+fmt(rt)+'</span></div>';
+
+  var displayCats=[
+    {dc:'curtains',  label:'Curtains',      cats:['curtains_main','curtains_sheer']},
+    {dc:'roman_blind',label:'Roman Blind',  cats:['roman_blind']},
+    {dc:'blind',     label:'Blind',         cats:['blind']},
+    {dc:'headboard', label:'Headboard',     cats:['headboard']},
+    {dc:'flooring',  label:'Flooring',      cats:['flooring']},
+    {dc:'wallpaper', label:'Wallpaper',     cats:['wallpaper']},
+    {dc:'mattress',  label:'Mattress',      cats:['mattress']},
+    {dc:'tracks_rods',label:'Tracks & Rods',cats:['tracks_rods']},
+    {dc:'others',    label:'Others',        cats:['others']}
+  ];
+
+  displayCats.forEach(function(info){
+    var catSels=sels.filter(function(s){ return info.cats.indexOf(s.category)!==-1; });
+    if(!catSels.length) return;
+    var areaItems=[];
+    catSels.forEach(function(sel){
+      var fp=fabricProd(sel), prod=fp&&fp.product||{};
+      var prodKey=[prod.brand,prod.catalog].filter(Boolean).join('/')||(prod.manualName||sel.trackType||'—');
+      var gk=sel.category+'|'+prodKey;
+      areas.forEach(function(area){
+        var linked=sel.openingId===area.id||(sel.areaIds||[]).indexOf(area.id)!==-1;
+        if(!linked) return;
+        var d=area.width&&area.height?_calcSelForArea_detail(sel,area):null;
+        areaItems.push({sel:sel,area:area,d:d,fp:fp,prod:prod,prodKey:prodKey,gk:gk});
+      });
+    });
+    if(!areaItems.length) return;
+
+    // line item row template
+    var liNum=0;
+    function _pLi(label,qtyStr,total){
+      liNum++;
+      return '<tr>'
+        +'<td style="width:12pt;padding:1.5mm 2pt 1.5mm 0;font-size:7.5pt;color:#aaa;text-align:right;vertical-align:top">'+liNum+'.</td>'
+        +'<td style="padding:1.5mm 3pt;font-size:8pt;font-weight:700;color:#000;vertical-align:top">'+label+'</td>'
+        +'<td style="padding:1.5mm 3pt;font-size:7.5pt;color:#555;text-align:right;white-space:nowrap;vertical-align:top">'+esc(qtyStr)+'</td>'
+        +'<td style="padding:1.5mm 0;font-size:8.5pt;font-weight:800;color:#000;text-align:right;vertical-align:top">'+fmt(total)+'</td>'
+        +'</tr>';
+    }
+    function _pFixed(label,qtyStr,total){ return _pLi(label,qtyStr,total); }
+
+    var catTotal=0, catH='';
+
+    if(info.dc==='curtains'){
+      // ── Build same groups as summary view ─────────────────────
+      var mainG={},mainOrd=[],sheerG={},sheerOrd=[];
+      var ctrkMap={},ctrkOrd=[];
+      var totalInstallCost=0,totalInstallWins=0;
+
+      areaItems.forEach(function(item){
+        var aid=item.area.id;
+        if(!ctrkMap[aid]){ctrkMap[aid]={area:item.area,mainSel:null,sheerSel:null};ctrkOrd.push(aid);}
+        if(item.sel.category==='curtains_main')  ctrkMap[aid].mainSel=item.sel;
+        if(item.sel.category==='curtains_sheer') ctrkMap[aid].sheerSel=item.sel;
+      });
+      areaItems.forEach(function(item){
+        if(!item.d||!item.fp) return;
+        var isMn=item.sel.category==='curtains_main',isSh=item.sel.category==='curtains_sheer';
+        if(!isMn&&!isSh) return;
+        var map=isMn?mainG:sheerG,ord=isMn?mainOrd:sheerOrd,gk=item.gk;
+        if(!map[gk]){
+          map[gk]={gk:gk,name:item.prodKey,prod:item.prod,repSel:item.sel,
+            fabM:0,fabricCost:0,stitchCost:0,beltCost:0,totalPanels:0,beltRate:0,
+            bottomWeightCost:0,bottomWeightRate:0,liningCost:0,liningStitchCost:0,
+            liningStitchRate:0,qty:0,liningType:'none'};
+          ord.push(gk);
+        }
+        var g=map[gk],c=calcCurtains(item.area,item.sel,item.fp);
+        g.fabM=roundTo005(g.fabM+c.fabricM);
+        g.fabricCost+=c.fabricCost||0; g.stitchCost+=c.stitchCost||0;
+        g.beltCost+=c.beltCost||0; g.totalPanels+=c.panels||0; g.beltRate=c.beltRate||0;
+        g.bottomWeightCost+=c.bottomWeightCost||0; g.bottomWeightRate=c.bottomWeightRate||0;
+        g.liningCost+=c.liningCost||0; g.liningStitchCost+=c.liningStitchCost||0;
+        g.liningStitchRate=c.liningStitchRate||0; g.qty+=(parseInt(item.area.qty)||1);
+        if(c.liningType&&c.liningType!=='none') g.liningType=c.liningType;
+        if(isMn){
+          var _nt=1+(ctrkMap[item.area.id]&&ctrkMap[item.area.id].sheerSel&&ctrkMap[item.area.id].sheerSel.ctrkType?1:0);
+          totalInstallCost+=Math.round((c.installCost||0)*_nt);
+          totalInstallWins+=(parseInt(item.area.qty)||1)*_nt;
+        }
+      });
+      // ctrkGroups
+      var ctrkGroups={},ctrkGroupOrd=[];
+      ctrkOrd.forEach(function(aid){
+        var m=ctrkMap[aid]; if(!m.mainSel||!m.mainSel.ctrkType) return;
+        var w=parseFloat(m.area.width)||0,qty=parseInt(m.area.qty)||1;
+        var bd=calcCurtainHWBreakdown(m.area,m.mainSel,m.sheerSel);
+        var mGk='main|'+m.mainSel.ctrkType+'|'+(m.mainSel.ctrkColor||'')+'|'+w;
+        if(!ctrkGroups[mGk]){ctrkGroups[mGk]={role:'main',sel:m.mainSel,width:w,totalQty:0,totalBd:{trackMain:0,dblBkt:0,elizaMain:0,finialMain:0,trackSheer:0,elizaSheer:0,finialSheer:0}};ctrkGroupOrd.push(mGk);}
+        var cg=ctrkGroups[mGk]; cg.totalQty+=qty;
+        cg.totalBd.trackMain+=bd.trackMain; cg.totalBd.dblBkt+=bd.dblBkt;
+        cg.totalBd.elizaMain+=bd.elizaMain; cg.totalBd.finialMain+=bd.finialMain;
+        if(m.sheerSel&&m.sheerSel.ctrkType){
+          var sGk='sheer|'+m.sheerSel.ctrkType+'|'+(m.sheerSel.ctrkColor||'')+'|'+w;
+          if(!ctrkGroups[sGk]){ctrkGroups[sGk]={role:'sheer',sel:m.sheerSel,width:w,totalQty:0,totalBd:{trackMain:0,dblBkt:0,elizaMain:0,finialMain:0,trackSheer:0,elizaSheer:0,finialSheer:0}};ctrkGroupOrd.push(sGk);}
+          var sg=ctrkGroups[sGk]; sg.totalQty+=qty;
+          sg.totalBd.trackSheer+=bd.trackSheer; sg.totalBd.elizaSheer+=bd.elizaSheer; sg.totalBd.finialSheer+=bd.finialSheer;
+        }
+      });
+      // Track rows
+      ctrkGroupOrd.forEach(function(gk){
+        var cg=ctrkGroups[gk],isMain=cg.role==='main',qty=cg.totalQty;
+        var label=(isMain?'Track – ':'Sheer track – ')+cg.sel.ctrkType+(cg.sel.ctrkColor?' ('+cg.sel.ctrkColor+')':'')+' · '+cg.width+'"';
+        var rateKey=isMain?'ctrkMainRate':'ctrkRate';
+        var bdCost=isMain?cg.totalBd.trackMain:cg.totalBd.trackSheer;
+        var rateComp=qty>0?Math.round(bdCost/qty):0;
+        var rate=(cg.sel.rates&&cg.sel.rates[rateKey]!=null)?cg.sel.rates[rateKey]:rateComp;
+        var tot=rate*qty; catTotal+=tot;
+        catH+=_pLi(esc(label),qty+' win'+(qty>1?'s':'')+' × ₹'+fmt(rate),tot);
+        if(isMain){
+          if(cg.totalBd.dblBkt>0){ catTotal+=cg.totalBd.dblBkt; catH+=_pFixed('Double brackets',qty+' win'+(qty>1?'s':''),cg.totalBd.dblBkt); }
+          if(cg.totalBd.elizaMain>0){ catTotal+=cg.totalBd.elizaMain; catH+=_pFixed('Eliza rings (main)','',cg.totalBd.elizaMain); }
+          if(cg.totalBd.finialMain>0){ var fn=(FINIALS.find(function(f){return f.code===cg.sel.ctrkFinial;})||{}).name||'Finial'; catTotal+=cg.totalBd.finialMain; catH+=_pFixed(esc(fn)+' × '+qty+' pair'+(qty>1?'s':''),'',cg.totalBd.finialMain); }
+        } else {
+          if(cg.totalBd.elizaSheer>0){ catTotal+=cg.totalBd.elizaSheer; catH+=_pFixed('Eliza rings (sheer)','',cg.totalBd.elizaSheer); }
+          if(cg.totalBd.finialSheer>0){ catTotal+=cg.totalBd.finialSheer; catH+=_pFixed('Finial (sheer) × '+qty+' pair'+(qty>1?'s':''),'',cg.totalBd.finialSheer); }
+        }
+      });
+      // Installation
+      if(totalInstallCost>0){
+        var _ir=qrate('curtainInstall');
+        catTotal+=totalInstallCost;
+        catH+=_pLi('Installation',totalInstallWins+' track'+(totalInstallWins>1?'s':'')+' × ₹'+fmt(_ir),totalInstallCost);
+      }
+      // Main fabric groups
+      mainOrd.forEach(function(gk){
+        var g=mainG[gk],sel=g.repSel,mrp=parseFloat(g.prod&&g.prod.mrp)||0;
+        if(!isLineHidden(ri,gk,'fabricMain')){ var tot=g.fabricCost; catTotal+=tot; catH+=_pLi('Fabric – '+esc(g.name),td(g.fabM)+' m × ₹'+fmt(mrp),tot); }
+        var sr=sel.rates&&sel.rates.stitchRate!=null?sel.rates.stitchRate:qrate('curtainStitchPerM');
+        if(!isLineHidden(ri,gk,'stitchMain')){ catTotal+=g.stitchCost; catH+=_pLi('Stitching',td(g.fabM)+' m × ₹'+fmt(sr),g.stitchCost); }
+        if(g.beltCost>0&&!isLineHidden(ri,gk,'belt')){ catTotal+=g.beltCost; catH+=_pLi('Belt Making',g.totalPanels+' pcs × ₹'+fmt(g.beltRate),g.beltCost); }
+        if(g.liningCost>0&&!isLineHidden(ri,gk,'liningMain')){
+          var lr=sel.rates&&sel.rates.liningRate!=null?sel.rates.liningRate:getLiningRate('curtains_main',g.liningType);
+          catTotal+=g.liningCost; catH+=_pLi('Lining ('+g.liningType+')',td(g.fabM)+' m × ₹'+fmt(lr),g.liningCost);
+          if(g.liningStitchCost>0&&!isLineHidden(ri,gk,'liningStitchMain')){ catTotal+=g.liningStitchCost; catH+=_pLi('Lining Stitching',td(g.fabM)+' m × ₹'+fmt(g.liningStitchRate),g.liningStitchCost); }
+        }
+      });
+      // Sheer fabric groups
+      sheerOrd.forEach(function(gk){
+        var g=sheerG[gk],sel=g.repSel,mrp=parseFloat(g.prod&&g.prod.mrp)||0;
+        if(!isLineHidden(ri,gk,'fabricSheer')){ catTotal+=g.fabricCost; catH+=_pLi('Fabric Sheer – '+esc(g.name),td(g.fabM)+' m × ₹'+fmt(mrp),g.fabricCost); }
+        var sr=sel.rates&&sel.rates.stitchRate!=null?sel.rates.stitchRate:qrate('curtainStitchPerM');
+        if(!isLineHidden(ri,gk,'stitchSheer')){ catTotal+=g.stitchCost; catH+=_pLi('Sheer Stitching',td(g.fabM)+' m × ₹'+fmt(sr),g.stitchCost); }
+        if(g.bottomWeightCost>0&&!isLineHidden(ri,gk,'bottomWeight')){ catTotal+=g.bottomWeightCost; catH+=_pLi('Bottom Weight',g.totalPanels+' pcs × ₹'+fmt(g.bottomWeightRate),g.bottomWeightCost); }
+        if(g.beltCost>0&&!isLineHidden(ri,gk,'beltSheer')){ catTotal+=g.beltCost; catH+=_pLi('Sheer Belt Making',g.totalPanels+' pcs × ₹'+fmt(g.beltRate),g.beltCost); }
+        if(g.liningCost>0&&!isLineHidden(ri,gk,'liningSheer')){
+          var lr2=sel.rates&&sel.rates.liningRate!=null?sel.rates.liningRate:getLiningRate('curtains_sheer',g.liningType);
+          catTotal+=g.liningCost; catH+=_pLi('Lining ('+g.liningType+')',td(g.fabM)+' m × ₹'+fmt(lr2),g.liningCost);
+          if(g.liningStitchCost>0&&!isLineHidden(ri,gk,'liningStitchSheer')){ catTotal+=g.liningStitchCost; catH+=_pLi('Lining Stitching',td(g.fabM)+' m × ₹'+fmt(g.liningStitchRate),g.liningStitchCost); }
+        }
+      });
+    } else {
+      // ── All other categories: use pre-computed lines ──────────
+      areaItems.forEach(function(item){
+        if(!item.d) return;
+        var itemTotal=0;
+        (item.d.lines||[]).forEach(function(ln){
+          if(!ln.a) return;
+          catTotal+=ln.a; itemTotal+=ln.a;
+          catH+=_pLi(esc(ln.l),esc(ln.v||''),ln.a);
+        });
+      });
+    }
+
+    if(!catTotal&&!catH) return;
+    h+='<div style="margin-bottom:4mm;break-inside:avoid">';
+    h+='<div style="font-size:7pt;font-weight:900;letter-spacing:1.5pt;text-transform:uppercase;color:#555;border-bottom:0.5pt solid #ccc;padding-bottom:1mm;margin-bottom:1.5mm">'+esc(info.label)+'</div>';
+    h+='<table style="width:100%;border-collapse:collapse">'+catH;
+    h+='<tr style="border-top:0.75pt solid #000">'
+      +'<td colspan="3" style="padding:1.5mm 0;font-size:8pt;font-weight:800;color:#000">'+esc(info.label)+' Total</td>'
+      +'<td style="padding:1.5mm 0;font-size:9pt;font-weight:900;color:#c0392b;text-align:right">'+fmt(catTotal)+'</td></tr>';
+    h+='</table></div>';
+  });
+
+  // Room total footer
+  h+='<div style="display:flex;justify-content:space-between;border-top:1.5pt solid #000;padding-top:1.5mm;margin-top:1mm">'
+    +'<span style="font-size:9pt;font-weight:900;color:#000">'+esc(room.name)+' Total</span>'
+    +'<span style="font-size:9pt;font-weight:900;color:#c0392b">'+fmt(rt)+'</span></div>';
   h+='</div>';
   return h;
 }
