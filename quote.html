@@ -6477,7 +6477,16 @@ function _renderSumRoomExpanded(room, ri){
         }
       });
 
-      // ── Track / Rod line items (FIRST, before fabric) ──────────────────
+      // Sort: all main tracks by type+width first, then all sheer tracks by type+width
+      ctrkGroupOrd.sort(function(a,b){
+        var ga=ctrkGroups[a], gb=ctrkGroups[b];
+        if(ga.role!==gb.role) return ga.role==='main'?-1:1;
+        var ta=(ga.sel.ctrkType||'').toLowerCase(), tb=(gb.sel.ctrkType||'').toLowerCase();
+        if(ta!==tb) return ta<tb?-1:1;
+        return ga.width-gb.width;
+      });
+
+      // ── Track rows first (all main, then all sheer) ────────────────
       var _liInp='width:52px;font-size:11px;padding:2px 3px;border:1px solid var(--border2);border-radius:3px;background:var(--bg2);color:var(--text);-webkit-appearance:none;text-align:right';
       ctrkGroupOrd.forEach(function(gk){
         var cg=ctrkGroups[gk]; var isMain=cg.role==='main';
@@ -6497,21 +6506,27 @@ function _renderSumRoomExpanded(room, ri){
           +'oninput="updateSelRate('+ri+',\''+sid+'\',\''+rateKey+'\',this.value)" onclick="this.select();event.stopPropagation()"></div>'
           +'<div style="font-size:13px;font-weight:800;color:var(--red);text-align:right;white-space:nowrap">'+fmt(rate*qty)+'</div>'
           +'<div></div><div></div></div>';
-        if(isMain){
-          if(cg.totalBd.dblBkt>0) liFixed('Double brackets', qty+' win'+(qty>1?'s':''), cg.totalBd.dblBkt);
-          if(cg.totalBd.elizaMain>0) liFixed('Eliza rings (main)', '', cg.totalBd.elizaMain);
-          if(cg.totalBd.finialMain>0){
-            var mfN=(FINIALS.find(function(f){return f.code===cg.sel.ctrkFinial;})||{}).name||'Finial';
-            liFixed(esc(mfN)+' × '+qty+' pair'+(qty>1?'s':''), '', cg.totalBd.finialMain);
-          }
+      });
+
+      // ── Aggregated accessories: double brackets, eliza, finials ───
+      var _totDblBkt=0,_totElizaM=0,_totElizaS=0,_totFinialM=0,_totFinialS=0;
+      var _dblBktWins=0,_finialMN='Finial',_finialSN='Finial';
+      ctrkGroupOrd.forEach(function(gk){
+        var cg=ctrkGroups[gk];
+        if(cg.role==='main'){
+          _totDblBkt+=cg.totalBd.dblBkt; _totElizaM+=cg.totalBd.elizaMain; _totFinialM+=cg.totalBd.finialMain;
+          if(cg.totalBd.dblBkt>0) _dblBktWins+=cg.totalQty;
+          if(cg.sel.ctrkFinial){ _finialMN=(FINIALS.find(function(f){return f.code===cg.sel.ctrkFinial;})||{}).name||'Finial'; }
         } else {
-          if(cg.totalBd.elizaSheer>0) liFixed('Eliza rings (sheer)', '', cg.totalBd.elizaSheer);
-          if(cg.totalBd.finialSheer>0){
-            var sfN=(FINIALS.find(function(f){return f.code===cg.sel.ctrkFinial;})||{}).name||'Finial';
-            liFixed(esc(sfN)+' × '+qty+' pair'+(qty>1?'s':''), '', cg.totalBd.finialSheer);
-          }
+          _totElizaS+=cg.totalBd.elizaSheer; _totFinialS+=cg.totalBd.finialSheer;
+          if(cg.sel.ctrkFinial){ _finialSN=(FINIALS.find(function(f){return f.code===cg.sel.ctrkFinial;})||{}).name||'Finial'; }
         }
       });
+      if(_totDblBkt>0) liFixed('Double brackets', _dblBktWins+' win'+(_dblBktWins>1?'s':''), _totDblBkt);
+      if(_totElizaM>0) liFixed('Eliza rings (main)', '', _totElizaM);
+      if(_totElizaS>0) liFixed('Eliza rings (sheer)', '', _totElizaS);
+      if(_totFinialM>0) liFixed(esc(_finialMN), '', _totFinialM);
+      if(_totFinialS>0) liFixed(esc(_finialSN)+' (sheer)', '', _totFinialS);
       // ── Installation line item ──────────────────────────────────────────
       if(totalInstallCost>0){
         var _ir=qrate('curtainInstall');
@@ -7086,7 +7101,15 @@ function _buildPrintRoomDetail(room, ri) {
           sg.totalBd.trackSheer+=bd.trackSheer; sg.totalBd.elizaSheer+=bd.elizaSheer; sg.totalBd.finialSheer+=bd.finialSheer;
         }
       });
-      // Track rows
+      // Sort: all main tracks (by type+width) then all sheer tracks (by type+width)
+      ctrkGroupOrd.sort(function(a,b){
+        var ga=ctrkGroups[a],gb=ctrkGroups[b];
+        if(ga.role!==gb.role) return ga.role==='main'?-1:1;
+        var ta=(ga.sel.ctrkType||'').toLowerCase(),tb=(gb.sel.ctrkType||'').toLowerCase();
+        if(ta!==tb) return ta<tb?-1:1;
+        return ga.width-gb.width;
+      });
+      // Track rows (all main first, then all sheer)
       ctrkGroupOrd.forEach(function(gk){
         var cg=ctrkGroups[gk],isMain=cg.role==='main',qty=cg.totalQty;
         var label=(isMain?'Track – ':'Sheer track – ')+cg.sel.ctrkType+(cg.sel.ctrkColor?' ('+cg.sel.ctrkColor+')':'')+' · '+cg.width+'"';
@@ -7096,15 +7119,25 @@ function _buildPrintRoomDetail(room, ri) {
         var rate=(cg.sel.rates&&cg.sel.rates[rateKey]!=null)?cg.sel.rates[rateKey]:rateComp;
         var tot=rate*qty; catTotal+=tot;
         catH+=_pLi(esc(label),qty+' win'+(qty>1?'s':'')+' × ₹'+fmt(rate),tot);
-        if(isMain){
-          if(cg.totalBd.dblBkt>0){ catTotal+=cg.totalBd.dblBkt; catH+=_pFixed('Double brackets',qty+' win'+(qty>1?'s':''),cg.totalBd.dblBkt); }
-          if(cg.totalBd.elizaMain>0){ catTotal+=cg.totalBd.elizaMain; catH+=_pFixed('Eliza rings (main)','',cg.totalBd.elizaMain); }
-          if(cg.totalBd.finialMain>0){ var fn=(FINIALS.find(function(f){return f.code===cg.sel.ctrkFinial;})||{}).name||'Finial'; catTotal+=cg.totalBd.finialMain; catH+=_pFixed(esc(fn)+' × '+qty+' pair'+(qty>1?'s':''),'',cg.totalBd.finialMain); }
+      });
+      // Aggregated accessories after all track rows
+      var _pDblBkt=0,_pElizaM=0,_pElizaS=0,_pFinM=0,_pFinS=0,_pDbWins=0,_pFnM='Finial',_pFnS='Finial';
+      ctrkGroupOrd.forEach(function(gk){
+        var cg=ctrkGroups[gk];
+        if(cg.role==='main'){
+          _pDblBkt+=cg.totalBd.dblBkt; _pElizaM+=cg.totalBd.elizaMain; _pFinM+=cg.totalBd.finialMain;
+          if(cg.totalBd.dblBkt>0) _pDbWins+=cg.totalQty;
+          if(cg.sel.ctrkFinial){ _pFnM=(FINIALS.find(function(f){return f.code===cg.sel.ctrkFinial;})||{}).name||'Finial'; }
         } else {
-          if(cg.totalBd.elizaSheer>0){ catTotal+=cg.totalBd.elizaSheer; catH+=_pFixed('Eliza rings (sheer)','',cg.totalBd.elizaSheer); }
-          if(cg.totalBd.finialSheer>0){ catTotal+=cg.totalBd.finialSheer; catH+=_pFixed('Finial (sheer) × '+qty+' pair'+(qty>1?'s':''),'',cg.totalBd.finialSheer); }
+          _pElizaS+=cg.totalBd.elizaSheer; _pFinS+=cg.totalBd.finialSheer;
+          if(cg.sel.ctrkFinial){ _pFnS=(FINIALS.find(function(f){return f.code===cg.sel.ctrkFinial;})||{}).name||'Finial'; }
         }
       });
+      if(_pDblBkt>0){ catTotal+=_pDblBkt; catH+=_pFixed('Double brackets',_pDbWins+' win'+(_pDbWins>1?'s':''),_pDblBkt); }
+      if(_pElizaM>0){ catTotal+=_pElizaM; catH+=_pFixed('Eliza rings (main)','',_pElizaM); }
+      if(_pElizaS>0){ catTotal+=_pElizaS; catH+=_pFixed('Eliza rings (sheer)','',_pElizaS); }
+      if(_pFinM>0){ catTotal+=_pFinM; catH+=_pFixed(esc(_pFnM),'',_pFinM); }
+      if(_pFinS>0){ catTotal+=_pFinS; catH+=_pFixed(esc(_pFnS)+' (sheer)','',_pFinS); }
       // Installation
       if(totalInstallCost>0){
         var _ir=qrate('curtainInstall');
