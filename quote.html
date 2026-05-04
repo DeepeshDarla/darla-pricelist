@@ -2187,7 +2187,7 @@ function qrate(key){
 function updateQuoteRate(key, val){
   if(!APP.quote.rates) APP.quote.rates={};
   APP.quote.rates[key]=parseFloat(val)||0;
-  saveDraft(); renderSum();
+  saveDraft(); _debouncedRenderSum();
 }
 function isLineHidden(ri, gk, lineKey){
   var hl=APP.quote.hiddenLines||(APP.quote.hiddenLines={});
@@ -2829,7 +2829,7 @@ function updateGroupMRP(ri, groupKey, val){
   group.items.forEach(function(item){
     var fp=activeProds(item.sel)[0]; if(fp) fp.product.mrp=mrp;
   });
-  saveDraft(); renderSum();
+  saveDraft(); _debouncedRenderSum();
 }
 function updateGroupRate(ri, groupKey, rateKey, val){
   var room=APP.quote.rooms[ri]; if(!room) return;
@@ -2840,7 +2840,7 @@ function updateGroupRate(ri, groupKey, rateKey, val){
     if(!item.sel.rates) item.sel.rates={};
     if(num) item.sel.rates[rateKey]=num; else delete item.sel.rates[rateKey];
   });
-  saveDraft(); renderSum();
+  saveDraft(); _debouncedRenderSum();
 }
 function updateSelRate(ri, selId, rateKey, val){
   var room=APP.quote.rooms[ri]; if(!room) return;
@@ -2849,7 +2849,7 @@ function updateSelRate(ri, selId, rateKey, val){
   if(!sel.rates) sel.rates={};
   var num=parseFloat(val);
   if(num) sel.rates[rateKey]=num; else delete sel.rates[rateKey];
-  saveDraft(); renderSum();
+  saveDraft(); _debouncedRenderSum();
 }
 function updateGroupQty(ri, gk, qtyKey, val){
   var room=APP.quote.rooms[ri]; if(!room) return;
@@ -2860,7 +2860,7 @@ function updateGroupQty(ri, gk, qtyKey, val){
     if(!item.sel.rates) item.sel.rates={};
     if(num>0) item.sel.rates[qtyKey]=num; else delete item.sel.rates[qtyKey];
   });
-  saveDraft(); renderSum();
+  saveDraft(); _debouncedRenderSum();
 }
 var _lastSavedAreaIds = [];   // areaIds of the most recently saved selection
 var _lastSavedOpeningId = null; // openingId of the most recently saved selection
@@ -2917,17 +2917,40 @@ window.addEventListener('beforeunload',function(){
     saveDraftLocal();
   }
 });
+// Mobile: visibilitychange / pagehide fire when user switches app or locks phone
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden&&APP.quote&&APP.quote.id){
+    saveDraftLocal();
+    clearTimeout(_saveDraftTimer); _saveDraftTimer=null; _saveToFirestore(false);
+  }
+});
+window.addEventListener('pagehide',function(){
+  if(APP.quote&&APP.quote.id){
+    saveDraftLocal(); _saveToFirestore(false);
+  }
+});
 
 // ── 5-second autosave interval ────────────────────────────────
-// Flushes APP.quote to localStorage every 5s so mid-session edits
-// survive a refresh even if the user hasn't tapped a Save button.
+// Flushes APP.quote to localStorage every 5s, Firestore every 30s.
 var _autoSaveInterval = null;
+var _autoSaveTick = 0;
+var _renderSumTimer = null;
+function _debouncedRenderSum(){
+  clearTimeout(_renderSumTimer);
+  _renderSumTimer=setTimeout(function(){ renderSum(); }, 400);
+}
 function _startAutoSave(){
   if(_autoSaveInterval) return;
+  _autoSaveTick=0;
   _autoSaveInterval = setInterval(function(){
     if(!APP.quote) return;
     _captureAreaFormToDraft();
     saveDraftLocal();
+    _autoSaveTick++;
+    // Sync Firestore every 30s (every 6th 5s tick) if there's a pending or recent edit
+    if(_autoSaveTick%6===0&&APP.quote.id){
+      clearTimeout(_saveDraftTimer); _saveDraftTimer=null; _saveToFirestore(false);
+    }
     _showAutoSave('saved');
   }, 5000);
 }
@@ -2970,7 +2993,7 @@ function saveDraft() {
   if(!APP.quote.id) return;
   _showAutoSave('saving');
   clearTimeout(_saveDraftTimer);
-  _saveDraftTimer = setTimeout(function(){ _saveToFirestore(false); }, 2000);
+  _saveDraftTimer = setTimeout(function(){ _saveToFirestore(false); }, 1000);
 }
 
 // Generate quote ID via Cloud Function (atomic), fallback to local counter
@@ -3372,6 +3395,11 @@ var _bldScreens = ['screen-builder','screen-room-measurements','screen-room-sele
                    'screen-add-area','screen-add-selection','screen-add-hardware'];
 
 function goTo(screenId) {
+  // Flush any focused input (forces onchange to fire, capturing typed values)
+  var ae=document.activeElement;
+  if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'||ae.tagName==='SELECT')) ae.blur();
+  // Immediately flush any pending Firestore save so data isn't lost on navigation
+  if(_saveDraftTimer&&APP.quote&&APP.quote.id){ clearTimeout(_saveDraftTimer); _saveDraftTimer=null; _saveToFirestore(false); }
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
   var s=document.getElementById(screenId); if(s) s.classList.add('active');
   window.scrollTo(0,0);
@@ -5939,14 +5967,14 @@ function updateProductMRP(ri,selId,pi,val){
   var room=APP.quote.rooms[ri]; if(!room) return;
   var sel=(room.selections||[]).find(function(s){ return s.id===selId; }); if(!sel||!sel.products[pi]) return;
   sel.products[pi].product.mrp=parseFloat(val)||0;
-  saveDraft(); renderSum();
+  saveDraft(); _debouncedRenderSum();
 }
 function updateSelRate(ri,selId,key,val){
   var room=APP.quote.rooms[ri]; if(!room) return;
   var sel=(room.selections||[]).find(function(s){ return s.id===selId; }); if(!sel) return;
   if(!sel.rates) sel.rates={};
   var n=parseFloat(val); sel.rates[key]=(isNaN(n)||val==='')?null:n;
-  saveDraft(); renderSum();
+  saveDraft(); _debouncedRenderSum();
 }
 function updateAreaQty(ri,areaId,val){
   var room=APP.quote.rooms[ri]; if(!room) return;
@@ -6018,7 +6046,7 @@ function renderSum(){
       +'<button class="btn'+(odt==='amt'?'':' ghost')+' sm" style="flex:1;margin:0" onclick="APP.quote.overallDiscType=\'amt\';renderSum()">₹ Amt</button>'
       +'</div>'
       +'<input class="inp" type="number" min="0" value="'+esc(String(q.overallDisc||0))+'" placeholder="0" style="text-align:center;font-size:16px;font-weight:700" '
-      +'onchange="APP.quote.overallDisc=parseFloat(this.value)||0;renderSum()" onclick="this.select()">'
+      +'oninput="APP.quote.overallDisc=parseFloat(this.value)||0;saveDraft();_debouncedRenderSum()" onclick="this.select()">'
       +'</div>';
   }
   asideH+='</div>';
@@ -6273,14 +6301,14 @@ function _renderSumRoomExpanded(room, ri){
       var dispTotal=dispQty!=null?Math.round(dispQty*mrp):total;
       var qCell=numericQty!=null
         ?('<input type="number" value="'+(dispQty!=null?dispQty:numericQty)+'" style="'+_qInp+'" '
-          +'onchange="updateGroupQty('+ri+',\''+gkEsc+'\',\''+qk+'\',this.value)" onclick="this.select();event.stopPropagation()"> × ')
+          +'oninput="updateGroupQty('+ri+',\''+gkEsc+'\',\''+qk+'\',this.value)" onclick="this.select();event.stopPropagation()"> × ')
         :(esc(qtyStr)+' × ');
       h+='<div style="display:grid;grid-template-columns:18px 1fr auto auto 20px 20px;gap:2px 4px;padding:5px 2px;border-bottom:1px solid var(--border);align-items:center">'
         +'<div style="font-size:11px;color:var(--text3);text-align:right">'+liNum+'.</div>'
         +'<div style="font-size:12px;font-weight:700;color:var(--text)">'+esc(label)+'</div>'
         +'<div style="font-size:11px;color:var(--text3);text-align:right;white-space:nowrap">'+qCell
         +'<input type="number" value="'+mrp+'" style="'+_rInp+'" '
-        +'onchange="updateGroupMRP('+ri+',\''+gkEsc+'\',this.value)" onclick="this.select();event.stopPropagation()"></div>'
+        +'oninput="updateGroupMRP('+ri+',\''+gkEsc+'\',this.value)" onclick="this.select();event.stopPropagation()"></div>'
         +'<div style="font-size:13px;font-weight:800;color:var(--red);text-align:right;white-space:nowrap">'+fmt(dispTotal)+'</div>'
         +(lineKey?delBtn(gk,lineKey):'<div></div>')
         +(selId?editBtn(selId):'<div></div>')
@@ -6297,15 +6325,15 @@ function _renderSumRoomExpanded(room, ri){
       var dispTotal=dispQty!=null?Math.round(dispQty*rate):total;
       var qCell=numericQty!=null
         ?('<input type="number" value="'+(dispQty!=null?dispQty:numericQty)+'" style="'+_qInp+'" '
-          +'onchange="updateGroupQty('+ri+',\''+gkEsc+'\',\''+qk+'\',this.value)" onclick="this.select();event.stopPropagation()"> × ')
+          +'oninput="updateGroupQty('+ri+',\''+gkEsc+'\',\''+qk+'\',this.value)" onclick="this.select();event.stopPropagation()"> × ')
         :(esc(qtyStr)+' × ');
       h+='<div style="display:grid;grid-template-columns:18px 1fr auto auto 20px 20px;gap:2px 4px;padding:5px 2px;border-bottom:1px solid var(--border);align-items:center">'
         +'<div style="font-size:11px;color:var(--text3);text-align:right">'+liNum+'.</div>'
         +'<div style="font-size:12px;font-weight:700;color:var(--text)">'+esc(label)+'</div>'
         +'<div style="font-size:11px;color:var(--text3);text-align:right;white-space:nowrap">'+qCell
         +'<input type="number" value="'+rate+'" style="'+_rInp+'" '
-        +(gk?'onchange="updateGroupRate('+ri+',\''+gkEsc+'\',\''+rateKey+'\',this.value)"'
-            :'onchange="updateQuoteRate(\''+rateKey+'\',this.value)"')
+        +(gk?'oninput="updateGroupRate('+ri+',\''+gkEsc+'\',\''+rateKey+'\',this.value)"'
+            :'oninput="updateQuoteRate(\''+rateKey+'\',this.value)"')
         +' onclick="this.select();event.stopPropagation()"></div>'
         +'<div style="font-size:13px;font-weight:800;color:var(--red);text-align:right;white-space:nowrap">'+fmt(dispTotal)+'</div>'
         +(lineKey?delBtn(gk,lineKey):'<div></div>')
@@ -6466,7 +6494,7 @@ function _renderSumRoomExpanded(room, ri){
           +'<div style="font-size:12px;font-weight:700;color:var(--text)">'+esc(label)+'</div>'
           +'<div style="font-size:11px;color:var(--text3);text-align:right;white-space:nowrap">'+qty+' win'+(qty>1?'s':'')+' × '
           +'<input type="number" value="'+rate+'" style="'+_liInp+'" '
-          +'onchange="updateSelRate('+ri+',\''+sid+'\',\''+rateKey+'\',this.value)" onclick="this.select();event.stopPropagation()"></div>'
+          +'oninput="updateSelRate('+ri+',\''+sid+'\',\''+rateKey+'\',this.value)" onclick="this.select();event.stopPropagation()"></div>'
           +'<div style="font-size:13px;font-weight:800;color:var(--red);text-align:right;white-space:nowrap">'+fmt(rate*qty)+'</div>'
           +'<div></div><div></div></div>';
         if(isMain){
@@ -6715,7 +6743,7 @@ function _renderSumSelCard(ri, sel, area){
       +'<label style="font-size:10px;color:var(--text3)">MRP</label>'
       +'<input type="number" class="inp" value="'+esc(String(prod.mrp||0))+'" '
       +'style="width:68px;padding:3px 5px;font-size:12px;font-weight:700" '
-      +'onchange="updateProductMRP('+ri+',\''+sel.id+'\','+pi+',this.value)" onclick="this.select()"></div>'
+      +'oninput="updateProductMRP('+ri+',\''+sel.id+'\','+pi+',this.value)" onclick="this.select()"></div>'
       +(widthCm?'<span style="font-size:11px;color:var(--text3)">'+widthCm+'cm</span>':'')
       +'</div>';
   });
@@ -6732,25 +6760,25 @@ function _renderSumSelCard(ri, sel, area){
       var _sr=sel.rates&&sel.rates.stitchRate!=null?sel.rates.stitchRate:'';
       sh+='<div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:2px">Stitch ₹/m</label>'
         +'<input type="number" class="inp" placeholder="'+qrate('curtainStitchPerM')+'" value="'+_sr+'" style="padding:4px 6px;font-size:12px;font-weight:700" '
-        +'onchange="updateSelRate('+ri+',\''+sel.id+'\',\'stitchRate\',this.value)" onclick="this.select()"></div>';
+        +'oninput="updateSelRate('+ri+',\''+sel.id+'\',\'stitchRate\',this.value)" onclick="this.select()"></div>';
     }
     if(_isRom){
       var _srR=sel.rates&&sel.rates.stitchRateRoman!=null?sel.rates.stitchRateRoman:'';
       sh+='<div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:2px">Stitch ₹/win</label>'
         +'<input type="number" class="inp" placeholder="'+qrate('romanStitch')+'" value="'+_srR+'" style="padding:4px 6px;font-size:12px;font-weight:700" '
-        +'onchange="updateSelRate('+ri+',\''+sel.id+'\',\'stitchRateRoman\',this.value)" onclick="this.select()"></div>';
+        +'oninput="updateSelRate('+ri+',\''+sel.id+'\',\'stitchRateRoman\',this.value)" onclick="this.select()"></div>';
     }
     if(_isFab){
       var _ir=sel.rates&&sel.rates.installRate!=null?sel.rates.installRate:'';
       sh+='<div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:2px">Install ₹/win</label>'
         +'<input type="number" class="inp" placeholder="'+(_isRom?qrate('romanInstall'):qrate('curtainInstall'))+'" value="'+_ir+'" style="padding:4px 6px;font-size:12px;font-weight:700" '
-        +'onchange="updateSelRate('+ri+',\''+sel.id+'\',\'installRate\',this.value)" onclick="this.select()"></div>';
+        +'oninput="updateSelRate('+ri+',\''+sel.id+'\',\'installRate\',this.value)" onclick="this.select()"></div>';
     }
     if(sel.trackType){
       var _tr=sel.rates&&sel.rates.trackInstallRate!=null?sel.rates.trackInstallRate:'';
       sh+='<div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:2px">Track ₹/win</label>'
         +'<input type="number" class="inp" placeholder="'+qrate('trackInstall')+'" value="'+_tr+'" style="padding:4px 6px;font-size:12px;font-weight:700" '
-        +'onchange="updateSelRate('+ri+',\''+sel.id+'\',\'trackInstallRate\',this.value)" onclick="this.select()"></div>';
+        +'oninput="updateSelRate('+ri+',\''+sel.id+'\',\'trackInstallRate\',this.value)" onclick="this.select()"></div>';
     }
     sh+='</div>';
   }
@@ -6766,7 +6794,7 @@ function _renderSumConstantsTab(){
       +'<label style="font-size:12px;color:var(--text2)">'+label+'</label>'
       +'<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
       +'<input type="number" class="inp" value="'+displayVal+'" style="width:72px;padding:4px 6px;font-size:13px;font-weight:700;text-align:right" '
-      +'onchange="updateQuoteRate(\''+key+'\','+(isPercent?'(parseFloat(this.value)||0)/100+1':'this.value')+')" onclick="this.select()">'
+      +'oninput="updateQuoteRate(\''+key+'\','+(isPercent?'(parseFloat(this.value)||0)/100+1':'this.value')+')" onclick="this.select()">'
       +'<span style="font-size:11px;color:var(--text3);width:56px">'+unit+'</span>'
       +'</div></div>';
   }
