@@ -3888,8 +3888,14 @@ function renderBld() {
           (uncovered&&!unmeasured
             ? '<div style="font-size:11px;font-weight:700;color:#c0610a;margin-top:3px">⚠ No selection yet</div>'
               +(function(){
+                  var _dc=_areaTypeToCat(area.type);
+                  var _cc=area.type==='curtains'?['curtains_main','curtains_sheer']:(_dc?[_dc]:null);
                   var srcs=areas.filter(function(a){
-                    return a.id!==area.id && sels.some(function(s){ return s.openingId===a.id||(s.areaIds||[]).indexOf(a.id)!==-1; });
+                    if(a.id===area.id) return false;
+                    return sels.some(function(s){
+                      var lk=s.openingId===a.id||(s.areaIds||[]).indexOf(a.id)!==-1;
+                      return lk&&(!_cc||_cc.indexOf(s.category)!==-1);
+                    });
                   });
                   if(!srcs.length) return '';
                   return '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">'
@@ -4256,14 +4262,17 @@ function _renderAreaPostSave(area,isNew){
   var linked=room?(room.selections||[]).filter(function(s){
     return s.openingId===area.id||(s.areaIds||[]).indexOf(area.id)!==-1;
   }):[];
-  // Find another area in this room that has selections (to offer copy)
+  // Find another area in this room that has compatible selections (to offer copy)
   var copySrcArea=null;
   if(isNew&&!linked.length&&room){
+    var _cdc=_areaTypeToCat(area.type);
+    var _ccc=area.type==='curtains'?['curtains_main','curtains_sheer']:(_cdc?[_cdc]:null);
     for(var _ai=0;_ai<(room.areas||[]).length;_ai++){
       var _a=room.areas[_ai];
-      if(_a.id!==area.id&&(room.selections||[]).some(function(s){ return s.openingId===_a.id||(s.areaIds||[]).indexOf(_a.id)!==-1; })){
-        copySrcArea=_a; break;
-      }
+      if(_a.id!==area.id&&(room.selections||[]).some(function(s){
+        var lk=s.openingId===_a.id||(s.areaIds||[]).indexOf(_a.id)!==-1;
+        return lk&&(!_ccc||_ccc.indexOf(s.category)!==-1);
+      })){ copySrcArea=_a; break; }
     }
   }
   // Unmeasured areas that already have a selection — show as "measure next" list
@@ -5338,8 +5347,14 @@ function saveSelection(){
 }
 function copySelectionsFromArea(srcAreaId,destAreaId){
   var room=APP.quote.rooms[_activeRoom]; if(!room) return;
-  var srcSels=(room.selections||[]).filter(function(s){ return s.openingId===srcAreaId||(s.areaIds||[]).indexOf(srcAreaId)!==-1; });
-  if(!srcSels.length){ showToast('No selections to copy'); return; }
+  var destArea=(room.areas||[]).find(function(a){ return a.id===destAreaId; });
+  var _dc=destArea?_areaTypeToCat(destArea.type):null;
+  var _cc=destArea&&destArea.type==='curtains'?['curtains_main','curtains_sheer']:(_dc?[_dc]:null);
+  var srcSels=(room.selections||[]).filter(function(s){
+    var lk=s.openingId===srcAreaId||(s.areaIds||[]).indexOf(srcAreaId)!==-1;
+    return lk&&(!_cc||_cc.indexOf(s.category)!==-1);
+  });
+  if(!srcSels.length){ showToast('No compatible selections to copy'); return; }
   srcSels.forEach(function(s,idx){
     var clone=JSON.parse(JSON.stringify(s));
     clone.id='s_'+Date.now()+idx; clone.openingId=destAreaId; clone.areaIds=[destAreaId];
