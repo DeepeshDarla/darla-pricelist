@@ -4404,10 +4404,21 @@ function _activeAreaForSel(){
   return (room.areas||[]).find(function(a){ return _selAreaIds.indexOf(a.id)!==-1; })||null;
 }
 function _roomExistingFabrics(){
-  var room=APP.quote.rooms[_activeRoom]; if(!room) return {main:null,sheer:null};
-  var ms=(room.selections||[]).find(function(s){ return s.category==='curtains_main'&&(s.products||[]).length; });
-  var ss=(room.selections||[]).find(function(s){ return s.category==='curtains_sheer'&&(s.products||[]).length; });
-  return { main:ms?activeProds(ms)[0]:null, sheer:ss?activeProds(ss)[0]:null };
+  var room=APP.quote.rooms[_activeRoom]; if(!room) return [];
+  var seen={}, result=[];
+  (room.selections||[]).forEach(function(s){
+    if(s.category===_selCategory||s.category==='curtains_sheer') return;
+    var fp=activeProds(s)[0]; if(!fp) return;
+    var prod=fp.product||{};
+    if(!prod.brand&&!prod.catalog&&!prod.manualName) return;
+    var key=(prod.brand||'')+'|'+(prod.catalog||'')+'|'+(prod.s_no||'')+'|'+(prod.manualName||'');
+    if(seen[key]) return; seen[key]=true;
+    var areaId=s.openingId||(s.areaIds||[])[0];
+    var areaName='';
+    if(areaId){ var _a=(room.areas||[]).find(function(a){return a.id===areaId;}); if(_a) areaName=_a.name; }
+    result.push({fp:fp, label:[prod.brand,prod.catalog,prod.s_no].filter(Boolean).join(' ')||(prod.manualName||'—'), areaName:areaName});
+  });
+  return result;
 }
 function copyFabricFromExisting(srcProd, layer){
   var entry=Object.assign({},srcProd,{widthType:'standard',rotationAllowed:null});
@@ -4750,11 +4761,14 @@ function _renderRomanLayerSection(layer){
   var bgColor=layer===2?'var(--bg3)':'transparent';
   h+='<div style="border:1px solid '+borderColor+';border-radius:var(--r-sm);padding:12px;margin-bottom:14px;background:'+bgColor+'">';
   h+='<div style="font-size:11px;font-weight:900;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">'+labelText+'</div>';
-  var _rf=_roomExistingFabrics();
-  if(_rf.main||_rf.sheer){
-    h+='<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Use existing room fabric:</div>';
-    if(_rf.main){ var _mp=_rf.main.product||{}; h+='<button class="btn ghost sm" style="width:100%;margin-bottom:4px;text-align:left;font-size:12px" data-src="'+esc(JSON.stringify(_rf.main))+'" onclick="_selRomanLayerTarget='+(layer||1)+';copyFabricFromExisting(JSON.parse(this.dataset.src),'+(layer||1)+')">📋 Main: '+esc([_mp.brand,_mp.catalog].filter(Boolean).join(' ')||'Main Fabric')+'</button>'; }
-    if(_rf.sheer){ var _sp=_rf.sheer.product||{}; h+='<button class="btn ghost sm" style="width:100%;margin-bottom:4px;text-align:left;font-size:12px" data-src="'+esc(JSON.stringify(_rf.sheer))+'" onclick="_selRomanLayerTarget='+(layer||1)+';copyFabricFromExisting(JSON.parse(this.dataset.src),'+(layer||1)+')">📋 Sheer: '+esc([_sp.brand,_sp.catalog].filter(Boolean).join(' ')||'Sheer Fabric')+'</button>'; }
+  var _rfList=_roomExistingFabrics();
+  if(_rfList.length){
+    h+='<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Use fabric from this room:</div>';
+    _rfList.forEach(function(item){
+      h+='<button class="btn ghost sm" style="width:100%;margin-bottom:4px;text-align:left;font-size:12px" data-src="'+esc(JSON.stringify(item.fp))+'" '
+        +'onclick="_selRomanLayerTarget='+(layer||1)+';copyFabricFromExisting(JSON.parse(this.dataset.src),'+(layer||1)+')">'
+        +'📋 '+(item.areaName?esc(item.areaName)+' · ':'')+esc(item.label)+'</button>';
+    });
     h+='</div>';
   }
   if(layerProds.length){
@@ -5014,6 +5028,16 @@ function renderAddSelection(){
       h+='<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Main Fabric</div>';
       h+=_renderSelProdRows();
       if(!_selProducts.length){
+        var _rfList2=_roomExistingFabrics();
+        if(_rfList2.length){
+          h+='<div style="margin-bottom:10px"><div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Use fabric from this room:</div>';
+          _rfList2.forEach(function(item){
+            h+='<button class="btn ghost sm" style="width:100%;margin-bottom:4px;text-align:left;font-size:12px" data-src="'+esc(JSON.stringify(item.fp))+'" '
+              +'onclick="copyFabricFromExisting(JSON.parse(this.dataset.src),null)">'
+              +'📋 '+(item.areaName?esc(item.areaName)+' · ':'')+esc(item.label)+'</button>';
+          });
+          h+='</div>';
+        }
         h+='<div class="btn-row" style="margin-top:10px">'
           +'<button class="btn" style="flex:2" onclick="_selProductTarget=\'main\';_nextProdMode=\'component\';openProductModal()">🔍 Search Product</button>'
           +'<button class="btn ghost" style="flex:1" onclick="_nextProdMode=\'component\';addManualSelProduct()">✎ Manual</button></div>';
