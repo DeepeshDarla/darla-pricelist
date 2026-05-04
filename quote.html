@@ -6276,7 +6276,7 @@ function _renderSumRoomExpanded(room, ri){
     if(!areaItems.length) return;
 
     h+='<div style="margin-bottom:16px">';
-    h+='<div style="font-size:11px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:var(--text);padding:5px 0;border-bottom:2px solid var(--red);margin-bottom:8px">'+esc(info.label)+'</div>';
+    h+='<div style="font-size:11px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:var(--text);padding:6px 0 6px 0;border-bottom:2px solid var(--red);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">'+esc(info.label)+'</div>';
 
     var liNum=0;
     var gkSelMap={};
@@ -6981,10 +6981,10 @@ function _buildPrintQuote(roomFilter) {
 function _buildPrintRoomDetail(room, ri) {
   var h='', areas=room.areas||[], sels=room.selections||[];
   var rt=roomTotal(room);
-  h+='<div style="margin-top:5mm">';
-  h+='<div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1.5pt solid #000;padding-bottom:1mm;margin-bottom:3mm">'
-    +'<span style="font-size:10.5pt;font-weight:900;text-transform:uppercase;color:#000">'+esc(room.name)+'</span>'
-    +'<span style="font-size:10pt;font-weight:900;color:#c0392b">'+fmt(rt)+'</span></div>';
+  h+='<div style="margin-top:6mm;break-before:page">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:2pt solid #c0392b;padding-bottom:1.5mm;margin-bottom:3mm">'
+    +'<span style="font-size:12pt;font-weight:900;text-transform:uppercase;color:#000;letter-spacing:0.5pt">'+esc(room.name)+'</span>'
+    +'<span style="font-size:11pt;font-weight:900;color:#c0392b">'+fmt(rt)+'</span></div>';
 
   var displayCats=[
     {dc:'curtains',  label:'Curtains',      cats:['curtains_main','curtains_sheer']},
@@ -7152,8 +7152,9 @@ function _buildPrintRoomDetail(room, ri) {
     }
 
     if(!catTotal&&!catH) return;
-    h+='<div style="margin-bottom:4mm;break-inside:avoid">';
-    h+='<div style="font-size:7pt;font-weight:900;letter-spacing:1.5pt;text-transform:uppercase;color:#555;border-bottom:0.5pt solid #ccc;padding-bottom:1mm;margin-bottom:1.5mm">'+esc(info.label)+'</div>';
+    h+='<div style="margin-bottom:5mm;break-inside:avoid">';
+    h+='<div style="background:#1a1a1a;color:#fff;padding:2mm 3mm;font-size:9pt;font-weight:900;letter-spacing:1pt;text-transform:uppercase;display:flex;justify-content:space-between;margin-bottom:1.5mm">'
+      +'<span>'+esc(info.label)+'</span></div>';
     h+='<table style="width:100%;border-collapse:collapse">'+catH;
     h+='<tr style="border-top:0.75pt solid #000">'
       +'<td colspan="3" style="padding:1.5mm 0;font-size:8pt;font-weight:800;color:#000">'+esc(info.label)+' Total</td>'
