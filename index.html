@@ -476,7 +476,7 @@ function pickOpt(idx,val){
       fetch(FB+"/"+rp+"/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+"/"+encodeURIComponent(sKey)+".json")
         .then(function(r){return r.json();})
         .then(function(data){
-          var res=[];function flat(o){if(Array.isArray(o))o.forEach(function(x){if(x&&x.code)res.push(x);});else if(o&&typeof o==="object")Object.values(o).forEach(flat);}flat(data);
+          var res=[];function flat(o){if(!o||typeof o!=="object")return;if(o.code){res.push(o);return;}if(Array.isArray(o))o.forEach(flat);else Object.values(o).forEach(flat);}flat(data);
           var fk=ci.lvl4Field,seen={},unique=[];
           res.forEach(function(x){var v=gv(x,fk)||x[fk]||"";if(v&&!seen[v]){seen[v]=true;unique.push(v);}});
           unique.sort();window._lvl4Opts=unique;
@@ -510,7 +510,7 @@ function fetchBlindsMechanisms(bKey,cKey,sKey){
   fetch(FB+"/blinds/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+"/"+encodeURIComponent(sKey)+".json")
     .then(function(r){return r.json();})
     .then(function(data){
-      var res=[];function flat(o){if(Array.isArray(o))o.forEach(function(x){if(x&&x.code)res.push(x);});else if(o&&typeof o==="object")Object.values(o).forEach(flat);}flat(data);
+      var res=[];function flat(o){if(!o||typeof o!=="object")return;if(o.code){res.push(o);return;}if(Array.isArray(o))o.forEach(flat);else Object.values(o).forEach(flat);}flat(data);
       var seen={},unique=[];
       res.forEach(function(x){var v=x.mechanism||gv(x,"mechanism")||"";if(v&&!seen[v]){seen[v]=true;unique.push(v);}});
       unique.sort();if(!unique.length)return;
@@ -535,7 +535,7 @@ function fetchBedsThickness(bKey,cKey,sKey){
   fetch(FB+"/beds/by_brand/"+encodeURIComponent(bKey)+"/"+encodeURIComponent(cKey)+"/"+encodeURIComponent(sKey)+".json")
     .then(function(r){return r.json();})
     .then(function(data){
-      var res=[];function flat(o){if(Array.isArray(o))o.forEach(function(x){if(x&&x.code)res.push(x);});else if(o&&typeof o==="object")Object.values(o).forEach(flat);}flat(data);
+      var res=[];function flat(o){if(!o||typeof o!=="object")return;if(o.code){res.push(o);return;}if(Array.isArray(o))o.forEach(flat);else Object.values(o).forEach(flat);}flat(data);
       var seen={},unique=[];
       res.forEach(function(x){var v=x.thickness||gv(x,"thickness")||"";if(v&&!seen[v]){seen[v]=true;unique.push(v);}});
       unique.sort();if(!unique.length)return;
@@ -601,8 +601,10 @@ function doSearch(){
       if(!data){renderRows([],currentCat);return;}
       var results=[];
       function flatten(obj){
-        if(Array.isArray(obj))obj.forEach(function(item){if(item&&item.code)results.push(item);});
-        else if(obj&&typeof obj==="object")Object.values(obj).forEach(function(v){flatten(v);});
+        if(!obj||typeof obj!=="object")return;
+        if(obj.code){results.push(obj);return;}
+        if(Array.isArray(obj))obj.forEach(flatten);
+        else Object.values(obj).forEach(flatten);
       }
       flatten(data);
       // Filter by 4th-level field if provided (flooring, motors, rods)
