@@ -108,12 +108,6 @@ button:focus-visible,input:focus-visible{outline:2px solid #c0392b;outline-offse
 .exp-val{font-size:13px;color:#1c1612;font-weight:600;text-align:right;word-break:break-word}
 .exp-link{color:#c0392b;font-size:13px;font-weight:800;text-decoration:none}
 .tbl-hint{font-size:11px;color:#c8bdb5;text-align:center;padding:10px 0 4px}
-.pin-gate{position:fixed;inset:0;background:#faf8f5;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
-.pin-gate-logo{width:160px;height:58px;object-fit:contain;margin-bottom:20px}
-.pin-gate-title{font-size:26px;font-weight:900;color:#1c1612;margin-bottom:6px;text-align:center}
-.pin-gate-sub{font-size:13px;color:#6b5e52;margin-bottom:32px;text-align:center}
-.pin-gate-dots{display:flex;justify-content:center;gap:18px;margin-bottom:28px}
-.pin-gate-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:320px;margin-bottom:14px}
 .pin-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100;align-items:flex-end;justify-content:center}
 .pin-ov.open{display:flex}
 .pin-sheet{background:#ffffff;border:1px solid #e0dbd3;border-top:3px solid #c0392b;border-bottom:none;border-radius:24px 24px 0 0;padding:18px 20px 44px;width:100%;max-width:480px;text-align:center}
@@ -268,12 +262,6 @@ function isStaff(){
   if(u && !u.isAnonymous) return true;
   return localStorage.getItem(SK)==="1";
 }
-function hasSearchAccess(){
-  var u=AUTH.currentUser;
-  if(u && !u.isAnonymous) return true;
-  return localStorage.getItem(SAK)==="1";
-}
-
 AUTH.onAuthStateChanged(function(user){
   if(user && !user.isAnonymous){
     localStorage.setItem(SK,"1"); localStorage.setItem(SAK,"1");
@@ -330,77 +318,7 @@ function showHome(){
 }
 
 function goSearch(cat){
-  if(hasSearchAccess()) showAdvancedSearch(cat);
-  else showSearchGate(cat);
-}
-
-var gateEn="",gateCat="",gateStaff=null;
-function showSearchGate(cat){
-  gateCat=cat; gateEn=""; gateStaff=null;
-  var staffOpts='<option value="">— Select Name —</option>';
-  try{ var sc=JSON.parse(localStorage.getItem("darla_staff_cache")||"[]"); sc.forEach(function(s){ staffOpts+='<option value="'+esc(s.name)+'">'+esc(s.name)+'</option>'; }); }catch(e){}
-  document.getElementById("app").innerHTML=
-    '<div class="pin-gate">'
-    +'<img class="pin-gate-logo" src="https://DeepeshDarla.github.io/darla-pricelist/Darla%20Final%20Logo%20-%20Copy.jpg" onerror="this.style.display=\'none\'" alt="Darla">'
-    +'<div class="pin-gate-title">Staff Access Required</div>'
-    +'<select id="gateNameSel" style="width:100%;max-width:280px;margin:12px auto 0;display:block;padding:12px;background:#ffffff;border:1.5px solid #e0dbd3;border-radius:8px;color:#1c1612;font-size:15px" onchange="gatePickStaff()">'+staffOpts+'</select>'
-    +'<div class="pin-gate-sub" id="gateSubTxt" style="margin-top:10px">Select your name, then enter PIN</div>'
-    +'<div class="pin-gate-dots">'
-    +'<div class="dot" id="gd0"></div><div class="dot" id="gd1"></div>'
-    +'<div class="dot" id="gd2"></div><div class="dot" id="gd3"></div>'
-    +'</div><div class="pin-gate-grid">'
-    +[1,2,3,4,5,6,7,8,9].map(function(n){return '<button class="pk" onclick="gatePk(\''+n+'\')">'+n+'</button>';}).join("")
-    +'<button class="pk ghost"></button>'
-    +'<button class="pk" onclick="gatePk(\'0\')">0</button>'
-    +'<button class="pk del" onclick="gatePd()">&#9003;</button>'
-    +'</div>'
-    +'<div id="gateErr" style="color:#e74c3c;font-size:13px;font-weight:600;min-height:18px;margin-top:8px"></div>'
-    +'<button class="pin-cancel" onclick="showHome()" style="color:#555;margin-top:8px">&#8592; Back</button>'
-    +'</div>';
-  DB.collection("staffDirectory").get()
-    .then(function(snap){
-      var list=[];
-      snap.forEach(function(d){ var dt=d.data(); if(dt.active!==false) list.push({uid:d.id,name:dt.name,role:dt.role}); });
-      list.sort(function(a,b){ return a.name.localeCompare(b.name); });
-      if(!list.length) return;
-      localStorage.setItem("darla_staff_cache",JSON.stringify(list));
-      var sel=document.getElementById("gateNameSel"); if(!sel) return;
-      sel.innerHTML='<option value="">— Select Name —</option>';
-      list.forEach(function(s){ var o=document.createElement("option"); o.value=s.name; o.textContent=s.name; sel.appendChild(o); });
-    }).catch(function(){});
-}
-function gatePickStaff(){
-  var n=document.getElementById("gateNameSel").value;
-  try{ var sc=JSON.parse(localStorage.getItem("darla_staff_cache")||"[]"); gateStaff=sc.find(function(s){ return s.name===n; })||null; }catch(e){}
-  if(!gateStaff && n) gateStaff={name:n};
-  gateEn=""; gDots();
-}
-function gatePk(k){
-  if(!gateStaff){ document.getElementById("gateErr").textContent="Select your name first"; return; }
-  if(gateEn.length>=4)return; gateEn+=k; gDots(); if(gateEn.length===4)setTimeout(gChk,80);
-}
-function gatePd(){gateEn=gateEn.slice(0,-1);gDots();}
-function gDots(err){
-  for(var i=0;i<4;i++){
-    var d=document.getElementById("gd"+i);if(!d)return;
-    d.className="dot";
-    if(err)d.classList.add("err");else if(i<gateEn.length)d.classList.add("on");
-  }
-}
-function gChk(){
-  if(!gateStaff) return;
-  var email=gateStaff.name.toLowerCase().replace(/\s+/g,".")+"@darla.in";
-  AUTH.signInWithEmailAndPassword(email, gateEn + PIN_SUFFIX)
-    .then(function(){
-      localStorage.setItem(SAK,"1");
-      showAdvancedSearch(gateCat);
-    })
-    .catch(function(){
-      gDots(true);
-      var err=document.getElementById("gateErr");
-      if(err) err.textContent="Incorrect PIN — try again";
-      setTimeout(function(){ gateEn=""; gDots(); if(err) err.textContent=""; },1000);
-    });
+  showAdvancedSearch(cat);
 }
 
 var BCM={},BCSM={},allBrands=[],currentCat="fabric",searchCtx={};
