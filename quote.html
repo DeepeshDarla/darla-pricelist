@@ -3888,8 +3888,14 @@ function renderBld() {
           (uncovered&&!unmeasured
             ? '<div style="font-size:11px;font-weight:700;color:#c0610a;margin-top:3px">⚠ No selection yet</div>'
               +(function(){
+                  var _dc=_areaTypeToCat(area.type);
+                  var _cc=area.type==='curtains'?['curtains_main','curtains_sheer']:(_dc?[_dc]:null);
                   var srcs=areas.filter(function(a){
-                    return a.id!==area.id && sels.some(function(s){ return s.openingId===a.id||(s.areaIds||[]).indexOf(a.id)!==-1; });
+                    if(a.id===area.id) return false;
+                    return sels.some(function(s){
+                      var lk=s.openingId===a.id||(s.areaIds||[]).indexOf(a.id)!==-1;
+                      return lk&&(!_cc||_cc.indexOf(s.category)!==-1);
+                    });
                   });
                   if(!srcs.length) return '';
                   return '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">'
@@ -4256,14 +4262,17 @@ function _renderAreaPostSave(area,isNew){
   var linked=room?(room.selections||[]).filter(function(s){
     return s.openingId===area.id||(s.areaIds||[]).indexOf(area.id)!==-1;
   }):[];
-  // Find another area in this room that has selections (to offer copy)
+  // Find another area in this room that has compatible selections (to offer copy)
   var copySrcArea=null;
   if(isNew&&!linked.length&&room){
+    var _cdc=_areaTypeToCat(area.type);
+    var _ccc=area.type==='curtains'?['curtains_main','curtains_sheer']:(_cdc?[_cdc]:null);
     for(var _ai=0;_ai<(room.areas||[]).length;_ai++){
       var _a=room.areas[_ai];
-      if(_a.id!==area.id&&(room.selections||[]).some(function(s){ return s.openingId===_a.id||(s.areaIds||[]).indexOf(_a.id)!==-1; })){
-        copySrcArea=_a; break;
-      }
+      if(_a.id!==area.id&&(room.selections||[]).some(function(s){
+        var lk=s.openingId===_a.id||(s.areaIds||[]).indexOf(_a.id)!==-1;
+        return lk&&(!_ccc||_ccc.indexOf(s.category)!==-1);
+      })){ copySrcArea=_a; break; }
     }
   }
   // Unmeasured areas that already have a selection — show as "measure next" list
@@ -4395,10 +4404,21 @@ function _activeAreaForSel(){
   return (room.areas||[]).find(function(a){ return _selAreaIds.indexOf(a.id)!==-1; })||null;
 }
 function _roomExistingFabrics(){
-  var room=APP.quote.rooms[_activeRoom]; if(!room) return {main:null,sheer:null};
-  var ms=(room.selections||[]).find(function(s){ return s.category==='curtains_main'&&(s.products||[]).length; });
-  var ss=(room.selections||[]).find(function(s){ return s.category==='curtains_sheer'&&(s.products||[]).length; });
-  return { main:ms?activeProds(ms)[0]:null, sheer:ss?activeProds(ss)[0]:null };
+  var room=APP.quote.rooms[_activeRoom]; if(!room) return [];
+  var seen={}, result=[];
+  (room.selections||[]).forEach(function(s){
+    if(s.category===_selCategory||s.category==='curtains_sheer') return;
+    var fp=activeProds(s)[0]; if(!fp) return;
+    var prod=fp.product||{};
+    if(!prod.brand&&!prod.catalog&&!prod.manualName) return;
+    var key=(prod.brand||'')+'|'+(prod.catalog||'')+'|'+(prod.s_no||'')+'|'+(prod.manualName||'');
+    if(seen[key]) return; seen[key]=true;
+    var areaId=s.openingId||(s.areaIds||[])[0];
+    var areaName='';
+    if(areaId){ var _a=(room.areas||[]).find(function(a){return a.id===areaId;}); if(_a) areaName=_a.name; }
+    result.push({fp:fp, label:[prod.brand,prod.catalog,prod.s_no].filter(Boolean).join(' ')||(prod.manualName||'—'), areaName:areaName});
+  });
+  return result;
 }
 function copyFabricFromExisting(srcProd, layer){
   var entry=Object.assign({},srcProd,{widthType:'standard',rotationAllowed:null});
@@ -4741,11 +4761,14 @@ function _renderRomanLayerSection(layer){
   var bgColor=layer===2?'var(--bg3)':'transparent';
   h+='<div style="border:1px solid '+borderColor+';border-radius:var(--r-sm);padding:12px;margin-bottom:14px;background:'+bgColor+'">';
   h+='<div style="font-size:11px;font-weight:900;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">'+labelText+'</div>';
-  var _rf=_roomExistingFabrics();
-  if(_rf.main||_rf.sheer){
-    h+='<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Use existing room fabric:</div>';
-    if(_rf.main){ var _mp=_rf.main.product||{}; h+='<button class="btn ghost sm" style="width:100%;margin-bottom:4px;text-align:left;font-size:12px" data-src="'+esc(JSON.stringify(_rf.main))+'" onclick="_selRomanLayerTarget='+(layer||1)+';copyFabricFromExisting(JSON.parse(this.dataset.src),'+(layer||1)+')">📋 Main: '+esc([_mp.brand,_mp.catalog].filter(Boolean).join(' ')||'Main Fabric')+'</button>'; }
-    if(_rf.sheer){ var _sp=_rf.sheer.product||{}; h+='<button class="btn ghost sm" style="width:100%;margin-bottom:4px;text-align:left;font-size:12px" data-src="'+esc(JSON.stringify(_rf.sheer))+'" onclick="_selRomanLayerTarget='+(layer||1)+';copyFabricFromExisting(JSON.parse(this.dataset.src),'+(layer||1)+')">📋 Sheer: '+esc([_sp.brand,_sp.catalog].filter(Boolean).join(' ')||'Sheer Fabric')+'</button>'; }
+  var _rfList=_roomExistingFabrics();
+  if(_rfList.length){
+    h+='<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Use fabric from this room:</div>';
+    _rfList.forEach(function(item){
+      h+='<button class="btn ghost sm" style="width:100%;margin-bottom:4px;text-align:left;font-size:12px" data-src="'+esc(JSON.stringify(item.fp))+'" '
+        +'onclick="_selRomanLayerTarget='+(layer||1)+';copyFabricFromExisting(JSON.parse(this.dataset.src),'+(layer||1)+')">'
+        +'📋 '+(item.areaName?esc(item.areaName)+' · ':'')+esc(item.label)+'</button>';
+    });
     h+='</div>';
   }
   if(layerProds.length){
@@ -5005,6 +5028,16 @@ function renderAddSelection(){
       h+='<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Main Fabric</div>';
       h+=_renderSelProdRows();
       if(!_selProducts.length){
+        var _rfList2=_roomExistingFabrics();
+        if(_rfList2.length){
+          h+='<div style="margin-bottom:10px"><div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Use fabric from this room:</div>';
+          _rfList2.forEach(function(item){
+            h+='<button class="btn ghost sm" style="width:100%;margin-bottom:4px;text-align:left;font-size:12px" data-src="'+esc(JSON.stringify(item.fp))+'" '
+              +'onclick="copyFabricFromExisting(JSON.parse(this.dataset.src),null)">'
+              +'📋 '+(item.areaName?esc(item.areaName)+' · ':'')+esc(item.label)+'</button>';
+          });
+          h+='</div>';
+        }
         h+='<div class="btn-row" style="margin-top:10px">'
           +'<button class="btn" style="flex:2" onclick="_selProductTarget=\'main\';_nextProdMode=\'component\';openProductModal()">🔍 Search Product</button>'
           +'<button class="btn ghost" style="flex:1" onclick="_nextProdMode=\'component\';addManualSelProduct()">✎ Manual</button></div>';
@@ -5338,8 +5371,14 @@ function saveSelection(){
 }
 function copySelectionsFromArea(srcAreaId,destAreaId){
   var room=APP.quote.rooms[_activeRoom]; if(!room) return;
-  var srcSels=(room.selections||[]).filter(function(s){ return s.openingId===srcAreaId||(s.areaIds||[]).indexOf(srcAreaId)!==-1; });
-  if(!srcSels.length){ showToast('No selections to copy'); return; }
+  var destArea=(room.areas||[]).find(function(a){ return a.id===destAreaId; });
+  var _dc=destArea?_areaTypeToCat(destArea.type):null;
+  var _cc=destArea&&destArea.type==='curtains'?['curtains_main','curtains_sheer']:(_dc?[_dc]:null);
+  var srcSels=(room.selections||[]).filter(function(s){
+    var lk=s.openingId===srcAreaId||(s.areaIds||[]).indexOf(srcAreaId)!==-1;
+    return lk&&(!_cc||_cc.indexOf(s.category)!==-1);
+  });
+  if(!srcSels.length){ showToast('No compatible selections to copy'); return; }
   srcSels.forEach(function(s,idx){
     var clone=JSON.parse(JSON.stringify(s));
     clone.id='s_'+Date.now()+idx; clone.openingId=destAreaId; clone.areaIds=[destAreaId];
@@ -6477,7 +6516,16 @@ function _renderSumRoomExpanded(room, ri){
         }
       });
 
-      // ── Track / Rod line items (FIRST, before fabric) ──────────────────
+      // Sort: all main tracks by type+width first, then all sheer tracks by type+width
+      ctrkGroupOrd.sort(function(a,b){
+        var ga=ctrkGroups[a], gb=ctrkGroups[b];
+        if(ga.role!==gb.role) return ga.role==='main'?-1:1;
+        var ta=(ga.sel.ctrkType||'').toLowerCase(), tb=(gb.sel.ctrkType||'').toLowerCase();
+        if(ta!==tb) return ta<tb?-1:1;
+        return ga.width-gb.width;
+      });
+
+      // ── Track rows first (all main, then all sheer) ────────────────
       var _liInp='width:52px;font-size:11px;padding:2px 3px;border:1px solid var(--border2);border-radius:3px;background:var(--bg2);color:var(--text);-webkit-appearance:none;text-align:right';
       ctrkGroupOrd.forEach(function(gk){
         var cg=ctrkGroups[gk]; var isMain=cg.role==='main';
@@ -6497,21 +6545,27 @@ function _renderSumRoomExpanded(room, ri){
           +'oninput="updateSelRate('+ri+',\''+sid+'\',\''+rateKey+'\',this.value)" onclick="this.select();event.stopPropagation()"></div>'
           +'<div style="font-size:13px;font-weight:800;color:var(--red);text-align:right;white-space:nowrap">'+fmt(rate*qty)+'</div>'
           +'<div></div><div></div></div>';
-        if(isMain){
-          if(cg.totalBd.dblBkt>0) liFixed('Double brackets', qty+' win'+(qty>1?'s':''), cg.totalBd.dblBkt);
-          if(cg.totalBd.elizaMain>0) liFixed('Eliza rings (main)', '', cg.totalBd.elizaMain);
-          if(cg.totalBd.finialMain>0){
-            var mfN=(FINIALS.find(function(f){return f.code===cg.sel.ctrkFinial;})||{}).name||'Finial';
-            liFixed(esc(mfN)+' × '+qty+' pair'+(qty>1?'s':''), '', cg.totalBd.finialMain);
-          }
+      });
+
+      // ── Aggregated accessories: double brackets, eliza, finials ───
+      var _totDblBkt=0,_totElizaM=0,_totElizaS=0,_totFinialM=0,_totFinialS=0;
+      var _dblBktWins=0,_finialMN='Finial',_finialSN='Finial';
+      ctrkGroupOrd.forEach(function(gk){
+        var cg=ctrkGroups[gk];
+        if(cg.role==='main'){
+          _totDblBkt+=cg.totalBd.dblBkt; _totElizaM+=cg.totalBd.elizaMain; _totFinialM+=cg.totalBd.finialMain;
+          if(cg.totalBd.dblBkt>0) _dblBktWins+=cg.totalQty;
+          if(cg.sel.ctrkFinial){ _finialMN=(FINIALS.find(function(f){return f.code===cg.sel.ctrkFinial;})||{}).name||'Finial'; }
         } else {
-          if(cg.totalBd.elizaSheer>0) liFixed('Eliza rings (sheer)', '', cg.totalBd.elizaSheer);
-          if(cg.totalBd.finialSheer>0){
-            var sfN=(FINIALS.find(function(f){return f.code===cg.sel.ctrkFinial;})||{}).name||'Finial';
-            liFixed(esc(sfN)+' × '+qty+' pair'+(qty>1?'s':''), '', cg.totalBd.finialSheer);
-          }
+          _totElizaS+=cg.totalBd.elizaSheer; _totFinialS+=cg.totalBd.finialSheer;
+          if(cg.sel.ctrkFinial){ _finialSN=(FINIALS.find(function(f){return f.code===cg.sel.ctrkFinial;})||{}).name||'Finial'; }
         }
       });
+      if(_totDblBkt>0) liFixed('Double brackets', _dblBktWins+' win'+(_dblBktWins>1?'s':''), _totDblBkt);
+      if(_totElizaM>0) liFixed('Eliza rings (main)', '', _totElizaM);
+      if(_totElizaS>0) liFixed('Eliza rings (sheer)', '', _totElizaS);
+      if(_totFinialM>0) liFixed(esc(_finialMN), '', _totFinialM);
+      if(_totFinialS>0) liFixed(esc(_finialSN)+' (sheer)', '', _totFinialS);
       // ── Installation line item ──────────────────────────────────────────
       if(totalInstallCost>0){
         var _ir=qrate('curtainInstall');
@@ -7086,7 +7140,15 @@ function _buildPrintRoomDetail(room, ri) {
           sg.totalBd.trackSheer+=bd.trackSheer; sg.totalBd.elizaSheer+=bd.elizaSheer; sg.totalBd.finialSheer+=bd.finialSheer;
         }
       });
-      // Track rows
+      // Sort: all main tracks (by type+width) then all sheer tracks (by type+width)
+      ctrkGroupOrd.sort(function(a,b){
+        var ga=ctrkGroups[a],gb=ctrkGroups[b];
+        if(ga.role!==gb.role) return ga.role==='main'?-1:1;
+        var ta=(ga.sel.ctrkType||'').toLowerCase(),tb=(gb.sel.ctrkType||'').toLowerCase();
+        if(ta!==tb) return ta<tb?-1:1;
+        return ga.width-gb.width;
+      });
+      // Track rows (all main first, then all sheer)
       ctrkGroupOrd.forEach(function(gk){
         var cg=ctrkGroups[gk],isMain=cg.role==='main',qty=cg.totalQty;
         var label=(isMain?'Track – ':'Sheer track – ')+cg.sel.ctrkType+(cg.sel.ctrkColor?' ('+cg.sel.ctrkColor+')':'')+' · '+cg.width+'"';
@@ -7096,15 +7158,25 @@ function _buildPrintRoomDetail(room, ri) {
         var rate=(cg.sel.rates&&cg.sel.rates[rateKey]!=null)?cg.sel.rates[rateKey]:rateComp;
         var tot=rate*qty; catTotal+=tot;
         catH+=_pLi(esc(label),qty+' win'+(qty>1?'s':'')+' × ₹'+fmt(rate),tot);
-        if(isMain){
-          if(cg.totalBd.dblBkt>0){ catTotal+=cg.totalBd.dblBkt; catH+=_pFixed('Double brackets',qty+' win'+(qty>1?'s':''),cg.totalBd.dblBkt); }
-          if(cg.totalBd.elizaMain>0){ catTotal+=cg.totalBd.elizaMain; catH+=_pFixed('Eliza rings (main)','',cg.totalBd.elizaMain); }
-          if(cg.totalBd.finialMain>0){ var fn=(FINIALS.find(function(f){return f.code===cg.sel.ctrkFinial;})||{}).name||'Finial'; catTotal+=cg.totalBd.finialMain; catH+=_pFixed(esc(fn)+' × '+qty+' pair'+(qty>1?'s':''),'',cg.totalBd.finialMain); }
+      });
+      // Aggregated accessories after all track rows
+      var _pDblBkt=0,_pElizaM=0,_pElizaS=0,_pFinM=0,_pFinS=0,_pDbWins=0,_pFnM='Finial',_pFnS='Finial';
+      ctrkGroupOrd.forEach(function(gk){
+        var cg=ctrkGroups[gk];
+        if(cg.role==='main'){
+          _pDblBkt+=cg.totalBd.dblBkt; _pElizaM+=cg.totalBd.elizaMain; _pFinM+=cg.totalBd.finialMain;
+          if(cg.totalBd.dblBkt>0) _pDbWins+=cg.totalQty;
+          if(cg.sel.ctrkFinial){ _pFnM=(FINIALS.find(function(f){return f.code===cg.sel.ctrkFinial;})||{}).name||'Finial'; }
         } else {
-          if(cg.totalBd.elizaSheer>0){ catTotal+=cg.totalBd.elizaSheer; catH+=_pFixed('Eliza rings (sheer)','',cg.totalBd.elizaSheer); }
-          if(cg.totalBd.finialSheer>0){ catTotal+=cg.totalBd.finialSheer; catH+=_pFixed('Finial (sheer) × '+qty+' pair'+(qty>1?'s':''),'',cg.totalBd.finialSheer); }
+          _pElizaS+=cg.totalBd.elizaSheer; _pFinS+=cg.totalBd.finialSheer;
+          if(cg.sel.ctrkFinial){ _pFnS=(FINIALS.find(function(f){return f.code===cg.sel.ctrkFinial;})||{}).name||'Finial'; }
         }
       });
+      if(_pDblBkt>0){ catTotal+=_pDblBkt; catH+=_pFixed('Double brackets',_pDbWins+' win'+(_pDbWins>1?'s':''),_pDblBkt); }
+      if(_pElizaM>0){ catTotal+=_pElizaM; catH+=_pFixed('Eliza rings (main)','',_pElizaM); }
+      if(_pElizaS>0){ catTotal+=_pElizaS; catH+=_pFixed('Eliza rings (sheer)','',_pElizaS); }
+      if(_pFinM>0){ catTotal+=_pFinM; catH+=_pFixed(esc(_pFnM),'',_pFinM); }
+      if(_pFinS>0){ catTotal+=_pFinS; catH+=_pFixed(esc(_pFnS)+' (sheer)','',_pFinS); }
       // Installation
       if(totalInstallCost>0){
         var _ir=qrate('curtainInstall');
